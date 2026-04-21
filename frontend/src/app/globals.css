@@ -1,0 +1,75 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Base ────────────────────────────────────────────────── */
+:root {
+  --surface-900: #0a0a0f;
+  --surface-800: #111118;
+  --surface-700: #1a1a27;
+  --surface-600: #22222f;
+  --surface-500: #2d2d3d;
+  --brand:        #6366f1;
+  --brand-light:  #818cf8;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--surface-900);
+  color: #e2e8f0;
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* ── Scrollbar ───────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--surface-800); }
+::-webkit-scrollbar-thumb { background: var(--surface-500); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--surface-400, #3d3d52); }
+
+/* ── Glass card ──────────────────────────────────────────── */
+@layer components {
+  .glass {
+    @apply bg-white/5 backdrop-blur-md border border-white/10 rounded-xl;
+  }
+  .glass-strong {
+    @apply bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl;
+  }
+  .btn-primary {
+    @apply bg-brand-600 hover:bg-brand-500 text-white font-semibold px-4 py-2 rounded-lg
+           transition-all duration-200 active:scale-95 shadow-glow-brand;
+  }
+  .btn-ghost {
+    @apply bg-transparent hover:bg-white/10 text-slate-300 hover:text-white font-medium
+           px-3 py-2 rounded-lg transition-all duration-200;
+  }
+  .input-dark {
+    @apply bg-surface-700 border border-white/10 text-white placeholder-slate-500
+           rounded-lg px-4 py-2.5 w-full outline-none focus:border-brand-500
+           focus:ring-1 focus:ring-brand-500/50 transition-all duration-200;
+  }
+  .badge {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium;
+  }
+  .badge-pending    { @apply badge bg-slate-700/60 text-slate-300; }
+  .badge-progress   { @apply badge bg-blue-900/60  text-blue-300; }
+  .badge-completed  { @apply badge bg-green-900/60 text-green-300; }
+  .badge-blocked    { @apply badge bg-red-900/60   text-red-300; }
+  .badge-high       { @apply badge bg-orange-900/60 text-orange-300; }
+  .badge-critical   { @apply badge bg-red-900/60   text-red-300; }
+  .badge-medium     { @apply badge bg-yellow-900/60 text-yellow-300; }
+  .badge-low        { @apply badge bg-slate-700/60  text-slate-400; }
+}
