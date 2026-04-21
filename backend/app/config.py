@@ -11,7 +11,7 @@ from typing import List
 class Settings(BaseSettings):
     # OpenAI
     openai_api_key: str = Field(..., env="OPENAI_API_KEY")
-    openai_model: str = Field(default="gpt-4o", env="OPENAI_MODEL")
+    openai_model: str = Field(default="gpt-4o-mini", env="OPENAI_MODEL")
 
     # Supabase
     supabase_url: str = Field(..., env="SUPABASE_URL")
