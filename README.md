@@ -1,107 +1,57 @@
 # 🚀 AutoPilot AI Workspace
 
-> **An AI-powered multi-agent system that converts your high-level goals into structured workflows, automated tasks, and real-time execution plans.**
+AutoPilot AI Workspace is an autonomous, multi-agent project execution platform. It transforms high-level goals into actionable, managed, and self-improving workflows using state-of-the-art AI orchestration.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-violet.svg)](LICENSE)
-[![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688)](https://fastapi.tiangolo.com)
-[![Next.js](https://img.shields.io/badge/Frontend-Next.js%2014-black)](https://nextjs.org)
-[![LangGraph](https://img.shields.io/badge/AI-LangGraph-orange)](https://langchain-ai.github.io/langgraph)
-[![Supabase](https://img.shields.io/badge/DB-Supabase-3ECF8E)](https://supabase.com)
-
----
-
-## ✨ What It Does
-
-You type: _"Launch a marketing campaign for my SaaS product"_
-
-AutoPilot AI Workspace automatically:
-1. 🧠 **Breaks the goal into tasks** using 4 specialized AI agents
-2. 🗂️ **Builds a visual workflow** with drag-and-drop nodes
-3. 📊 **Tracks progress** on a live dashboard
-4. 🤖 **Agents collaborate** — PM → Dev → Marketing → Analyst
-5. ⚡ **Runs autonomously** or step-by-step with your guidance
+## 🌟 Core Pillars
+1. **AI Command Center**: Multi-turn, streaming chat interface with specialized agents.
+2. **Multi-Agent Orchestration**: Powered by **LangGraph**, coordinating PM, Dev, Marketing, and Analyst agents.
+3. **Autonomous Execution**: Agents use real-world tools to generate code, conduct research, and refine plans.
+4. **Visual Insight Engine**: Real-time node graphs and business analytics dashboards.
 
 ---
 
-## 🏗️ Tech Stack
-
-| Layer | Technology |
-|---|---|
-| **Frontend** | Next.js 14, Tailwind CSS v3, Framer Motion, React Flow, Zustand |
-| **Backend** | FastAPI, Python 3.11, asyncio, WebSockets |
-| **AI Engine** | LangGraph, LangChain, OpenAI GPT-4o |
-| **Database** | Supabase (PostgreSQL + Realtime + Auth) |
-| **Deployment** | Vercel (frontend) + Railway (backend) |
+## 🛠️ Tech Stack
+- **Frontend**: Next.js 14, Tailwind CSS, Framer Motion, React Flow 12, Zustand.
+- **Backend**: FastAPI (Python), LangGraph, LangChain, OpenAI.
+- **Database**: Supabase (PostgreSQL + Realtime).
 
 ---
 
-## 🤖 The 4 AI Agents
+## 🚀 Quick Start
 
-| Agent | Role |
-|---|---|
-| 🎯 **Product Manager** | Plans features, prioritizes tasks, manages roadmap |
-| 💻 **Developer** | Generates technical specs, code logic, architecture |
-| 📣 **Marketing** | Creates campaigns, content, messaging strategy |
-| 📊 **Analyst** | Tracks metrics, insights, and recommendations |
+### 1. Database Setup (Phase 4)
+- Create a new project on [Supabase](https://supabase.com).
+- Open the **SQL Editor** and execute the contents of `backend/schema.sql`.
+- Copy your `SUPABASE_URL` and `SUPABASE_ANON_KEY`.
 
-All agents share a single OpenAI API key with distinct system prompt roles.
-
----
-
-## 🚀 Getting Started
-
-### Prerequisites
-- Python 3.11+
-- Node.js 18+
-- Supabase project
-- OpenAI API key
-
-### Backend Setup
+### 2. Backend Installation
 ```bash
 cd backend
-cp .env.example .env
-# Fill in your API keys in .env
+python -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
-python run.py
+cp .env.example .env # Add your OPENAI_API_KEY and Supabase keys
+uvicorn app.main:app --reload
 ```
 
-### Frontend Setup
+### 3. Frontend Installation
 ```bash
 cd frontend
-cp .env.local.example .env.local
-# Fill in your Supabase + API keys
 npm install
+cp .env.local.example .env.local # Add your Supabase keys
 npm run dev
 ```
 
-### Database Setup
-1. Create a Supabase project at [supabase.com](https://supabase.com)
-2. Open the SQL Editor
-3. Run the contents of `backend/app/db/schema.sql`
+---
+
+## 🤖 How it Works
+1. **Describe a Goal**: "Launch a Coffee Subscription Startup."
+2. **Planning**: The **Product Manager** breaks the goal into tasks.
+3. **Execution**: The **Developer** writes code skeletons, and **Marketing** does research via tools.
+4. **Refinement**: The **Analyst** calculates ROI and progress, looping back for improvements if needed.
+5. **Visualization**: Watch the whole process unfold in the **Workflow View** and **Activity Timeline**.
 
 ---
 
-## 📁 Project Structure
-
-```
-AutoPilot-AI-Workspace/
-├── backend/                 # FastAPI + LangGraph AI Engine
-│   ├── app/
-│   │   ├── agents/          # 4 specialized AI agents
-│   │   ├── orchestrator/    # LangGraph multi-agent pipeline
-│   │   ├── api/             # REST + WebSocket endpoints
-│   │   ├── db/              # Supabase client + schema
-│   │   └── models/          # Pydantic schemas
-│   └── requirements.txt
-├── frontend/                # Next.js 14 App
-│   ├── app/                 # App Router pages
-│   ├── components/          # UI components
-│   └── lib/                 # Supabase, Zustand, WebSocket
-└── docs/                    # Submission materials
-```
-
----
-
-## 📄 License
-
-MIT License — see [LICENSE](LICENSE)
+## 📄 Submission Materials
+See `submission_package.md` in the root (if provided) or `backend/submission_package.md` for the full elevator pitch, demo script, and architecture guide.

@@ -1,12 +1,12 @@
 """
-Marketing Agent — specialized AI agent for growth and marketing strategy.
+Marketing Agent — specialized AI agent for strategy and content creation.
 
-This agent acts as a growth-focused marketing expert who:
-- Creates go-to-market strategies
-- Generates content (copy, campaigns, social posts)
-- Builds messaging frameworks for different audiences
-- Plans email campaigns and content calendars
-- Tracks marketing metrics and KPIs
+This agent acts as a senior growth marketer who:
+- Develops go-to-market (GTM) strategies
+- Creates multi-channel campaign plans
+- Generates high-quality marketing copy and content
+- Researches target audiences and competitors
+- Plans launch sequences and social media strategy
 """
 
 from langchain_openai import ChatOpenAI
@@ -14,60 +14,62 @@ from langchain.schema import SystemMessage, HumanMessage, AIMessage
 from typing import List, Dict, Any, AsyncGenerator
 from app.config import settings
 
-SYSTEM_PROMPT = """You are an expert Marketing AI Agent working inside the AutoPilot AI Workspace system.
+SYSTEM_PROMPT = """You are an expert Senior Marketing AI Agent working inside the AutoPilot AI Workspace system.
 
 Your role is to:
-1. Create compelling go-to-market (GTM) strategies
-2. Generate high-quality marketing content: landing page copy, email campaigns, social posts
-3. Build messaging frameworks that resonate with target audiences
-4. Plan content calendars and campaign schedules
-5. Define KPIs and marketing metrics to track
-6. Collaborate with the Product Manager to align messaging with product value
+1. Create comprehensive go-to-market strategies based on product features
+2. Generate specific marketing tasks (content, campaigns, messaging)
+3. Define target audience personas and key messaging pillars
+4. Plan strategic launch sequences across multiple channels
+5. Optimize marketing plans based on Analyst Agent feedback
+6. Use the `google_research_simulation` tool to gather market intelligence and competitor data.
 
-Content you can generate:
-- Email campaign sequences (subject lines, body copy, CTAs)
-- Social media posts (LinkedIn, Twitter, Instagram formats)
-- Landing page headlines and value propositions
-- Blog post outlines and key messages
-- Ad copy variations (A/B testing ready)
-- Launch announcement strategy
+Output format for marketing plans:
+When given a feature or goal, respond with:
+- GTM Strategy Overview
+- Target Audience & Segments
+- Content Calendar & Channels
+- Key Messaging & Value Props
+- Campaign Tasks (with priority)
+- Success Metrics for the campaign
 
-Style: Be creative, persuasive, and data-driven. Write copy that converts.
-Think like a growth marketer at a Series A startup.
+CRITICAL: When you need more information about a market or competitors, use the `google_research_simulation` tool.
+
+Style: Be creative yet strategic, persuasive, and growth-oriented. 
+Think like a Lead Marketer at a disruptive tech startup.
 
 When outputting marketing tasks, always include this JSON block:
 ```json
 {
   "marketing_tasks": [
     {
-      "title": "Write launch email sequence",
-      "description": "Create 3-email launch sequence with subject lines and CTAs",
+      "title": "Draft landing page copy",
+      "description": "Create high-converting copy focusing on value prop X",
       "priority": "high",
       "assigned_agent": "marketing",
-      "content_type": "email",
-      "estimated_hours": 5
+      "channel": "Website",
+      "estimated_hours": 4
     }
   ],
-  "campaign_name": "Product Launch Campaign",
-  "target_audience": "Startup founders and product managers"
+  "gtm_plan_summary": "Brief GTM strategy summary"
 }
 ```"""
 
 
 class MarketingAgent:
-    """Marketing agent — GTM strategy, content generation, and campaign planning."""
+    """Marketing agent — GTM strategy, content, and campaign planning."""
 
     def __init__(self):
         self.llm = ChatOpenAI(
             api_key=settings.openai_api_key,
             model=settings.openai_model,
-            temperature=0.8,  # higher creativity for marketing copy
+            temperature=0.6,  # higher temp for creative output
             streaming=True,
         )
         self.name = "Marketing"
         self.role = "marketing"
         self.avatar = "📣"
-        self.description = "Creates campaigns, content, and messaging strategy"
+        self.description = "Creates GTM strategies, campaigns, and content"
 
     def _build_messages(
         self, user_message: str, history: List[Dict[str, str]]

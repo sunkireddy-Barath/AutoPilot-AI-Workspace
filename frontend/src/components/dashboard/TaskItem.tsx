@@ -44,10 +44,16 @@ export default function TaskItem({ task, index }: TaskItemProps) {
       </div>
 
       <div className="flex-1 min-w-0">
-        <h4 className="text-sm font-semibold text-white truncate group-hover:text-brand-400 transition-colors">
-          {task.title}
-        </h4>
-        <p className="text-xs text-slate-400 mt-1 line-clamp-1">{task.description}</p>
+        <div className="flex items-center justify-between">
+          <h4 className="text-sm font-bold text-white truncate">{task.title}</h4>
+          {task.metadata?.artifact_path && (
+            <button className="text-[10px] font-bold text-brand-400 hover:text-brand-300 transition-colors flex items-center gap-1">
+              <div className="h-1.5 w-1.5 rounded-full bg-brand-500 animate-pulse" />
+              VIEW ARTIFACT
+            </button>
+          )}
+        </div>
+        <p className="text-xs text-slate-500 truncate mt-1">{task.description}</p>
         
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3">
           <div className="flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-wider text-slate-500">

@@ -122,10 +122,10 @@ export default function ChatWindow() {
     setLoading(true)
     try {
       await chatApi.sendMessage({
-        conversation_id: activeConversationId,
+        conversation_id: activeConversationId!,
         user_id: userId,
         message: text,
-        autonomous_mode: true // Default to true for premium experience
+        autonomous_mode: useStore.getState().autonomousMode
       })
     } catch (error) {
       toast.error('Failed to send message')

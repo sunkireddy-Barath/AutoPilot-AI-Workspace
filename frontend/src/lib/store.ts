@@ -39,6 +39,11 @@ export interface Task {
   priority: 'low' | 'medium' | 'high' | 'critical'
   assigned_agent: AgentRole | null
   progress: number
+  metadata?: {
+    artifact_path?: string
+    tool_output?: string
+    [key: string]: any
+  }
   created_at: string
   updated_at: string
 }
