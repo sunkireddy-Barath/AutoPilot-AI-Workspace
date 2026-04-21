@@ -20,7 +20,7 @@ interface TaskItemProps {
 }
 
 export default function TaskItem({ task, index }: TaskItemProps) {
-  const statusIcon = {
+  const StatusIcon = {
     pending: Circle,
     in_progress: Clock,
     completed: CheckCircle2,
@@ -40,7 +40,7 @@ export default function TaskItem({ task, index }: TaskItemProps) {
         task.status === 'in_progress' ? "text-blue-400" :
         task.status === 'blocked' ? "text-red-400" : "text-slate-500"
       )}>
-        <statusIcon className="h-5 w-5" />
+        <StatusIcon className="h-5 w-5" />
       </div>
 
       <div className="flex-1 min-w-0">

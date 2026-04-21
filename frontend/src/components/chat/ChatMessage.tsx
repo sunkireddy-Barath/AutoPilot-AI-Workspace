@@ -78,11 +78,10 @@ export default function ChatMessage({ message }: ChatMessageProps) {
           </ReactMarkdown>
         </div>
 
-        {/* Action tags if any were part of the response (e.g. metadata) */}
-        {message.metadata?.task_count && (
+        {Boolean(message.metadata?.task_count) && (
           <div className="mt-4 flex items-center gap-2">
             <div className="px-2 py-1 rounded-lg bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-medium flex items-center gap-1.5">
-              🚀 {message.metadata.task_count as string} Tasks Generated
+              🚀 {String(message.metadata?.task_count)} Tasks Generated
             </div>
           </div>
         )}
