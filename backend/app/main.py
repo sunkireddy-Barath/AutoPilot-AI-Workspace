@@ -15,6 +15,7 @@ from app.api.tasks import router as tasks_router
 from app.api.workflows import router as workflows_router
 from app.api.conversations import router as conversations_router
 from app.api.agents import router as agents_router
+from app.api.chat import router as chat_router
 
 
 @asynccontextmanager
@@ -56,3 +57,4 @@ app.include_router(tasks_router, prefix="/api/v1")
 app.include_router(workflows_router, prefix="/api/v1")
 app.include_router(conversations_router, prefix="/api/v1")
 app.include_router(agents_router, prefix="/api/v1")
+app.include_router(chat_router)  # chat + WebSocket (no prefix — /ws/{id} lives at root)
