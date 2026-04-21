@@ -1,34 +1,39 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase, IS_DEMO_MODE } from '@/lib/supabase'
 import { useStore } from '@/lib/store'
 import Sidebar from '@/components/ui/Sidebar'
+import LoadingSplash from '@/components/ui/LoadingSplash'
 import { Toaster } from 'react-hot-toast'
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const { userId, setUserId } = useStore()
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (IS_DEMO_MODE) {
-      // In Demo Mode, if we have a userId in the store, we're good.
-      // If not, redirect to auth page.
-      if (!userId) {
-        router.replace('/auth')
+    const checkAuth = async () => {
+      if (IS_DEMO_MODE) {
+        if (!userId) {
+          router.replace('/auth')
+        }
+        // Artificial delay for premium feel
+        setTimeout(() => setLoading(false), 1200)
+        return
       }
-      return
-    }
 
-    // Check auth on mount
-    supabase.auth.getSession().then(({ data }) => {
+      const { data } = await supabase.auth.getSession()
       if (!data.session) {
         router.replace('/auth')
       } else {
         setUserId(data.session.user.id)
       }
-    })
+      setLoading(false)
+    }
+
+    checkAuth()
 
     // Listen for auth changes
     const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
@@ -42,6 +47,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
     return () => listener.subscription.unsubscribe()
   }, [router, setUserId, userId])
+
+  if (loading) return <LoadingSplash />
 
   return (
     <div className="flex h-screen overflow-hidden bg-surface-900">

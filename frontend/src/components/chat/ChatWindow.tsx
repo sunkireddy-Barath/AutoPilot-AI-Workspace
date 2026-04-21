@@ -8,7 +8,7 @@ import {
   History, 
   Bot, 
   Cpu, 
-  Sparkles,
+  Zap,
   RefreshCw
 } from 'lucide-react'
 import { useStore, Message, AgentRole } from '@/lib/store'
@@ -141,7 +141,7 @@ export default function ChatWindow() {
       <header className="h-16 flex items-center justify-between px-6 border-b border-white/5 bg-surface-800/50 backdrop-blur-sm sticky top-0 z-10">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-brand-600/20 flex items-center justify-center">
-            <Sparkles className="h-4 w-4 text-brand-400" />
+            <Zap className="h-4 w-4 text-brand-400 fill-brand-400/20" />
           </div>
           <div>
             <h2 className="text-sm font-bold text-white tracking-tight">AI Command Center</h2>
@@ -176,7 +176,7 @@ export default function ChatWindow() {
                 animate={{ scale: 1, opacity: 1 }}
                 className="w-20 h-20 rounded-3xl bg-brand-600/10 flex items-center justify-center mb-6 border border-brand-600/20 shadow-glow-brand"
               >
-                <Bot className="h-10 w-10 text-brand-400" />
+                <Zap className="h-10 w-10 text-brand-400 fill-brand-400/20" />
               </motion.div>
               <h1 className="text-2xl font-bold text-white mb-2">How can AutoPilot help you today?</h1>
               <p className="text-slate-400 max-w-sm text-sm">

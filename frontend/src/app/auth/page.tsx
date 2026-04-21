@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { supabase, IS_DEMO_MODE } from '@/lib/supabase'
 import { useStore } from '@/lib/store'
+import { Zap } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 export default function AuthPage() {
@@ -64,10 +65,10 @@ export default function AuthPage() {
       >
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-brand-600 shadow-glow-brand text-3xl mb-4">
-            🚀
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-brand-600 shadow-glow-brand mb-4">
+            <Zap className="w-8 h-8 text-white fill-white" />
           </div>
-          <h1 className="text-2xl font-bold text-white">AutoPilot AI Workspace</h1>
+          <h1 className="text-2xl font-bold text-white tracking-widest uppercase">AutoPilot</h1>
           <p className="text-slate-400 mt-1 text-sm">
             Your AI-powered business automation system
           </p>

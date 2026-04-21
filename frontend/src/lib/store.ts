@@ -4,7 +4,7 @@
  */
 
 import { create } from 'zustand'
-import { devtools } from 'zustand/middleware'
+import { devtools, persist } from 'zustand/middleware'
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -139,79 +139,89 @@ interface AppState {
 // ── Store Implementation ───────────────────────────────────────────────
 
 export const useStore = create<AppState>()(
-  devtools(
-    (set) => ({
-      // Auth
-      userId: null,
-      setUserId: (id) => set({ userId: id }),
+  persist(
+    devtools(
+      (set) => ({
+        // Auth
+        userId: null,
+        setUserId: (id) => set({ userId: id }),
 
-      // Conversations
-      conversations: [],
-      activeConversationId: null,
-      setConversations: (list) => set({ conversations: list }),
-      addConversation: (c) =>
-        set((s) => ({ conversations: [c, ...s.conversations] })),
-      setActiveConversation: (id) => set({ activeConversationId: id }),
+        // Conversations
+        conversations: [],
+        activeConversationId: null,
+        setConversations: (list) => set({ conversations: list }),
+        addConversation: (c) =>
+          set((s) => ({ conversations: [c, ...s.conversations] })),
+        setActiveConversation: (id) => set({ activeConversationId: id }),
 
-      // Messages
-      messages: [],
-      setMessages: (msgs) => set({ messages: msgs }),
-      addMessage: (msg) =>
-        set((s) => ({ messages: [...s.messages, msg] })),
+        // Messages
+        messages: [],
+        setMessages: (msgs) => set({ messages: msgs }),
+        addMessage: (msg) =>
+          set((s) => ({ messages: [...s.messages, msg] })),
 
-      // Tasks
-      tasks: [],
-      setTasks: (tasks) => set({ tasks }),
-      addTask: (task) =>
-        set((s) => ({ tasks: [task, ...s.tasks] })),
-      updateTask: (id, patch) =>
-        set((s) => ({
-          tasks: s.tasks.map((t) => (t.id === id ? { ...t, ...patch } : t)),
-        })),
+        // Tasks
+        tasks: [],
+        setTasks: (tasks) => set({ tasks }),
+        addTask: (task) =>
+          set((s) => ({ tasks: [task, ...s.tasks] })),
+        updateTask: (id, patch) =>
+          set((s) => ({
+            tasks: s.tasks.map((t) => (t.id === id ? { ...t, ...patch } : t)),
+          })),
 
-      // Workflow Graph
-      workflowNodes: [],
-      workflowEdges: [],
-      setWorkflowGraph: (nodes, edges) =>
-        set({ workflowNodes: nodes, workflowEdges: edges }),
+        // Workflow Graph
+        workflowNodes: [],
+        workflowEdges: [],
+        setWorkflowGraph: (nodes, edges) =>
+          set({ workflowNodes: nodes, workflowEdges: edges }),
 
-      // Agent Activities
-      agentActivities: [],
-      addAgentActivity: (activity) =>
-        set((s) => ({
-          agentActivities: [activity, ...s.agentActivities].slice(0, 100),
-        })),
-      setAgentActivities: (activities) => set({ agentActivities: activities }),
+        // Agent Activities
+        agentActivities: [],
+        addAgentActivity: (activity) =>
+          set((s) => ({
+            agentActivities: [activity, ...s.agentActivities].slice(0, 100),
+          })),
+        setAgentActivities: (activities) => set({ agentActivities: activities }),
 
-      // Agent Statuses
-      agentStatuses: {
-        product_manager: 'idle',
-        developer: 'idle',
-        marketing: 'idle',
-        analyst: 'idle',
-        orchestrator: 'idle',
-      },
-      setAgentStatus: (role, status) =>
-        set((s) => ({
-          agentStatuses: { ...s.agentStatuses, [role]: status },
-        })),
+        // Agent Statuses
+        agentStatuses: {
+          product_manager: 'idle',
+          developer: 'idle',
+          marketing: 'idle',
+          analyst: 'idle',
+          orchestrator: 'idle',
+        },
+        setAgentStatus: (role, status) =>
+          set((s) => ({
+            agentStatuses: { ...s.agentStatuses, [role]: status },
+          })),
 
-      // UI
-      isAgentsRunning: false,
-      setAgentsRunning: (v) => set({ isAgentsRunning: v }),
-      autonomousMode: false,
-      setAutonomousMode: (v) => set({ autonomousMode: v }),
-      sidebarOpen: true,
-      setSidebarOpen: (v) => set({ sidebarOpen: v }),
-      activeView: 'chat',
-      setActiveView: (v) => set({ activeView: v }),
+        // UI
+        isAgentsRunning: false,
+        setAgentsRunning: (v) => set({ isAgentsRunning: v }),
+        autonomousMode: false,
+        setAutonomousMode: (v) => set({ autonomousMode: v }),
+        sidebarOpen: true,
+        setSidebarOpen: (v) => set({ sidebarOpen: v }),
+        activeView: 'chat',
+        setActiveView: (v) => set({ activeView: v }),
 
-      // Streaming
-      streamingContent: '',
-      appendStreamChunk: (chunk) =>
-        set((s) => ({ streamingContent: s.streamingContent + chunk })),
-      clearStream: () => set({ streamingContent: '' }),
-    }),
-    { name: 'autopilot-store' }
+        // Streaming
+        streamingContent: '',
+        appendStreamChunk: (chunk) =>
+          set((s) => ({ streamingContent: s.streamingContent + chunk })),
+        clearStream: () => set({ streamingContent: '' }),
+      }),
+      { name: 'autopilot-store' }
+    ),
+    {
+      name: 'autopilot-storage', // name of the item in storage (must be unique)
+      partialize: (state) => ({ 
+        userId: state.userId,
+        sidebarOpen: state.sidebarOpen,
+        autonomousMode: state.autonomousMode 
+      }), // only persist these fields
+    }
   )
 )

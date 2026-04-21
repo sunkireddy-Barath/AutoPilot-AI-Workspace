@@ -52,7 +52,7 @@ export default function Sidebar() {
             <Zap className="h-5 w-5 text-white" />
           </div>
           {sidebarOpen && (
-            <span className="text-lg font-bold text-white tracking-tight">AutoPilot AI</span>
+            <span className="text-lg font-bold text-white tracking-widest uppercase">AutoPilot</span>
           )}
         </Link>
       </div>
