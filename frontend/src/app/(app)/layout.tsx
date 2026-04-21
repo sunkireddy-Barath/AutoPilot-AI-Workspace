@@ -2,16 +2,25 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
+import { supabase, IS_DEMO_MODE } from '@/lib/supabase'
 import { useStore } from '@/lib/store'
 import Sidebar from '@/components/ui/Sidebar'
 import { Toaster } from 'react-hot-toast'
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
-  const setUserId = useStore((s) => s.setUserId)
+  const { userId, setUserId } = useStore()
 
   useEffect(() => {
+    if (IS_DEMO_MODE) {
+      // In Demo Mode, if we have a userId in the store, we're good.
+      // If not, redirect to auth page.
+      if (!userId) {
+        router.replace('/auth')
+      }
+      return
+    }
+
     // Check auth on mount
     supabase.auth.getSession().then(({ data }) => {
       if (!data.session) {
@@ -32,7 +41,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     })
 
     return () => listener.subscription.unsubscribe()
-  }, [router, setUserId])
+  }, [router, setUserId, userId])
 
   return (
     <div className="flex h-screen overflow-hidden bg-surface-900">

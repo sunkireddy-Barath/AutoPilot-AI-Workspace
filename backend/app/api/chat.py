@@ -91,7 +91,11 @@ async def chat(request: ChatRequest):
         "metadata": {},
         "created_at": datetime.utcnow().isoformat(),
     }
-    supabase_admin.table("messages").insert(user_msg).execute()
+    if supabase_admin:
+        try:
+            supabase_admin.table("messages").insert(user_msg).execute()
+        except Exception as e:
+            print(f"Error saving user message: {e}")
 
     # 2. Broadcast: user message received, agents starting
     await manager.broadcast(conversation_id, WSEvent(
@@ -101,19 +105,24 @@ async def chat(request: ChatRequest):
     ))
 
     # 3. Load conversation history
-    history_result = (
-        supabase_admin.table("messages")
-        .select("role, content, agent_role")
-        .eq("conversation_id", conversation_id)
-        .order("created_at")
-        .limit(20)
-        .execute()
-    )
-    history = [
-        {"role": m["role"], "content": m["content"]}
-        for m in (history_result.data or [])
-        if m["id"] != user_msg["id"]
-    ]
+    history = []
+    if supabase_admin:
+        try:
+            history_result = (
+                supabase_admin.table("messages")
+                .select("role, content, agent_role")
+                .eq("conversation_id", conversation_id)
+                .order("created_at")
+                .limit(20)
+                .execute()
+            )
+            history = [
+                {"role": m["role"], "content": m["content"]}
+                for m in (history_result.data or [])
+                if m.get("id") != user_msg["id"]
+            ]
+        except Exception as e:
+            print(f"Error loading history: {e}")
 
     # 4. Run the multi-agent LangGraph pipeline
     try:
@@ -134,56 +143,68 @@ async def chat(request: ChatRequest):
 
     # 5. Persist all generated tasks
     saved_tasks = []
-    for task in final_state.get("tasks", []):
-        task_row = {
-            "id": task["id"],
-            "user_id": user_id,
-            "conversation_id": conversation_id,
-            "title": task["title"],
-            "description": task["description"],
-            "status": task.get("status", "pending"),
-            "priority": task.get("priority", "medium"),
-            "assigned_agent": task.get("assigned_agent"),
-            "progress": 0,
-            "created_at": datetime.utcnow().isoformat(),
-            "updated_at": datetime.utcnow().isoformat(),
-        }
-        try:
-            result = supabase_admin.table("tasks").insert(task_row).execute()
-            if result.data:
-                saved_tasks.append(result.data[0])
-                # Broadcast each new task
-                await manager.broadcast(conversation_id, WSEvent(
-                    event=WSEventType.TASK_CREATED,
-                    data=result.data[0],
-                    conversation_id=conversation_id,
-                ))
-        except Exception:
-            continue  # skip duplicates
+    if supabase_admin:
+        for task in final_state.get("tasks", []):
+            task_row = {
+                "id": task["id"],
+                "user_id": user_id,
+                "conversation_id": conversation_id,
+                "title": task["title"],
+                "description": task["description"],
+                "status": task.get("status", "pending"),
+                "priority": task.get("priority", "medium"),
+                "assigned_agent": task.get("assigned_agent"),
+                "progress": 0,
+                "created_at": datetime.utcnow().isoformat(),
+                "updated_at": datetime.utcnow().isoformat(),
+            }
+            try:
+                result = supabase_admin.table("tasks").insert(task_row).execute()
+                if result.data:
+                    saved_tasks.append(result.data[0])
+                    # Broadcast each new task
+                    await manager.broadcast(conversation_id, WSEvent(
+                        event=WSEventType.TASK_CREATED,
+                        data=result.data[0],
+                        conversation_id=conversation_id,
+                    ))
+            except Exception:
+                continue  # skip duplicates
+    else:
+        # Demo mode: return in-memory tasks
+        saved_tasks = final_state.get("tasks", [])
 
     # 6. Persist all agent activities
-    for activity in final_state.get("agent_activities", []):
-        try:
-            supabase_admin.table("agent_activities").insert({
-                "id": activity["id"],
-                "agent_role": activity["agent_role"],
-                "action": activity["action"],
-                "detail": activity["detail"],
-                "status": activity["status"],
-                "conversation_id": conversation_id,
-                "metadata": {},
-                "timestamp": activity["timestamp"],
-            }).execute()
+    if supabase_admin:
+        for activity in final_state.get("agent_activities", []):
+            try:
+                supabase_admin.table("agent_activities").insert({
+                    "id": activity["id"],
+                    "agent_role": activity["agent_role"],
+                    "action": activity["action"],
+                    "detail": activity["detail"],
+                    "status": activity["status"],
+                    "conversation_id": conversation_id,
+                    "metadata": {},
+                    "timestamp": activity["timestamp"],
+                }).execute()
+                await manager.broadcast(conversation_id, WSEvent(
+                    event=WSEventType.AGENT_ACTIVITY,
+                    data=activity,
+                    conversation_id=conversation_id,
+                ))
+            except Exception:
+                continue
+    else:
+        # Demo mode: broadcast activities only
+        for activity in final_state.get("agent_activities", []):
             await manager.broadcast(conversation_id, WSEvent(
                 event=WSEventType.AGENT_ACTIVITY,
                 data=activity,
                 conversation_id=conversation_id,
             ))
-        except Exception:
-            continue
 
     # 7. Save the synthesized assistant response
-    # Combine PM + analyst as the "main" response visible in chat
     combined_response = _build_chat_response(final_state)
     assistant_msg = {
         "id": str(uuid4()),
@@ -197,12 +218,15 @@ async def chat(request: ChatRequest):
         },
         "created_at": datetime.utcnow().isoformat(),
     }
-    supabase_admin.table("messages").insert(assistant_msg).execute()
-
-    # 8. Update conversation updated_at
-    supabase_admin.table("conversations").update(
-        {"updated_at": datetime.utcnow().isoformat()}
-    ).eq("id", conversation_id).execute()
+    if supabase_admin:
+        try:
+            supabase_admin.table("messages").insert(assistant_msg).execute()
+            # 8. Update conversation updated_at
+            supabase_admin.table("conversations").update(
+                {"updated_at": datetime.utcnow().isoformat()}
+            ).eq("id", conversation_id).execute()
+        except Exception:
+            pass
 
     # 9. Broadcast workflow update and stream_done
     await manager.broadcast(conversation_id, WSEvent(

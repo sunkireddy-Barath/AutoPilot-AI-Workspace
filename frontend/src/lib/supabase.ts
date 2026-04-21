@@ -3,6 +3,9 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
 
+// Detect if we are in Demo Mode (using dummy keys or missing keys)
+export const IS_DEMO_MODE = !supabaseUrl || supabaseUrl.includes('dummy') || !supabaseKey || supabaseKey.includes('dummy')
+
 export const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: {
     autoRefreshToken: true,

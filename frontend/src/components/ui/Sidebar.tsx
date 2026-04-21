@@ -14,7 +14,7 @@ import {
   Zap
 } from 'lucide-react'
 import { useStore } from '@/lib/store'
-import { supabase } from '@/lib/supabase'
+import { supabase, IS_DEMO_MODE } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 
 const navigation = [
@@ -27,9 +27,14 @@ const navigation = [
 
 export default function Sidebar() {
   const pathname = usePathname()
-  const sidebarOpen = useStore((s) => s.sidebarOpen)
+  const { sidebarOpen, setUserId } = useStore()
 
   const handleLogout = async () => {
+    if (IS_DEMO_MODE) {
+      setUserId(null)
+      window.location.href = '/auth'
+      return
+    }
     await supabase.auth.signOut()
   }
 

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
+import { supabase, IS_DEMO_MODE } from '@/lib/supabase'
 import { useStore } from '@/lib/store'
 import toast from 'react-hot-toast'
 
@@ -19,6 +19,15 @@ export default function AuthPage() {
     e.preventDefault()
     setLoading(true)
     try {
+      if (IS_DEMO_MODE) {
+        // DEMO BYPASS: Simulate successful login
+        const demoUserId = `demo-user-${email.split('@')[0] || '123'}`
+        setUserId(demoUserId)
+        toast.success(mode === 'signup' ? '✨ Demo account created!' : '🚀 Demo login successful!')
+        setTimeout(() => router.replace('/dashboard'), 500)
+        return
+      }
+
       if (mode === 'signup') {
         const { data, error } = await supabase.auth.signUp({ email, password })
         if (error) throw error
