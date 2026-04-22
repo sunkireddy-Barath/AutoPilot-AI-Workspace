@@ -11,27 +11,28 @@ export default function ChatPage() {
   const [initializing, setInitializing] = useState(true)
 
   useEffect(() => {
-    if (!userId) return
+    if (!userId) {
+      setInitializing(false)
+      return
+    }
 
     const initChat = async () => {
       try {
-        // Try to find an existing conversation or create a new one
         const data = await conversationsApi.list(userId) as any[]
         
         if (data.length > 0) {
           const latest = data[0]
           setActiveConversation(latest.id)
-          // Fetch messages for this conversation
           const msgs = await conversationsApi.getMessages(latest.id)
           setMessages(msgs as any[])
         } else {
-          // Create initial conversation
           const newConv = await conversationsApi.create(userId, "New Project Analysis") as any
           setActiveConversation(newConv.id)
           setMessages([])
         }
       } catch (error) {
         console.error('Failed to initialize chat:', error)
+        // Set a dummy ID or handle error UI if needed
       } finally {
         setInitializing(false)
       }

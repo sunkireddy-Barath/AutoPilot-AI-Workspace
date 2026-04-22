@@ -31,8 +31,13 @@ export default function TaskItem({ task, index }: TaskItemProps) {
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.05 }}
-      className="p-4 hover:bg-white/5 transition-colors group flex items-start gap-4 border-b border-white/5 last:border-0"
+      whileHover={{ x: 4, backgroundColor: 'rgba(255,255,255,0.05)' }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ 
+        delay: index * 0.05,
+        backgroundColor: { duration: 0.2 } 
+      }}
+      className="p-4 group flex items-start gap-4 border-b border-white/5 last:border-0 cursor-pointer transition-colors"
     >
       <div className={cn(
         "mt-1 p-1 rounded-full",

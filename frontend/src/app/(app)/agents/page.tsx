@@ -4,8 +4,13 @@ import DashboardHeader from '@/components/dashboard/DashboardHeader'
 import AgentGrid from '@/components/agents/AgentGrid'
 import { motion } from 'framer-motion'
 import { Shield, Zap, Info, Play, Pause } from 'lucide-react'
+import { useStore } from '@/lib/store'
+import { cn } from '@/lib/utils'
+import toast from 'react-hot-toast'
 
 export default function AgentsPage() {
+  const { isAgentsRunning, setAgentsRunning } = useStore()
+
   return (
     <div className="p-8 max-w-7xl mx-auto flex flex-col gap-8">
       <DashboardHeader 
@@ -24,18 +29,42 @@ export default function AgentsPage() {
             <Zap className="h-6 w-6 text-white" />
           </div>
           <div>
-            <div className="text-lg font-bold text-white leading-tight">Neural Core V4 — Operational</div>
+            <div className="text-lg font-bold text-white leading-tight">
+              Neural Core V4 — {isAgentsRunning ? 'Operational' : 'Paused'}
+            </div>
             <p className="text-xs text-slate-400 mt-1">
-              All agent clusters are online and synchronized with the LangGraph orchestrator.
+              {isAgentsRunning 
+                ? 'All agent clusters are online and synchronized with the LangGraph orchestrator.'
+                : 'All agent processes are currently paused. Click resume to restore operations.'}
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-700 border border-white/5 text-xs font-bold text-slate-300 hover:text-white hover:bg-surface-600 transition-all">
+          <button 
+            onClick={() => {
+              setAgentsRunning(false)
+              toast.error('AI execution paused globally')
+            }}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all",
+              !isAgentsRunning ? "bg-surface-800 text-slate-600 cursor-not-allowed" : "bg-surface-700 border border-white/5 text-slate-300 hover:text-white hover:bg-surface-600"
+            )}
+            disabled={!isAgentsRunning}
+          >
             <Pause className="h-3 w-3" /> PAUSE ALL
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-600 text-xs font-bold text-white hover:bg-brand-500 shadow-glow-brand transition-all">
+          <button 
+            onClick={() => {
+              setAgentsRunning(true)
+              toast.success('AI execution resumed')
+            }}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold shadow-glow-brand transition-all",
+              isAgentsRunning ? "bg-brand-800 text-white/50 cursor-not-allowed" : "bg-brand-600 text-white hover:bg-brand-500"
+            )}
+            disabled={isAgentsRunning}
+          >
             <Play className="h-3 w-3" /> RESUME ALL
           </button>
         </div>

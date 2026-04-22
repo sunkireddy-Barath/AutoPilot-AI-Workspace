@@ -16,7 +16,7 @@ import {
 } from '@xyflow/react'
 import dagre from 'dagre'
 import '@xyflow/react/dist/style.css'
-import { useStore } from '@/lib/store'
+import { useStore, AgentRole } from '@/lib/store'
 import AgentNode from './AgentNode'
 import TaskNode from './TaskNode'
 
@@ -78,7 +78,7 @@ export default function WorkflowGraph() {
     // Enrich agent nodes with current status from store
     const enrichedNodes = workflowNodes.map(node => {
       if (node.type === 'agent') {
-        const role = node.data.role as any
+        const role = node.data.role as AgentRole
         return {
           ...node,
           data: { ...node.data, status: agentStatuses[role] || 'idle' }
@@ -120,6 +120,7 @@ export default function WorkflowGraph() {
         fitView
         colorMode="dark"
         proOptions={{ hideAttribution: true }}
+        className="cursor-grab active:cursor-grabbing"
       >
         <Background 
           variant={BackgroundVariant.Dots} 

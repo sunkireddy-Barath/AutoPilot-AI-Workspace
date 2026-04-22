@@ -40,30 +40,23 @@ export default function ChatInput({ onSend, disabled, loading }: ChatInputProps)
   return (
     <div className="p-4 bg-surface-900 border-t border-white/5">
       <div className="max-w-4xl mx-auto relative group">
-        {/* Glow effect on focus */}
-        <div className="absolute -inset-0.5 bg-gradient-to-r from-brand-600 to-purple-600 rounded-2xl blur opacity-20 group-focus-within:opacity-60 transition duration-700 group-focus-within:duration-300" />
-        
-        <div className="relative glass-strong flex flex-col gap-2 p-2 focus-within:ring-2 focus-within:ring-brand-500/60 transition-all duration-300 bg-surface-900/40 backdrop-blur-md">
+        <div className={cn(
+          "relative glass-strong flex flex-col gap-2 p-2 focus-within:ring-2 focus-within:ring-brand-500/60 transition-all duration-300 bg-surface-900/40 backdrop-blur-md",
+          "hover:border-white/10 focus-within:bg-surface-900/60"
+        )}>
           <textarea
             ref={textareaRef}
             rows={1}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Tell AutoPilot your next goal..."
+            placeholder={disabled ? "No active session. Click 'New Session' to start." : "Tell AutoPilot your next goal..."}
             className="w-full bg-transparent border-none outline-none text-slate-100 placeholder-slate-500 resize-none py-3 px-4 text-sm min-h-[48px]"
             disabled={disabled || loading}
           />
 
           <div className="flex items-center justify-between px-2 pb-1">
             <div className="flex items-center gap-1">
-              <button className="p-2 text-slate-500 hover:text-brand-300 hover:bg-brand-500/10 rounded-lg transition-all duration-300" title="Attach file">
-                <Paperclip className="h-4 w-4" />
-              </button>
-              <button className="p-2 text-slate-500 hover:text-brand-300 hover:bg-brand-500/10 rounded-lg transition-all duration-300" title="Voice input">
-                <Mic className="h-4 w-4" />
-              </button>
-              <div className="w-px h-4 bg-white/10 mx-1" />
               <div className="relative flex items-center gap-1.5 px-2 py-1 rounded-lg bg-brand-500/10 text-[10px] font-black uppercase text-brand-400 tracking-wider border border-brand-500/20 overflow-hidden group/badge">
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/badge:animate-[shimmer_1.5s_infinite]" />
                 <Sparkles className="h-3 w-3 animate-pulse text-brand-300" />
@@ -71,8 +64,10 @@ export default function ChatInput({ onSend, disabled, loading }: ChatInputProps)
               </div>
             </div>
 
-            <button
+            <motion.button
               onClick={handleSend}
+              whileHover={input.trim() && !loading ? { scale: 1.05, y: -1 } : {}}
+              whileTap={input.trim() && !loading ? { scale: 0.95 } : {}}
               disabled={!input.trim() || disabled || loading}
               className={cn(
                 "p-2.5 rounded-xl transition-all duration-300 active:scale-95 relative overflow-hidden group/btn",
@@ -103,7 +98,7 @@ export default function ChatInput({ onSend, disabled, loading }: ChatInputProps)
                   </motion.div>
                 )}
               </AnimatePresence>
-            </button>
+            </motion.button>
           </div>
         </div>
         

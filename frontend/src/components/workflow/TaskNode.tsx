@@ -4,6 +4,7 @@ import { memo } from 'react'
 import { Handle, Position, NodeProps } from '@xyflow/react'
 import { cn } from '@/lib/utils'
 import { CheckCircle2, Clock, Circle, AlertCircle } from 'lucide-react'
+import { motion } from 'framer-motion'
 
 export default memo(function TaskNode({ data, selected }: NodeProps) {
   const status = data.status as string || 'pending'
@@ -19,10 +20,13 @@ export default memo(function TaskNode({ data, selected }: NodeProps) {
   }[status] || Circle
 
   return (
-    <div className={cn(
-      "px-4 py-3 rounded-xl glass border-2 min-w-[220px] transition-all",
-      selected ? "border-brand-500 shadow-glow-brand" : "border-white/5"
-    )}>
+    <motion.div 
+      whileHover={{ scale: 1.02, y: -2 }}
+      className={cn(
+        "px-4 py-3 rounded-xl glass border-2 min-w-[220px] transition-all cursor-pointer",
+        selected ? "border-brand-500 shadow-glow-brand" : "border-white/5 hover:border-brand-500/30"
+      )}
+    >
       <Handle type="target" position={Position.Top} className="w-2 h-2 bg-slate-500 border-none" />
       
       <div className="flex items-start gap-3">
@@ -67,6 +71,6 @@ export default memo(function TaskNode({ data, selected }: NodeProps) {
       </div>
 
       <Handle type="source" position={Position.Bottom} className="w-2 h-2 bg-slate-500 border-none" />
-    </div>
+    </motion.div>
   )
 })

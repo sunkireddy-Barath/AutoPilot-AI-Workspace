@@ -27,11 +27,14 @@ export default memo(function AgentNode({ data, selected }: NodeProps) {
   const status = data.status as string || 'idle'
 
   return (
-    <div className={cn(
-      "px-5 py-4 rounded-2xl glass-strong border-2 min-w-[200px] transition-all relative overflow-hidden group",
-      selected ? "border-brand-500/50 shadow-glow-brand scale-105" : "border-white/10 shadow-xl",
-      status === 'thinking' && "ring-2 ring-yellow-400/30 ring-offset-2 ring-offset-surface-900"
-    )}>
+    <motion.div 
+      whileHover={{ scale: 1.02, y: -2 }}
+      className={cn(
+        "px-5 py-4 rounded-2xl glass-strong border-2 min-w-[200px] transition-all relative overflow-hidden group cursor-pointer",
+        selected ? "border-brand-500/50 shadow-glow-brand" : "border-white/10 shadow-xl hover:border-brand-500/30",
+        status === 'thinking' && "ring-2 ring-yellow-400/30 ring-offset-2 ring-offset-surface-900"
+      )}
+    >
       {/* Background Animated Gradient for Thinking State */}
       {status === 'thinking' && (
         <motion.div 
@@ -89,6 +92,6 @@ export default memo(function AgentNode({ data, selected }: NodeProps) {
       </div>
 
       <Handle type="source" position={Position.Bottom} className="w-3 h-3 bg-brand-500 border-2 border-surface-900" />
-    </div>
+    </motion.div>
   )
 })

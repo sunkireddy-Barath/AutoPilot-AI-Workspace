@@ -19,8 +19,9 @@ interface StatCardProps {
 export default function StatCard({ label, value, icon: Icon, color, trend }: StatCardProps) {
   return (
     <motion.div
-      whileHover={{ y: -4 }}
-      className="glass p-6 flex flex-col gap-4 relative overflow-hidden group"
+      whileHover={{ y: -4, scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      className="glass p-6 flex flex-col gap-4 relative overflow-hidden group cursor-pointer transition-shadow hover:shadow-glow-brand/20"
     >
       <div 
         className="absolute top-0 right-0 w-24 h-24 blur-[60px] opacity-20 pointer-events-none -translate-y-12 translate-x-12"

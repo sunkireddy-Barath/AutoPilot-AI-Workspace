@@ -26,6 +26,7 @@ export default function ChatWindow() {
     messages, 
     setMessages, 
     addMessage,
+    setActiveConversation,
     streamingContent,
     appendStreamChunk,
     clearStream,
@@ -135,6 +136,23 @@ export default function ChatWindow() {
     }
   }
 
+  const handleNewSession = async () => {
+    if (!userId) return
+    
+    setLoading(true)
+    try {
+      const newConv = await conversationsApi.create(userId, "New Analysis Session") as any
+      setActiveConversation(newConv.id)
+      setMessages([])
+      toast.success('Started new session')
+    } catch (error) {
+      toast.error('Failed to create new session')
+      console.error(error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="flex flex-col h-full bg-surface-900">
       {/* Header */}
@@ -156,7 +174,11 @@ export default function ChatWindow() {
           <button className="btn-ghost p-2" title="History"><History className="h-4 w-4" /></button>
           <button className="btn-ghost p-2" title="Settings"><Settings2 className="h-4 w-4" /></button>
           <div className="w-px h-4 bg-white/10 mx-1" />
-          <button className="btn-primary flex items-center gap-2 py-1.5 px-3">
+          <button 
+            onClick={handleNewSession}
+            disabled={loading}
+            className="btn-primary flex items-center gap-2 py-1.5 px-3 disabled:opacity-50"
+          >
             <PlusCircle className="h-4 w-4" />
             <span className="text-xs">New Session</span>
           </button>

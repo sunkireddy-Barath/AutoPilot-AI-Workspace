@@ -66,28 +66,33 @@ export default function Sidebar() {
         {navigation.map((item) => {
           const isActive = pathname === item.href
           return (
-            <Link
+            <motion.div
               key={item.name}
-              href={item.href}
-              className={cn(
-                "group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
-                isActive 
-                  ? "bg-brand-600/10 text-brand-400 shadow-[inset_0_0_20px_rgba(99,102,241,0.05)]" 
-                  : "text-slate-400 hover:bg-white/5 hover:text-white"
-              )}
+              whileHover={{ x: 4 }}
+              whileTap={{ scale: 0.98 }}
             >
-              <item.icon className={cn(
-                "h-5 w-5 flex-shrink-0 transition-colors",
-                isActive ? "text-brand-400" : "text-slate-400 group-hover:text-white"
-              )} />
-              {sidebarOpen && <span className="ml-3 truncate">{item.name}</span>}
-              {isActive && (
-                <motion.div
-                  layoutId="active-nav"
-                  className="ml-auto h-1.5 w-1.5 rounded-full bg-brand-500 shadow-glow-brand"
-                />
-              )}
-            </Link>
+              <Link
+                href={item.href}
+                className={cn(
+                  "group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
+                  isActive 
+                    ? "bg-brand-600/10 text-brand-400 shadow-[inset_0_0_20px_rgba(99,102,241,0.05)]" 
+                    : "text-slate-400 hover:bg-white/5 hover:text-white"
+                )}
+              >
+                <item.icon className={cn(
+                  "h-5 w-5 flex-shrink-0 transition-colors",
+                  isActive ? "text-brand-400" : "text-slate-400 group-hover:text-white"
+                )} />
+                {sidebarOpen && <span className="ml-3 truncate">{item.name}</span>}
+                {isActive && (
+                  <motion.div
+                    layoutId="active-nav"
+                    className="ml-auto h-1.5 w-1.5 rounded-full bg-brand-500 shadow-glow-brand"
+                  />
+                )}
+              </Link>
+            </motion.div>
           )
         })}
       </nav>
