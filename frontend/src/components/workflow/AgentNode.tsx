@@ -28,52 +28,67 @@ export default memo(function AgentNode({ data, selected }: NodeProps) {
 
   return (
     <div className={cn(
-      "px-4 py-3 rounded-xl glass-strong border-2 min-w-[180px] transition-all",
-      selected ? "border-brand-500 shadow-glow-brand" : "border-white/10"
+      "px-5 py-4 rounded-2xl glass-strong border-2 min-w-[200px] transition-all relative overflow-hidden group",
+      selected ? "border-brand-500/50 shadow-glow-brand scale-105" : "border-white/10 shadow-xl",
+      status === 'thinking' && "ring-2 ring-yellow-400/30 ring-offset-2 ring-offset-surface-900"
     )}>
-      <Handle type="target" position={Position.Top} className="w-2 h-2 bg-brand-500 border-none" />
+      {/* Background Animated Gradient for Thinking State */}
+      {status === 'thinking' && (
+        <motion.div 
+          className="absolute inset-0 bg-gradient-to-r from-yellow-400/5 via-transparent to-yellow-400/5"
+          animate={{ x: ['-100%', '100%'] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+        />
+      )}
+
+      <Handle type="target" position={Position.Top} className="w-3 h-3 bg-brand-500 border-2 border-surface-900" />
       
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-4 relative z-10">
         <div className={cn(
-          "w-10 h-10 rounded-lg flex items-center justify-center text-xl",
-          role === 'product_manager' ? "bg-agent-pm/20" :
-          role === 'developer' ? "bg-agent-dev/20" :
-          role === 'marketing' ? "bg-agent-marketing/20" :
-          role === 'analyst' ? "bg-agent-analyst/20" : "bg-brand-500/20"
+          "w-12 h-12 rounded-xl flex items-center justify-center text-2xl shadow-inner",
+          role === 'product_manager' ? "bg-agent-pm/20 text-agent-pm" :
+          role === 'developer' ? "bg-agent-dev/20 text-agent-dev" :
+          role === 'marketing' ? "bg-agent-marketing/20 text-agent-marketing" :
+          role === 'analyst' ? "bg-agent-analyst/20 text-agent-analyst" : "bg-brand-500/20 text-brand-400"
         )}>
           {agentIcons[role]}
         </div>
         
-        <div>
-          <div className="text-[10px] font-black uppercase tracking-tighter text-slate-500">Agent</div>
-          <div className="text-sm font-bold text-white">{agentLabels[role]}</div>
+        <div className="flex-1">
+          <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-0.5">Agent Node</div>
+          <div className="text-base font-bold text-white tracking-tight leading-tight">{agentLabels[role]}</div>
         </div>
       </div>
 
-      <div className="mt-3 flex items-center justify-between">
-        <div className="flex items-center gap-1.5">
-          <div className={cn(
-            "w-2 h-2 rounded-full",
-            status === 'thinking' ? "bg-yellow-400 animate-pulse" :
-            status === 'active' ? "bg-green-400" : "bg-slate-500"
-          )} />
-          <span className="text-[10px] font-medium text-slate-400 uppercase tracking-widest">{status}</span>
+      <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between relative z-10">
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <div className={cn(
+              "w-2.5 h-2.5 rounded-full shadow-sm",
+              status === 'thinking' ? "bg-yellow-400" :
+              status === 'active' ? "bg-green-400" : "bg-slate-500"
+            )} />
+            {status === 'thinking' && (
+              <div className="absolute inset-0 rounded-full bg-yellow-400 animate-ping opacity-75" />
+            )}
+          </div>
+          <span className={cn(
+            "text-[10px] font-bold uppercase tracking-widest",
+            status === 'thinking' ? "text-yellow-400/80" :
+            status === 'active' ? "text-green-400/80" : "text-slate-500"
+          )}>{status}</span>
         </div>
         
         {status === 'thinking' && (
-          <motion.div 
-            className="flex gap-0.5"
-            animate={{ opacity: [0.3, 1, 0.3] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
-          >
-            {[0, 1, 2].map(i => (
-              <div key={i} className="w-0.5 h-2 bg-brand-500/50 rounded-full" />
-            ))}
-          </motion.div>
+          <div className="text-[10px] font-medium text-slate-400 flex items-center gap-1">
+            <span className="w-1 h-1 rounded-full bg-slate-600 animate-bounce" style={{ animationDelay: '0s' }} />
+            <span className="w-1 h-1 rounded-full bg-slate-600 animate-bounce" style={{ animationDelay: '0.2s' }} />
+            <span className="w-1 h-1 rounded-full bg-slate-600 animate-bounce" style={{ animationDelay: '0.4s' }} />
+          </div>
         )}
       </div>
 
-      <Handle type="source" position={Position.Bottom} className="w-2 h-2 bg-brand-500 border-none" />
+      <Handle type="source" position={Position.Bottom} className="w-3 h-3 bg-brand-500 border-2 border-surface-900" />
     </div>
   )
 })

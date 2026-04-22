@@ -27,7 +27,12 @@ const navigation = [
 
 export default function Sidebar() {
   const pathname = usePathname()
-  const { sidebarOpen, setUserId } = useStore()
+  const { 
+    sidebarOpen, 
+    setUserId, 
+    autonomousMode, 
+    setAutonomousMode 
+  } = useStore()
 
   const handleLogout = async () => {
     if (IS_DEMO_MODE) {
@@ -87,7 +92,32 @@ export default function Sidebar() {
         })}
       </nav>
 
-      <div className="border-t border-white/5 p-4">
+      <div className="border-t border-white/5 p-4 space-y-4">
+        {/* Autonomous Mode Toggle */}
+        <div className={cn(
+          "flex items-center rounded-xl px-3 py-2.5 bg-surface-900/50 border border-white/5",
+          sidebarOpen ? "justify-between" : "justify-center"
+        )}>
+          {sidebarOpen && (
+            <div className="flex flex-col">
+              <span className="text-[10px] font-black uppercase tracking-tighter text-brand-400">Autonomous</span>
+              <span className="text-xs text-slate-300 font-medium">Mode</span>
+            </div>
+          )}
+          <button 
+            onClick={() => setAutonomousMode(!autonomousMode)}
+            className={cn(
+              "relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-200",
+              autonomousMode ? "bg-brand-600 shadow-glow-brand" : "bg-surface-800"
+            )}
+          >
+            <span className={cn(
+              "inline-block h-3 w-3 transform rounded-full bg-white transition-transform duration-200",
+              autonomousMode ? "translate-x-5" : "translate-x-1"
+            )} />
+          </button>
+        </div>
+
         <button
           onClick={handleLogout}
           className="group flex w-full items-center rounded-xl px-3 py-2.5 text-sm font-medium text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-all duration-200"

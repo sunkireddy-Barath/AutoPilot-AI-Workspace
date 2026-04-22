@@ -26,6 +26,7 @@ from app.models.schemas import (
 )
 from app.orchestrator.langgraph_engine import AutoPilotOrchestrator
 from app.db.supabase_client import supabase_admin
+from app.utils.events import global_bus
 
 router = APIRouter(tags=["chat"])
 
@@ -67,6 +68,36 @@ class ConnectionManager:
 
 
 manager = ConnectionManager()
+
+# ── Event Bus Subscription ─────────────────────────────────────────────
+
+async def on_bus_event(event_type: str, data: dict):
+    """
+    Called when the orchestrator emits an event.
+    Automatically wraps it in a WSEvent and broadcasts it.
+    """
+    conversation_id = data.get("conversation_id")
+    if not conversation_id:
+        return
+
+    ws_event_type = None
+    if event_type == "agent_activity":
+        ws_event_type = WSEventType.AGENT_ACTIVITY
+    elif event_type == "task_created":
+        ws_event_type = WSEventType.TASK_CREATED
+    elif event_type == "agent_thinking":
+        ws_event_type = WSEventType.AGENT_THINKING
+    
+    if ws_event_type:
+        event = WSEvent(
+            event=ws_event_type,
+            data=data.get("activity") or data.get("task") or data.get("data"),
+            conversation_id=conversation_id
+        )
+        await manager.broadcast(conversation_id, event)
+
+# Start subscription
+global_bus.subscribe(on_bus_event)
 
 
 # ── REST Chat Endpoint ────────────────────────────────────────────────

@@ -12,6 +12,7 @@ import re
 from typing import TypedDict, List, Dict, Any, Optional, Annotated
 from datetime import datetime
 from uuid import uuid4
+from app.utils.events import global_bus
 
 from langgraph.graph import StateGraph, END
 from langgraph.graph.message import add_messages
@@ -147,6 +148,7 @@ class AutoPilotOrchestrator:
                     state["conversation_id"]
                 )
                 state["agent_activities"].append(activity)
+                await global_bus.emit("agent_activity", {"conversation_id": state["conversation_id"], "activity": activity})
         return state
 
     async def _pm_node(self, state: AgentState) -> AgentState:
@@ -159,14 +161,25 @@ class AutoPilotOrchestrator:
             state["conversation_id"]
         )
         state["agent_activities"].append(activity)
+        await global_bus.emit("agent_activity", {"conversation_id": state["conversation_id"], "activity": activity})
 
         context = f"Goal: {state['user_goal']}\nIteration: {state['iteration']}"
         response = await self.pm.think(context, self._get_history(state))
         state["pm_response"] = response
         
+        reasoning = self._extract_reasoning(response)
+        if reasoning:
+            activity = self._create_activity(
+                AgentRole.PRODUCT_MANAGER, "Thinking", reasoning, "completed", state["conversation_id"]
+            )
+            await global_bus.emit("agent_activity", {"conversation_id": state["conversation_id"], "activity": activity})
+
         new_tasks = self._extract_tasks(response, "tasks", state)
         state["tasks"].extend(new_tasks)
         
+        for task in new_tasks:
+             await global_bus.emit("task_created", {"conversation_id": state["conversation_id"], "task": task})
+
         state["messages"].append(AIMessage(content=response, additional_kwargs={"agent_role": "product_manager"}))
         return state
 
@@ -175,7 +188,16 @@ class AutoPilotOrchestrator:
         dev_ll = self.dev.llm.bind_tools([write_workspace_file])
         context = f"Specs for: {state['pm_response'][:500]}"
         response = await dev_ll.ainvoke(self.dev._build_messages(context, self._get_history(state)))
-        state["dev_response"] = response.content
+        content = response.content
+        state["dev_response"] = content
+        
+        reasoning = self._extract_reasoning(content)
+        if reasoning:
+            activity = self._create_activity(
+                AgentRole.DEVELOPER, "Thinking", reasoning, "completed", state["conversation_id"]
+            )
+            await global_bus.emit("agent_activity", {"conversation_id": state["conversation_id"], "activity": activity})
+            
         state["messages"].append(response)
         return state
 
@@ -184,7 +206,16 @@ class AutoPilotOrchestrator:
         mkt_ll = self.marketing.llm.bind_tools([google_research_simulation])
         context = f"Strategy for: {state['user_goal']}"
         response = await mkt_ll.ainvoke(self.marketing._build_messages(context, self._get_history(state)))
-        state["marketing_response"] = response.content
+        content = response.content
+        state["marketing_response"] = content
+        
+        reasoning = self._extract_reasoning(content)
+        if reasoning:
+            activity = self._create_activity(
+                AgentRole.MARKETING, "Thinking", reasoning, "completed", state["conversation_id"]
+            )
+            await global_bus.emit("agent_activity", {"conversation_id": state["conversation_id"], "activity": activity})
+
         state["messages"].append(response)
         return state
 
@@ -192,6 +223,14 @@ class AutoPilotOrchestrator:
         state["current_agent"] = "analyst"
         response = await self.analyst.think("Evaluate full plan coherence.", self._get_history(state))
         state["analyst_response"] = response
+        
+        reasoning = self._extract_reasoning(response)
+        if reasoning:
+            activity = self._create_activity(
+                AgentRole.ANALYST, "Thinking", reasoning, "completed", state["conversation_id"]
+            )
+            await global_bus.emit("agent_activity", {"conversation_id": state["conversation_id"], "activity": activity})
+
         state["messages"].append(AIMessage(content=response, additional_kwargs={"agent_role": "analyst"}))
         return state
 
@@ -235,6 +274,13 @@ class AutoPilotOrchestrator:
                     })
             except: continue
         return tasks
+
+    def _extract_reasoning(self, response):
+        """Extract content within <thinking> tags."""
+        match = re.search(r"<thinking>([\s\S]*?)</thinking>", response)
+        if match:
+            return match.group(1).strip()
+        return None
 
     def _build_workflow_graph(self, tasks):
         nodes = [{"id": "goal", "type": "goal", "data": {"label": "🎯 Goal"}, "position": {"x": 400, "y": 50}}]

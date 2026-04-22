@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { 
   ReactFlow, 
   Controls, 
@@ -14,6 +14,7 @@ import {
   Panel,
   MiniMap
 } from '@xyflow/react'
+import dagre from 'dagre'
 import '@xyflow/react/dist/style.css'
 import { useStore } from '@/lib/store'
 import AgentNode from './AgentNode'
@@ -24,16 +25,83 @@ const nodeTypes = {
   task: TaskNode,
 }
 
+const dagreGraph = new dagre.graphlib.Graph()
+dagreGraph.setDefaultEdgeLabel(() => ({}))
+
+const nodeWidth = 200
+const nodeHeight = 100
+
+const getLayoutedElements = (nodes: any[], edges: any[], direction = 'TB') => {
+  const isHorizontal = direction === 'LR'
+  dagreGraph.setGraph({ rankdir: direction })
+
+  nodes.forEach((node) => {
+    dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight })
+  })
+
+  edges.forEach((edge) => {
+    dagreGraph.setEdge(edge.source, edge.target)
+  })
+
+  dagre.layout(dagreGraph)
+
+  const layoutedNodes = nodes.map((node) => {
+    const nodeWithPosition = dagreGraph.node(node.id)
+    return {
+      ...node,
+      targetPosition: isHorizontal ? 'left' : 'top',
+      sourcePosition: isHorizontal ? 'right' : 'bottom',
+      position: {
+        x: nodeWithPosition.x - nodeWidth / 2,
+        y: nodeWithPosition.y - nodeHeight / 2,
+      },
+    }
+  })
+
+  return { nodes: layoutedNodes, edges }
+}
+
 export default function WorkflowGraph() {
-  const { workflowNodes, workflowEdges } = useStore()
+  const { 
+    workflowNodes, 
+    workflowEdges, 
+    agentStatuses,
+    isAgentsRunning 
+  } = useStore()
   const [nodes, setNodes, onNodesChange] = useNodesState([])
   const [edges, setEdges, onEdgesChange] = useEdgesState([])
 
-  // Sync with store
+  // Sync with store and apply layout
   useEffect(() => {
-    setNodes(workflowNodes as any)
-    setEdges(workflowEdges as any)
-  }, [workflowNodes, workflowEdges, setNodes, setEdges])
+    if (workflowNodes.length === 0) return
+
+    // Enrich agent nodes with current status from store
+    const enrichedNodes = workflowNodes.map(node => {
+      if (node.type === 'agent') {
+        const role = node.data.role as any
+        return {
+          ...node,
+          data: { ...node.data, status: agentStatuses[role] || 'idle' }
+        }
+      }
+      return node
+    })
+
+    // Animate edges if agents are running
+    const enrichedEdges = workflowEdges.map(edge => ({
+      ...edge,
+      animated: isAgentsRunning,
+      style: { stroke: isAgentsRunning ? '#6366f1' : 'rgba(255,255,255,0.1)', strokeWidth: 2 },
+    }))
+
+    const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
+      enrichedNodes,
+      enrichedEdges
+    )
+    
+    setNodes(layoutedNodes as any)
+    setEdges(layoutedEdges as any)
+  }, [workflowNodes, workflowEdges, agentStatuses, isAgentsRunning, setNodes, setEdges])
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
@@ -60,19 +128,15 @@ export default function WorkflowGraph() {
           color="rgba(255,255,255,0.05)" 
         />
         
-        <Panel position="top-right" className="glass p-2 flex flex-col gap-2">
+        <Panel position="top-right" className="glass p-2 flex flex-col gap-1">
           <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-2 mb-1">Graph Legend</div>
           <div className="flex items-center gap-2 px-2">
             <div className="w-2 h-2 rounded-full bg-brand-500" />
-            <span className="text-[10px] text-slate-300 font-medium">Data Pipe</span>
+            <span className="text-[10px] text-slate-300 font-medium">Data Pipeline</span>
           </div>
           <div className="flex items-center gap-2 px-2">
             <div className="w-2 h-2 rounded-full bg-agent-dev" />
             <span className="text-[10px] text-slate-300 font-medium">Agent Node</span>
-          </div>
-          <div className="flex items-center gap-2 px-2">
-            <div className="w-2 h-2 rounded-full bg-slate-500" />
-            <span className="text-[10px] text-slate-300 font-medium">Task Node</span>
           </div>
         </Panel>
 
