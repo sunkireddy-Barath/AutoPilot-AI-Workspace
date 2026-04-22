@@ -57,6 +57,7 @@ module.exports = {
         'glow':         'glow 2s ease-in-out infinite alternate',
         'slide-in':     'slideIn 0.3s ease-out',
         'fade-in':      'fadeIn 0.4s ease-out',
+        'shimmer':      'shimmer 2.5s infinite',
       },
       keyframes: {
         glow: {
@@ -70,6 +71,9 @@ module.exports = {
         fadeIn: {
           from: { opacity: '0', transform: 'translateY(4px)' },
           to:   { opacity: '1', transform: 'translateY(0)' },
+        },
+        shimmer: {
+          '100%': { transform: 'translateX(100%)' },
         },
       },
       boxShadow: {
