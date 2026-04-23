@@ -11,7 +11,8 @@ const agentColors: Record<AgentRole, string> = {
   developer: '#06B6D4',
   marketing: '#F59E0B',
   analyst: '#10B981',
-  orchestrator: '#6366f1'
+  orchestrator: '#6366f1',
+  operations: '#EC4899'
 }
 
 interface TaskItemProps {

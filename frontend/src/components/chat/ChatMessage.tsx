@@ -11,7 +11,8 @@ const agentAvatars: Record<AgentRole, string> = {
   developer: '💻',
   marketing: '📣',
   analyst: '📊',
-  orchestrator: '🚀'
+  orchestrator: '🚀',
+  operations: '⚙️'
 }
 
 const agentColors: Record<AgentRole, string> = {
@@ -19,7 +20,8 @@ const agentColors: Record<AgentRole, string> = {
   developer: 'text-agent-dev bg-agent-dev/10',
   marketing: 'text-agent-marketing bg-agent-marketing/10',
   analyst: 'text-agent-analyst bg-agent-analyst/10',
-  orchestrator: 'text-brand-400 bg-brand-400/10'
+  orchestrator: 'text-brand-400 bg-brand-400/10',
+  operations: 'text-pink-400 bg-pink-400/10'
 }
 
 interface ChatMessageProps {
@@ -56,7 +58,7 @@ export default function ChatMessage({ message }: ChatMessageProps) {
       <div className="flex-1 min-w-0 space-y-2">
         <div className="flex items-center gap-2">
           <span className="text-sm font-bold text-white">
-            {isUser ? 'You' : (message.agent_role ? message.agent_role.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : 'AutoPilot AI')}
+            {isUser ? 'You' : (message.agent_role ? message.agent_role.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : 'MeDO')}
           </span>
           {!isUser && (
             <div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-brand-500/10 text-brand-400 text-[10px] font-black uppercase tracking-tighter border border-brand-500/20">

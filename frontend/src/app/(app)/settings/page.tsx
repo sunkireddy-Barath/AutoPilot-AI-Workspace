@@ -15,7 +15,10 @@ import {
   Sun,
   Moon,
   Monitor,
-  Activity
+  Activity,
+  Users,
+  Cloud,
+  Database
 } from 'lucide-react'
 import { useState } from 'react'
 import toast from 'react-hot-toast'
@@ -254,6 +257,87 @@ export default function SettingsPage() {
              </button>
           </div>
         </motion.div>
+         
+        {/* Team Cluster Module */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="lg:col-span-3 glass-strong p-8 rounded-[32px] border border-white/10 shadow-2xl"
+        >
+          <div className="flex items-center gap-3 mb-8">
+            <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20">
+              <Users className="h-5 w-5" />
+            </div>
+            <h3 className="text-lg font-black text-white tracking-tight uppercase">Team Cluster</h3>
+          </div>
+
+          <div className="space-y-4 mb-6">
+            <div className="flex items-center justify-between p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-brand-500/30 transition-all">
+              <div className="flex items-center gap-3">
+                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-brand-500 to-indigo-600 flex items-center justify-center">
+                  <span className="text-[10px] font-black text-white">NP</span>
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-white">Neural Pilot</div>
+                  <div className="text-[9px] text-brand-400 font-bold uppercase tracking-widest">Admin</div>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center justify-between p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-brand-500/30 transition-all">
+              <div className="flex items-center gap-3">
+                <div className="h-8 w-8 rounded-full bg-slate-800 flex items-center justify-center">
+                  <span className="text-[10px] font-black text-slate-400">SA</span>
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-white">System Analyst</div>
+                  <div className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Observer</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <button className="w-full py-3 rounded-2xl bg-white/[0.03] border border-white/5 text-slate-400 text-[10px] font-black uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all flex items-center justify-center gap-2">
+            <User className="h-3 w-3" /> Add Cluster Member
+          </button>
+        </motion.div>
+
+        {/* Integration Matrix Module */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="lg:col-span-3 glass-strong p-8 rounded-[32px] border border-white/10 shadow-2xl"
+        >
+          <div className="flex items-center gap-3 mb-8">
+            <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              <Cloud className="h-5 w-5" />
+            </div>
+            <h3 className="text-lg font-black text-white tracking-tight uppercase">Integration Matrix</h3>
+          </div>
+
+          <div className="space-y-4">
+            {[
+              { id: 'github', name: 'GitHub Sync', status: 'Connected', icon: Database, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+              { id: 'aws', name: 'AWS Cloud', status: 'Pending', icon: Cloud, color: 'text-yellow-400', bg: 'bg-yellow-500/10' },
+              { id: 'stripe', name: 'Stripe Billing', status: 'Disconnected', icon: Activity, color: 'text-slate-500', bg: 'bg-slate-800' },
+            ].map(integration => (
+              <div key={integration.id} className="flex items-center justify-between p-4 rounded-2xl bg-white/[0.02] border border-white/5 group hover:border-white/10 transition-all cursor-pointer">
+                <div className="flex items-center gap-3">
+                  <div className={cn("p-2 rounded-lg", integration.bg)}>
+                    <integration.icon className={cn("h-4 w-4", integration.color)} />
+                  </div>
+                  <span className="text-xs font-bold text-white">{integration.name}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className={cn("h-1.5 w-1.5 rounded-full", integration.status === 'Connected' ? 'bg-emerald-500' : integration.status === 'Pending' ? 'bg-yellow-500' : 'bg-slate-600')} />
+                  <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{integration.status}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+
       </div>
 
       <div className="flex justify-end pt-8">

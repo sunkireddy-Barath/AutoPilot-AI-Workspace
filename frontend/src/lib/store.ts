@@ -8,7 +8,7 @@ import { devtools, persist } from 'zustand/middleware'
 
 // ── Types ──────────────────────────────────────────────────────────────
 
-export type AgentRole = 'product_manager' | 'developer' | 'marketing' | 'analyst' | 'orchestrator'
+export type AgentRole = 'product_manager' | 'developer' | 'marketing' | 'analyst' | 'orchestrator' | 'operations'
 
 export interface Message {
   id: string
@@ -191,6 +191,7 @@ export const useStore = create<AppState>()(
           marketing: 'idle',
           analyst: 'idle',
           orchestrator: 'idle',
+          operations: 'idle',
         },
         setAgentStatus: (role, status) =>
           set((s) => ({

@@ -1,5 +1,5 @@
 """
-LangGraph Multi-Agent Orchestration Engine — Refined Iterative Edition.
+MeDo Master Orchestration Engine — Refined Iterative Edition.
 
 Coordinates specialized agents in an iterative, autonomous loop:
 PM → Dev (→ Tools) → Marketing (→ Tools) → Analyst → [Loop if needed] → Synthesize.
@@ -62,7 +62,7 @@ class AgentState(TypedDict):
 #  Orchestration Engine
 # ─────────────────────────────────────────────
 
-class AutoPilotOrchestrator:
+class MeDoOrchestrator:
     """Main orchestration engine with iterative autonomy."""
 
     def __init__(self):

@@ -35,6 +35,12 @@ const agentMeta: Record<AgentRole, { icon: any, desc: string, color: string, cap
     desc: 'Master AI that coordinates between agents and maintains global state and memory.',
     color: '#6366f1',
     capabilities: ['State Management', 'Conflict Resolution', 'Global Orchestration']
+  },
+  operations: {
+    icon: Server,
+    desc: 'Handles infrastructure orchestration, CI/CD pipelines, and multi-cloud deployment scaling.',
+    color: '#EC4899',
+    capabilities: ['Cloud Orchestration', 'CI/CD Pipelines', 'System Scalability']
   }
 }
 

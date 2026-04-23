@@ -24,14 +24,14 @@ from app.models.schemas import (
     ChatRequest, WSEvent, WSEventType, MessageRole,
     AgentRole, TaskCreate, TaskPriority, TaskStatus
 )
-from app.orchestrator.langgraph_engine import AutoPilotOrchestrator
+from app.orchestrator.langgraph_engine import MeDoOrchestrator
 from app.db.supabase_client import supabase_admin
 from app.utils.events import global_bus
 
 router = APIRouter(tags=["chat"])
 
 # ── Singleton orchestrator (shared across requests) ────────────────────
-orchestrator = AutoPilotOrchestrator()
+orchestrator = MeDoOrchestrator()
 
 # ── WebSocket connection manager ───────────────────────────────────────
 class ConnectionManager:
@@ -131,7 +131,7 @@ async def chat(request: ChatRequest):
     # 2. Broadcast: user message received, agents starting
     await manager.broadcast(conversation_id, WSEvent(
         event=WSEventType.AGENT_THINKING,
-        data={"message": "🤖 AutoPilot analyzing your goal...", "agent": "orchestrator"},
+        data={"message": "🤖 MeDo analyzing your goal...", "agent": "orchestrator"},
         conversation_id=conversation_id,
     ))
 
@@ -320,7 +320,7 @@ def _build_chat_response(state: dict) -> str:
     pm_summary = state.get("pm_response", "")[:800]
 
     lines = [
-        "## 🚀 AutoPilot AI — Plan Generated\n",
+        "## 🚀 MeDo — Plan Generated\n",
         pm_summary,
         f"\n\n---\n**✅ {task_count} tasks created** across Product, Development, Marketing, and Analytics.\n",
         "\n**Agents activated:** 🎯 PM · 💻 Developer · 📣 Marketing · 📊 Analyst",

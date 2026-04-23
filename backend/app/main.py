@@ -21,16 +21,16 @@ from app.api.chat import router as chat_router
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan — startup and shutdown events."""
-    print("🚀 AutoPilot AI Workspace API starting up...")
+    print("🚀 MeDo Master Orchestrator API starting up...")
     yield
-    print("🛑 AutoPilot AI Workspace API shutting down...")
+    print("🛑 MeDo Master Orchestrator API shutting down...")
 
 
 app = FastAPI(
-    title="AutoPilot AI Workspace",
+    title="MeDo Master Orchestrator",
     description=(
-        "A multi-agent AI system that converts high-level goals into "
-        "structured workflows, tasks, and automated execution plans."
+        "The core intelligence of MeDo — coordinates multi-agent workflows "
+        "and autonomous project execution."
     ),
     version="1.0.0",
     docs_url="/docs",

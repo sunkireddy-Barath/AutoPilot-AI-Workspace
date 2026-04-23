@@ -70,7 +70,7 @@ export default function AgentsPage() {
               </div>
               <div>
                 <div className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] mb-1">Compute Cluster</div>
-                <h2 className="text-3xl font-black text-white tracking-tighter">Neural Core <span className="text-brand-500">V4.2</span></h2>
+                <h2 className="text-3xl font-black text-white tracking-tighter">MeDO Core <span className="text-brand-500">V6.0</span></h2>
               </div>
             </div>
 

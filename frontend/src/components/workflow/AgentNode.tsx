@@ -11,7 +11,8 @@ const agentIcons: Record<AgentRole, string> = {
   developer: '💻',
   marketing: '📣',
   analyst: '📊',
-  orchestrator: '🚀'
+  orchestrator: '🚀',
+  operations: '⚙️'
 }
 
 const agentLabels: Record<AgentRole, string> = {
@@ -19,7 +20,8 @@ const agentLabels: Record<AgentRole, string> = {
   developer: 'Developer',
   marketing: 'Marketing',
   analyst: 'Analyst',
-  orchestrator: 'AutoPilot'
+  orchestrator: 'AutoPilot',
+  operations: 'Operations'
 }
 
 export default memo(function AgentNode({ data, selected }: NodeProps) {

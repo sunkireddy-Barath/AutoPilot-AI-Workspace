@@ -15,7 +15,7 @@ export default function TopBar() {
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 group-focus-within:text-brand-400 transition-colors" />
           <input 
             type="text" 
-            placeholder="Search Project Intelligence..." 
+            placeholder="Search MeDo Intelligence..." 
             className="w-full bg-white/[0.03] border border-white/5 rounded-2xl pl-12 pr-6 py-2.5 text-sm text-white outline-none focus:bg-white/[0.06] focus:border-brand-500/20 transition-all"
           />
         </div>

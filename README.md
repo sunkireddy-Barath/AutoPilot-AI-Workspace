@@ -1,9 +1,9 @@
-# 🚀 AutoPilot AI Workspace
+# 🚀 MeDo: Master Execution & Dashboard Orchestrator
 
-AutoPilot AI Workspace is an autonomous, multi-agent project execution platform. It transforms high-level goals into actionable, managed, and self-improving workflows using state-of-the-art AI orchestration.
+MeDo is an autonomous, multi-agent project execution platform. It transforms high-level goals into actionable, managed, and self-improving workflows using state-of-the-art AI orchestration.
 
 ## 🌟 Core Pillars
-1. **AI Command Center**: Multi-turn, streaming chat interface with specialized agents.
+1. **MeDo Command Center**: Multi-turn, streaming chat interface with specialized agents.
 2. **Multi-Agent Orchestration**: Powered by **LangGraph**, coordinating PM, Dev, Marketing, and Analyst agents.
 3. **Autonomous Execution**: Agents use real-world tools to generate code, conduct research, and refine plans.
 4. **Visual Insight Engine**: Real-time node graphs and business analytics dashboards.
