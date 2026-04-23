@@ -157,10 +157,30 @@ export default function GlobalDock() {
 
         {/* Settings & Logout */}
         <div className="flex items-center gap-1 px-1">
-          <button className="flex flex-col items-center gap-1 p-2 rounded-2xl text-slate-400 hover:text-white hover:bg-white/5 transition-all group active:scale-90">
-            <Settings className="h-4 w-4 group-hover:rotate-45 transition-transform duration-500" />
-            <span className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-500 group-hover:text-white transition-colors">Setup</span>
-          </button>
+          <Link 
+            href="/settings"
+            className={cn(
+              "flex flex-col items-center gap-1 p-2 rounded-2xl transition-all group active:scale-90",
+              pathname === '/settings' ? "bg-white/5 text-brand-400" : "text-slate-400 hover:text-white hover:bg-white/5"
+            )}
+          >
+            <Settings className={cn(
+              "h-4 w-4 transition-transform duration-500",
+              pathname === '/settings' ? "rotate-45" : "group-hover:rotate-45"
+            )} />
+            <span className={cn(
+              "text-[8px] font-black uppercase tracking-[0.2em] transition-colors",
+              pathname === '/settings' ? "text-brand-400" : "text-slate-500 group-hover:text-white"
+            )}>Setup</span>
+            
+            {/* Setting Info Tooltip */}
+            <div className="absolute bottom-full mb-4 left-1/2 -translate-x-1/2 px-3 py-2 rounded-xl bg-[#0a0a14] border border-white/10 shadow-2xl opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300 pointer-events-none min-w-[140px] z-[100]">
+               <div className="text-[9px] font-black text-brand-400 uppercase tracking-widest mb-1">System Config</div>
+               <div className="text-[8px] text-slate-500 leading-tight">Neural ID: pilot@autopilot.ai<br/>Security: V4 Matrix Active</div>
+               <div className="absolute bottom-[-5px] left-1/2 -translate-x-1/2 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[5px] border-t-white/10" />
+            </div>
+          </Link>
+
           <button 
             onClick={handleLogout}
             className="flex flex-col items-center gap-1 p-2 rounded-2xl text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-all group active:scale-90"

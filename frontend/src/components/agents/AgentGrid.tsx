@@ -48,7 +48,7 @@ export default function AgentGrid() {
   const { agentStatuses } = useStore()
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
       {(Object.entries(agentMeta) as [AgentRole, typeof agentMeta['developer']][]).map(([role, meta], i) => {
         const status = agentStatuses[role] || 'idle'
         const Icon = meta.icon
@@ -59,55 +59,78 @@ export default function AgentGrid() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1 }}
-            className="glass-strong p-6 flex flex-col group relative overflow-hidden"
+            whileHover={{ y: -5, scale: 1.02 }}
+            className="group relative"
           >
-            {/* Live Indicator */}
-            <div className="absolute top-4 right-4 flex items-center gap-2 px-2 py-1 rounded bg-surface-800 border border-white/5">
-              <div className={cn(
-                "h-1.5 w-1.5 rounded-full",
-                status === 'thinking' ? "bg-yellow-400 animate-pulse" :
-                status === 'active' ? "bg-green-400" : "bg-slate-500"
-              )} />
-              <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{status}</span>
-            </div>
-
+            {/* Hover Glow */}
             <div 
-              className="w-12 h-12 rounded-xl flex items-center justify-center mb-6 transition-transform group-hover:scale-110 duration-500"
-              style={{ backgroundColor: `${meta.color}15`, color: meta.color }}
-            >
-              <Icon className="h-6 w-6" />
-            </div>
-
-            <h3 className="text-lg font-bold text-white mb-2">{role.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</h3>
-            <p className="text-xs text-slate-400 leading-relaxed min-h-[40px] mb-6">{meta.desc}</p>
-
-            <div className="space-y-4">
-              <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest border-b border-white/5 pb-2">Capabilities</div>
-              <div className="flex flex-wrap gap-2 text-[10px] font-bold">
-                {meta.capabilities.map(cap => (
-                  <span key={cap} className="px-2 py-1 rounded-md bg-surface-700 text-slate-300">
-                    {cap}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <div className="mt-8 pt-6 border-t border-white/5 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Server className="h-3 w-3 text-slate-500" />
-                <span className="text-[10px] text-slate-500 font-medium">instance: p3.turbo</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Shield className="h-3 w-3 text-green-500" />
-                <span className="text-[10px] text-green-500 font-bold">SECURE</span>
-              </div>
-            </div>
-
-            {/* Decorative mesh */}
-            <div 
-              className="absolute -bottom-12 -right-12 w-32 h-32 blur-[60px] opacity-10 group-hover:opacity-20 transition-opacity pointer-events-none"
+              className="absolute -inset-0.5 rounded-[24px] blur-xl opacity-0 group-hover:opacity-30 transition-opacity duration-700"
               style={{ backgroundColor: meta.color }}
             />
+
+            <div className="relative h-full glass-strong p-6 rounded-[24px] border border-white/10 flex flex-col overflow-hidden bg-[#111118]/60 backdrop-blur-3xl">
+              {/* Scanline Effect */}
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/[0.02] to-transparent h-1/2 w-full -translate-y-full group-hover:animate-[shimmer_3s_infinite]" />
+              
+              <div className="flex items-start justify-between mb-8">
+                <div 
+                  className="w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 group-hover:rotate-6 group-hover:scale-110 shadow-lg"
+                  style={{ backgroundColor: `${meta.color}15`, color: meta.color, border: `1px solid ${meta.color}30` }}
+                >
+                  <Icon className="h-7 w-7" />
+                </div>
+
+                <div className="flex flex-col items-end gap-1.5">
+                  <div className={cn(
+                    "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border transition-colors",
+                    status === 'thinking' ? "bg-yellow-500/10 text-yellow-400 border-yellow-500/20 animate-pulse" :
+                    status === 'active' ? "bg-green-500/10 text-green-400 border-green-500/20" : "bg-white/5 text-slate-500 border-white/5"
+                  )}>
+                    <div className={cn(
+                      "h-1 w-1 rounded-full",
+                      status === 'thinking' ? "bg-yellow-400" :
+                      status === 'active' ? "bg-green-400 shadow-glow-brand" : "bg-slate-500"
+                    )} />
+                    {status}
+                  </div>
+                  <div className="text-[8px] font-black text-slate-600 uppercase tracking-tighter">ID: AG-00{i+1}</div>
+                </div>
+              </div>
+
+              <div className="flex-1">
+                <h3 className="text-xl font-bold text-white mb-2 tracking-tight">
+                  {role.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+                </h3>
+                <p className="text-xs text-slate-400 leading-relaxed mb-6 font-medium">
+                  {meta.desc}
+                </p>
+
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <div className="h-px flex-1 bg-white/5" />
+                    <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Matrix</span>
+                    <div className="h-px flex-1 bg-white/5" />
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {meta.capabilities.map(cap => (
+                      <span key={cap} className="px-2.5 py-1 rounded-lg bg-white/[0.03] border border-white/5 text-[9px] font-bold text-slate-300 hover:border-white/10 transition-colors">
+                        {cap}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-8 pt-5 border-t border-white/5 flex items-center justify-between">
+                <div className="flex items-center gap-2 opacity-60">
+                  <div className="h-1.5 w-1.5 rounded-full bg-brand-500" />
+                  <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider tabular-nums">p3.turbo.xl</span>
+                </div>
+                <div className="p-1 rounded-lg bg-green-500/10">
+                   <Shield className="h-3 w-3 text-green-500" />
+                </div>
+              </div>
+            </div>
           </motion.div>
         )
       })}
