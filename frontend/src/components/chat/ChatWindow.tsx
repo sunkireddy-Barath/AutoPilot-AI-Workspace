@@ -9,7 +9,10 @@ import {
   Bot, 
   Cpu, 
   Zap,
-  RefreshCw
+  RefreshCw,
+  Rocket,
+  Search,
+  Share2
 } from 'lucide-react'
 import { useStore, Message, AgentRole } from '@/lib/store'
 import { wsClient, WSEvent } from '@/lib/websocket'
@@ -154,33 +157,29 @@ export default function ChatWindow() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-surface-900">
+    <div className="flex flex-col h-full bg-transparent overflow-hidden relative">
       {/* Header */}
-      <header className="h-16 flex items-center justify-between px-6 border-b border-white/5 bg-surface-800/50 backdrop-blur-sm sticky top-0 z-10">
+      <header className="h-14 flex items-center justify-between px-6 border-b border-white/5 bg-white/[0.02] backdrop-blur-md sticky top-0 z-10">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-brand-600/20 flex items-center justify-center">
-            <Zap className="h-4 w-4 text-brand-400 fill-brand-400/20" />
-          </div>
-          <div>
-            <h2 className="text-sm font-bold text-white tracking-tight">AI Command Center</h2>
-            <div className="flex items-center gap-1.5">
-              <span className="flex h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
-              <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Multi-Agent Engine Active</span>
-            </div>
+          <div className="flex items-center gap-1.5">
+            <span className="flex h-1.5 w-1.5 rounded-full bg-brand-500 shadow-glow-brand animate-pulse" />
+            <h2 className="text-xs font-black text-white uppercase tracking-[0.2em] opacity-80">Command Hub</h2>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button className="btn-ghost p-2" title="History"><History className="h-4 w-4" /></button>
-          <button className="btn-ghost p-2" title="Settings"><Settings2 className="h-4 w-4" /></button>
-          <div className="w-px h-4 bg-white/10 mx-1" />
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1">
+            <button className="p-2 text-slate-500 hover:text-white transition-colors" title="History"><History className="h-4 w-4" /></button>
+            <button className="p-2 text-slate-500 hover:text-white transition-colors" title="Settings"><Settings2 className="h-4 w-4" /></button>
+          </div>
+          <div className="w-px h-4 bg-white/10" />
           <button 
             onClick={handleNewSession}
             disabled={loading}
-            className="btn-primary flex items-center gap-2 py-1.5 px-3 disabled:opacity-50"
+            className="flex items-center gap-2 py-1.5 px-3 rounded-lg bg-brand-500/10 text-brand-400 text-[10px] font-black uppercase tracking-widest hover:bg-brand-500 hover:text-white transition-all disabled:opacity-50 active:scale-95"
           >
-            <PlusCircle className="h-4 w-4" />
-            <span className="text-xs">New Session</span>
+            <PlusCircle className="h-3.5 w-3.5" />
+            New Project
           </button>
         </div>
       </header>
@@ -188,40 +187,45 @@ export default function ChatWindow() {
       {/* Messages Area */}
       <div 
         ref={scrollRef}
-        className="flex-1 overflow-y-auto scroll-smooth"
+        className="flex-1 overflow-y-auto scroll-smooth custom-scrollbar pb-40"
       >
-        <div className="max-w-4xl mx-auto py-8">
+        <div className="max-w-3xl mx-auto py-12 px-6">
           {messages.length === 0 && !loading && (
-            <div className="flex flex-col items-center justify-center min-h-[50vh] text-center px-4">
+            <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
               <motion.div 
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                className="w-20 h-20 rounded-3xl bg-brand-600/10 flex items-center justify-center mb-6 border border-brand-600/20 shadow-glow-brand"
+                className="w-20 h-20 rounded-3xl bg-brand-600/10 flex items-center justify-center mb-8 border border-brand-500/20 shadow-glow-brand/20 relative"
               >
-                <Zap className="h-10 w-10 text-brand-400 fill-brand-400/20" />
+                <div className="absolute inset-0 bg-brand-500/20 blur-2xl rounded-full" />
+                <Zap className="h-10 w-10 text-brand-400 fill-brand-400/20 relative z-10" />
               </motion.div>
-              <h1 className="text-2xl font-bold text-white mb-2">How can AutoPilot help you today?</h1>
-              <p className="text-slate-400 max-w-sm text-sm">
-                Describe a complex goal, and our agents will work together to plan and execute it.
+              
+              <h1 className="text-4xl font-black text-white mb-4 tracking-tighter">
+                Neural <span className="text-brand-500">AutoPilot</span>
+              </h1>
+              <p className="text-slate-500 max-w-sm text-base font-medium leading-relaxed mb-12">
+                The next generation of autonomous project execution. Describe your goal to begin.
               </p>
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-10 w-full max-w-lg">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl">
                 {[
-                  "Launch a successful SaaS for developers",
-                  "Build a multi-agent marketing campaign",
-                  "Automate my customer outreach workflow",
-                  "Analyze market trends for AI startups"
-                ].map((prompt) => (
+                  { title: "Launch SaaS", desc: "Build a developer-first platform", icon: Rocket },
+                  { title: "Market Research", desc: "Analyze AI startup trends 2024", icon: Search },
+                  { title: "Social Campaign", desc: "Multi-agent marketing automation", icon: Share2 },
+                  { title: "Process Automation", desc: "Scale your customer outreach", icon: Cpu }
+                ].map((item) => (
                   <button 
-                    key={prompt}
-                    onClick={() => handleSendMessage(prompt)}
-                    className="glass p-4 text-left hover:border-brand-500/50 transition-all group"
+                    key={item.title}
+                    onClick={() => handleSendMessage(item.desc)}
+                    className="flex flex-col items-start p-5 rounded-[20px] bg-white/[0.03] border border-white/5 hover:border-brand-500/30 hover:bg-white/[0.05] transition-all group text-left relative overflow-hidden"
                   >
-                    <div className="text-xs text-slate-500 mb-1 flex items-center justify-between">
-                      Suggestion 
-                      <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
+                      <item.icon size={48} />
                     </div>
-                    <div className="text-xs font-semibold text-slate-200">{prompt}</div>
+                    <div className="text-[10px] font-black text-brand-500 uppercase tracking-widest mb-1">Suggestion</div>
+                    <div className="text-sm font-bold text-white mb-1">{item.title}</div>
+                    <div className="text-xs text-slate-500 line-clamp-1">{item.desc}</div>
                   </button>
                 ))}
               </div>

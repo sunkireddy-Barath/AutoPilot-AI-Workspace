@@ -109,7 +109,7 @@ export default function WorkflowGraph() {
   )
 
   return (
-    <div className="w-full h-full bg-surface-900 overflow-hidden relative border border-white/5 rounded-2xl">
+    <div className="w-full h-full bg-transparent overflow-hidden relative border border-white/5 rounded-[32px] glass-strong">
       <ReactFlow
         nodes={nodes}
         edges={edges}

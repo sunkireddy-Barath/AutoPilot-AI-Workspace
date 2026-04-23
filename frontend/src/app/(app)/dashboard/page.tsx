@@ -16,6 +16,7 @@ import DashboardHeader from '@/components/dashboard/DashboardHeader'
 import StatCard from '@/components/dashboard/StatCard'
 import TaskItem from '@/components/dashboard/TaskItem'
 import Link from 'next/link'
+import InteractiveCard from '@/components/ui/InteractiveCard'
 
 export default function DashboardPage() {
   const { userId, tasks, setTasks, agentActivities, setAgentActivities } = useStore()
@@ -78,87 +79,123 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="p-8 max-w-7xl mx-auto">
+    <div className="p-8 w-full max-w-full px-4 lg:px-16 space-y-8 pb-32">
       <DashboardHeader 
-        title="Dashboard" 
-        subtitle="Overview of your AI-driven workspace and automation progress." 
+        title="Command Hub" 
+        subtitle="Intelligent orchestration of your active AI clusters." 
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {stats.map((stat, i) => (
-          <StatCard key={i} {...stat} />
-        ))}
-      </div>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        {/* Top Feature Card - Strategic Overview */}
+        <div className="md:col-span-3">
+          <InteractiveCard nodeId="CORE_HUB" scanning={true} className="p-8 min-h-[300px] overflow-hidden flex flex-col justify-end">
+            <div className="absolute top-0 right-0 p-12 opacity-10 group-hover:scale-110 transition-transform duration-700 pointer-events-none">
+              <Rocket size={200} className="text-brand-500" />
+            </div>
+            <div className="relative z-10">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="px-2 py-1 rounded bg-brand-500/20 text-brand-400 text-[10px] font-black uppercase tracking-widest">Autonomous Syncing</span>
+                <div className="h-1.5 w-1.5 rounded-full bg-brand-500 animate-pulse" />
+              </div>
+              <h2 className="text-4xl font-bold text-white mb-4 leading-tight">Neural Core V4<br/><span className="text-slate-500">Operational</span></h2>
+              <div className="flex items-center gap-6">
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Active Jobs</span>
+                  <span className="text-2xl font-bold text-white">{tasks.filter(t => t.status === 'in_progress').length}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Efficiency</span>
+                  <span className="text-2xl font-bold text-green-400">98.4%</span>
+                </div>
+                <Link href="/chat" className="ml-auto px-6 py-3 rounded-xl bg-white text-black font-bold text-sm hover:bg-brand-400 hover:text-white transition-all active:scale-95">
+                  Launch Explorer
+                </Link>
+              </div>
+            </div>
+          </InteractiveCard>
+        </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Recent Tasks */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="glass overflow-hidden">
-            <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
+        {/* Small Stats Grid */}
+        <div className="md:col-span-1 grid grid-cols-1 gap-6">
+          {stats.slice(2, 4).map((stat, i) => (
+            <InteractiveCard key={i} nodeId={`ST_0${i+2}`} className="h-full">
+              <StatCard {...stat} />
+            </InteractiveCard>
+          ))}
+        </div>
+
+        {/* Recent Tasks - Main Bento Block */}
+        <div className="md:col-span-2">
+          <InteractiveCard nodeId="TASK_STREAM" className="flex flex-col h-full overflow-hidden">
+            <div className="px-6 py-5 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
               <h3 className="font-bold text-white flex items-center gap-2">
-                <Rocket className="h-4 w-4 text-brand-400" />
+                <div className="p-1.5 rounded-lg bg-brand-500/10 text-brand-400">
+                  <CheckCircle2 className="h-4 w-4" />
+                </div>
                 Recent Tasks
               </h3>
-              <Link 
-                href="/workflows" 
-                className="text-xs font-medium text-brand-400 hover:text-brand-300 flex items-center gap-1 transition-colors"
-              >
-                View All <ArrowRight className="h-3 w-3" />
+              <Link href="/workflows" className="text-[10px] font-black text-slate-500 hover:text-brand-400 uppercase tracking-widest transition-colors">
+                View All
               </Link>
             </div>
             
-            <div className="divide-y divide-white/5">
+            <div className="flex-1 divide-y divide-white/5 overflow-auto max-h-[400px]">
               {tasks.length > 0 ? (
                 tasks.slice(0, 5).map((task, i) => (
                   <TaskItem key={task.id} task={task} index={i} />
                 ))
               ) : (
-                <div className="p-12 text-center">
+                <div className="p-12 text-center h-full flex flex-col items-center justify-center">
                   <div className="text-4xl mb-4">🚀</div>
                   <h4 className="text-white font-medium">No tasks yet</h4>
-                  <p className="text-slate-500 text-sm mt-1 mb-6">Describe a goal in the Command Center to start generating tasks.</p>
-                  <Link href="/chat" className="btn-primary inline-flex">Go to Chat</Link>
+                  <Link href="/chat" className="mt-4 text-xs font-bold text-brand-400 underline uppercase tracking-widest">Start Goal</Link>
                 </div>
               )}
             </div>
-          </div>
+          </InteractiveCard>
         </div>
 
-        {/* Agent Activity Timeline */}
-        <div className="space-y-6">
-          <div className="glass p-6">
+        {/* Agent Activity - Sidebar Bento Block */}
+        <div className="md:col-span-1">
+          <InteractiveCard nodeId="ACT_LOG" className="p-6 flex flex-col h-full">
             <h3 className="font-bold text-white mb-6 flex items-center gap-2">
-              <Activity className="h-4 w-4 text-brand-400" />
-              Agent Activity
+              <div className="p-1.5 rounded-lg bg-cyan-500/10 text-cyan-400">
+                <Activity className="h-4 w-4" />
+              </div>
+              Activity
             </h3>
             
-            <div className="space-y-6">
+            <div className="flex-1 space-y-6 overflow-auto max-h-[350px] pr-2 scrollbar-hide">
               {agentActivities.length > 0 ? (
                 agentActivities.slice(0, 6).map((activity, i) => (
-                  <div key={i} className="relative pl-6 pb-6 last:pb-0">
-                    {i !== agentActivities.slice(0, 6).length - 1 && (
-                      <div className="absolute left-[11px] top-6 bottom-0 w-px bg-surface-600" />
-                    )}
-                    <div className="absolute left-0 top-1 h-5 w-5 rounded-full bg-surface-800 border-2 border-surface-600 flex items-center justify-center">
-                      <div className="h-1.5 w-1.5 rounded-full bg-brand-500" />
+                  <div key={i} className="relative pl-5 last:pb-0">
+                    <div className="absolute left-0 top-1 h-3 w-3 rounded-full bg-surface-800 border-2 border-surface-600 flex items-center justify-center">
+                      <div className="h-1 w-1 rounded-full bg-brand-500" />
                     </div>
-                    
-                    <div className="text-xs font-bold text-brand-400 uppercase tracking-wider mb-1">
-                      {activity.agent_role.replace('_', ' ')}
+                    <div className="text-[9px] font-black text-slate-500 uppercase tracking-tighter mb-0.5">
+                      {activity.agent_role.split('_')[0]} // {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </div>
-                    <div className="text-sm font-medium text-white">{activity.action}</div>
-                    <div className="text-xs text-slate-500 mt-1 line-clamp-2">{activity.detail}</div>
+                    <div className="text-sm font-semibold text-white leading-snug">{activity.action}</div>
                   </div>
                 ))
               ) : (
-                <div className="text-slate-500 text-sm text-center py-8">No activity logs yet</div>
+                <div className="text-white opacity-40 text-[10px] text-center py-8 font-medium">No activity logs</div>
               )}
             </div>
             
-            <Link href="/agents" className="block text-center text-xs font-medium text-slate-400 hover:text-white mt-6 transition-colors">
-              View Deployment Status
+            <Link href="/agents" className="block text-center text-[10px] font-black text-slate-500 hover:text-white mt-6 uppercase tracking-widest border border-white/5 py-2 rounded-lg transition-all">
+              Inspect Clusters
             </Link>
-          </div>
+          </InteractiveCard>
+        </div>
+
+        {/* Remaining Stat Cards */}
+        <div className="md:col-span-1 grid grid-cols-1 gap-6">
+          {stats.slice(0, 2).map((stat, i) => (
+            <InteractiveCard key={i} nodeId={`ST_0${i+1}`} className="h-full">
+              <StatCard {...stat} />
+            </InteractiveCard>
+          ))}
         </div>
       </div>
     </div>

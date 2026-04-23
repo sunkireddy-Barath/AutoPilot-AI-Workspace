@@ -5,12 +5,17 @@ import { useRouter, usePathname } from 'next/navigation'
 import { supabase, IS_DEMO_MODE } from '@/lib/supabase'
 import { useStore } from '@/lib/store'
 import { motion, AnimatePresence } from 'framer-motion'
-import Sidebar from '@/components/ui/Sidebar'
+import GlobalDock from '@/components/ui/GlobalDock'
+import MeshBackground from '@/components/ui/MeshBackground'
 import LoadingSplash from '@/components/ui/LoadingSplash'
 import { Toaster } from 'react-hot-toast'
+import CursorSpotlight from '@/components/ui/CursorSpotlight'
+
+import TopBar from '@/components/ui/TopBar'
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
+  const pathname = usePathname()
   const { userId, setUserId } = useStore()
   const [loading, setLoading] = useState(true)
 
@@ -52,22 +57,29 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   if (loading) return <LoadingSplash />
 
   return (
-    <div className="flex h-screen overflow-hidden bg-surface-900">
-      <Sidebar />
-      <main className="flex-1 overflow-auto bg-surface-900 relative">
+    <div className="flex h-screen overflow-hidden bg-[#050508] relative">
+      <MeshBackground />
+      
+      <main className="flex-1 overflow-auto relative pb-28">
         <AnimatePresence mode="wait">
           <motion.div
-            key={usePathname()}
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -5 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
+            key={pathname}
+            initial={{ opacity: 0, y: 10, filter: 'blur(10px)' }}
+            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+            exit={{ opacity: 0, y: -10, filter: 'blur(10px)' }}
+            transition={{ 
+              duration: 0.5, 
+              ease: [0.22, 1, 0.36, 1],
+              opacity: { duration: 0.4 }
+            }}
             className="h-full"
           >
             {children}
           </motion.div>
         </AnimatePresence>
       </main>
+
+      <GlobalDock />
       <Toaster
         position="top-right"
         toastOptions={{

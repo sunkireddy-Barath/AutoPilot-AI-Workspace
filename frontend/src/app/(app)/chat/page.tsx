@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useStore } from '@/lib/store'
 import { conversationsApi } from '@/lib/api'
 import ChatWindow from '@/components/chat/ChatWindow'
+import DashboardHeader from '@/components/dashboard/DashboardHeader'
 import { motion } from 'framer-motion'
 
 export default function ChatPage() {
@@ -60,8 +61,14 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="h-full">
-      <ChatWindow />
+    <div className="w-full h-full max-w-full flex flex-col bg-[#050508]">
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="flex-1 min-h-0 relative overflow-hidden"
+      >
+        <ChatWindow />
+      </motion.div>
     </div>
   )
 }

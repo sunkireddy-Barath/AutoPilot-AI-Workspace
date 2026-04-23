@@ -38,74 +38,83 @@ export default function ChatInput({ onSend, disabled, loading }: ChatInputProps)
   }, [input])
 
   return (
-    <div className="p-4 bg-surface-900 border-t border-white/5">
-      <div className="max-w-4xl mx-auto relative group">
+    <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-full max-w-3xl px-6 z-20">
+      <motion.div 
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="relative group"
+      >
+        {/* Glow Effect */}
+        <div className="absolute -inset-1 bg-gradient-to-r from-brand-500/20 via-brand-400/10 to-brand-600/20 rounded-[24px] blur-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-700" />
+        
         <div className={cn(
-          "relative glass-strong flex flex-col gap-2 p-2 focus-within:ring-2 focus-within:ring-brand-500/60 transition-all duration-300 bg-surface-900/40 backdrop-blur-md",
-          "hover:border-white/10 focus-within:bg-surface-900/60"
+          "relative flex flex-col gap-2 p-3 rounded-[24px] border border-white/10 transition-all duration-500 shadow-2xl overflow-hidden",
+          "bg-[#111118]/80 backdrop-blur-3xl focus-within:border-brand-500/40 focus-within:shadow-glow-brand/20",
+          "hover:border-white/20"
         )}>
-          <textarea
-            ref={textareaRef}
-            rows={1}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={disabled ? "No active session. Click 'New Session' to start." : "Tell AutoPilot your next goal..."}
-            className="w-full bg-transparent border-none outline-none text-slate-100 placeholder-slate-500 resize-none py-3 px-4 text-sm min-h-[48px]"
-            disabled={disabled || loading}
-          />
+          {/* Subtle Inner Highlight */}
+          <div className="absolute inset-0 bg-gradient-to-tr from-white/[0.02] to-transparent pointer-events-none" />
 
-          <div className="flex items-center justify-between px-2 pb-1">
-            <div className="flex items-center gap-1">
-              <div className="relative flex items-center gap-1.5 px-2 py-1 rounded-lg bg-brand-500/10 text-[10px] font-black uppercase text-brand-400 tracking-wider border border-brand-500/20 overflow-hidden group/badge">
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/badge:animate-[shimmer_1.5s_infinite]" />
-                <Sparkles className="h-3 w-3 animate-pulse text-brand-300" />
-                <span className="relative z-10">Autonomous Ready</span>
-              </div>
+          <div className="flex items-start gap-3">
+            <div className="flex-1 min-w-0">
+              <textarea
+                ref={textareaRef}
+                rows={1}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder={disabled ? "Session inactive..." : "Message AutoPilot..."}
+                className="w-full bg-transparent border-none outline-none text-slate-100 placeholder-slate-500 resize-none py-2 px-2 text-[15px] font-medium leading-relaxed min-h-[44px] custom-scrollbar"
+                disabled={disabled || loading}
+              />
             </div>
-
+            
             <motion.button
               onClick={handleSend}
-              whileHover={input.trim() && !loading ? { scale: 1.05, y: -1 } : {}}
+              whileHover={input.trim() && !loading ? { scale: 1.05 } : {}}
               whileTap={input.trim() && !loading ? { scale: 0.95 } : {}}
               disabled={!input.trim() || disabled || loading}
               className={cn(
-                "p-2.5 rounded-xl transition-all duration-300 active:scale-95 relative overflow-hidden group/btn",
+                "mt-1 p-2.5 rounded-2xl transition-all duration-300 relative overflow-hidden group/btn",
                 input.trim() && !loading
-                  ? "bg-brand-600 text-white shadow-[0_0_15px_rgba(var(--brand-600),0.5)] hover:shadow-[0_0_25px_rgba(var(--brand-600),0.7)] hover:bg-brand-500 hover:-translate-y-0.5"
-                  : "bg-surface-700 text-slate-500 cursor-not-allowed"
+                  ? "bg-brand-600 text-white shadow-glow-brand"
+                  : "bg-white/5 text-slate-500 cursor-not-allowed"
               )}
             >
               <AnimatePresence mode="wait">
                 {loading ? (
                   <motion.div
                     key="loading"
-                    initial={{ opacity: 0, rotate: 180 }}
-                    animate={{ opacity: 1, rotate: 0 }}
-                    exit={{ opacity: 0 }}
-                    className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin"
+                    animate={{ rotate: 360 }}
+                    transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                    className="h-4 w-4 border-2 border-white/20 border-t-white rounded-full"
                   />
                 ) : (
-                  <motion.div
-                    key="send"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="relative"
-                  >
-                    <div className="absolute inset-0 bg-white/20 blur opacity-0 group-hover/btn:opacity-100 transition-opacity" />
-                    <Send className="h-4 w-4 relative z-10" />
-                  </motion.div>
+                  <Send className="h-4 w-4 relative z-10 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform" />
                 )}
               </AnimatePresence>
             </motion.button>
           </div>
+
+          <div className="flex items-center justify-between mt-1 px-1">
+            <div className="flex items-center gap-2">
+              <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-all text-[11px] font-bold uppercase tracking-wider">
+                <Paperclip className="h-3.5 w-3.5" />
+                <span>Attach</span>
+              </button>
+              <div className="h-4 w-px bg-white/10 mx-1" />
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-500/10 border border-brand-500/20 text-[10px] font-black uppercase text-brand-400 tracking-widest">
+                <Sparkles className="h-3 w-3 animate-pulse" />
+                <span>Autonomous</span>
+              </div>
+            </div>
+
+            <span className="text-[10px] text-slate-500 font-medium tracking-tight opacity-50 group-hover:opacity-100 transition-opacity">
+              Press Enter to send
+            </span>
+          </div>
         </div>
-        
-        <p className="text-[10px] text-slate-500 text-center mt-3 font-medium">
-          Shift + Enter for new line. AutoPilot will automatically break down your goal into agents and tasks.
-        </p>
-      </div>
+      </motion.div>
     </div>
   )
 }
