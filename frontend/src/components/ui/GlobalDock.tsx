@@ -150,7 +150,7 @@ export default function GlobalDock() {
           <span className={cn(
             "text-[8px] font-black uppercase tracking-[0.2em] transition-colors",
             autonomousMode ? "text-brand-400" : "text-slate-500"
-          )}>Auto</span>
+          )}>Autonomous</span>
         </div>
 
         <div className="w-px h-8 bg-white/5 mx-1 opacity-50" />
