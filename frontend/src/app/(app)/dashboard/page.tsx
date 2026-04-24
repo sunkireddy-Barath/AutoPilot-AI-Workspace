@@ -15,6 +15,7 @@ import { tasksApi, agentsApi } from '@/lib/api'
 import DashboardHeader from '@/components/dashboard/DashboardHeader'
 import StatCard from '@/components/dashboard/StatCard'
 import TaskItem from '@/components/dashboard/TaskItem'
+import AgentActivityTimeline from '@/components/dashboard/AgentActivityTimeline'
 import Link from 'next/link'
 import InteractiveCard from '@/components/ui/InteractiveCard'
 
@@ -155,38 +156,9 @@ export default function DashboardPage() {
           </InteractiveCard>
         </div>
 
-        {/* Agent Activity - Sidebar Bento Block */}
-        <div className="md:col-span-1">
-          <InteractiveCard nodeId="ACT_LOG" className="p-6 flex flex-col h-full">
-            <h3 className="font-bold text-white mb-6 flex items-center gap-2">
-              <div className="p-1.5 rounded-lg bg-cyan-500/10 text-cyan-400">
-                <Activity className="h-4 w-4" />
-              </div>
-              Activity
-            </h3>
-            
-            <div className="flex-1 space-y-6 overflow-auto max-h-[350px] pr-2 scrollbar-hide">
-              {agentActivities.length > 0 ? (
-                agentActivities.slice(0, 6).map((activity, i) => (
-                  <div key={i} className="relative pl-5 last:pb-0">
-                    <div className="absolute left-0 top-1 h-3 w-3 rounded-full bg-surface-800 border-2 border-surface-600 flex items-center justify-center">
-                      <div className="h-1 w-1 rounded-full bg-brand-500" />
-                    </div>
-                    <div className="text-[9px] font-black text-slate-500 uppercase tracking-tighter mb-0.5">
-                      {activity.agent_role.split('_')[0]} // {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </div>
-                    <div className="text-sm font-semibold text-white leading-snug">{activity.action}</div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-white opacity-40 text-[10px] text-center py-8 font-medium">No activity logs</div>
-              )}
-            </div>
-            
-            <Link href="/agents" className="block text-center text-[10px] font-black text-slate-500 hover:text-white mt-6 uppercase tracking-widest border border-white/5 py-2 rounded-lg transition-all">
-              Inspect Clusters
-            </Link>
-          </InteractiveCard>
+        {/* Agent Activity - Visual Timeline */}
+        <div className="md:col-span-1 h-full min-h-[400px]">
+          <AgentActivityTimeline />
         </div>
 
         {/* Remaining Stat Cards */}

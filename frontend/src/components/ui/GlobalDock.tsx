@@ -59,7 +59,7 @@ export default function GlobalDock() {
           <Link 
             href="/dashboard" 
             className={cn(
-              "flex flex-col items-center gap-1 p-2 rounded-2xl transition-all duration-300",
+              "flex flex-col items-center p-2 rounded-2xl transition-all duration-300",
               pathname === '/dashboard' ? "bg-brand-600/20 shadow-glow-brand/20" : "hover:bg-white/5"
             )}
           >
@@ -70,8 +70,8 @@ export default function GlobalDock() {
               <Zap className={cn("h-5 w-5", pathname === '/dashboard' ? "text-white" : "text-brand-400")} />
             </div>
             <span className={cn(
-              "text-[8px] font-black uppercase tracking-[0.2em] transition-all duration-300",
-              pathname === '/dashboard' ? "text-brand-400" : "text-slate-500 group-hover:text-white"
+              "text-[8px] font-black uppercase tracking-[0.2em] transition-all duration-300 overflow-hidden",
+              pathname === '/dashboard' ? "text-brand-400 max-h-4 opacity-100 mt-1" : "text-white max-h-0 opacity-0 group-hover:max-h-4 group-hover:opacity-100 group-hover:mt-1"
             )}>
               Launch
             </span>
@@ -96,7 +96,7 @@ export default function GlobalDock() {
                 <Link
                   href={item.href}
                   className={cn(
-                    "flex flex-col items-center gap-1 px-3 py-2 rounded-2xl transition-all duration-300 group",
+                    "flex flex-col items-center px-3 py-2 rounded-2xl transition-all duration-300 group",
                     isActive 
                       ? "bg-white/5 text-brand-400" 
                       : "text-slate-400 hover:text-white hover:bg-white/5"
@@ -108,8 +108,8 @@ export default function GlobalDock() {
                   )} />
                   
                   <span className={cn(
-                    "text-[8px] font-black uppercase tracking-[0.2em] transition-all duration-300",
-                    isActive ? "text-brand-400 opacity-100" : "text-slate-500 opacity-70 group-hover:opacity-100"
+                    "text-[8px] font-black uppercase tracking-[0.2em] transition-all duration-300 overflow-hidden whitespace-nowrap",
+                    isActive ? "text-brand-400 max-h-4 opacity-100 mt-1" : "text-white max-h-0 opacity-0 group-hover:max-h-4 group-hover:opacity-100 group-hover:mt-1"
                   )}>
                     {item.name}
                   </span>
@@ -130,7 +130,7 @@ export default function GlobalDock() {
         <div className="w-px h-8 bg-white/5 mx-1 opacity-50" />
 
         {/* Autonomous Mode Toggle */}
-        <div className="flex flex-col items-center gap-1 px-3">
+        <div className="flex flex-col items-center px-3 group">
           <button 
             onClick={() => setAutonomousMode(!autonomousMode)}
             className={cn(
@@ -148,8 +148,8 @@ export default function GlobalDock() {
             )} />
           </button>
           <span className={cn(
-            "text-[8px] font-black uppercase tracking-[0.2em] transition-colors",
-            autonomousMode ? "text-brand-400" : "text-slate-500"
+            "text-[8px] font-black uppercase tracking-[0.2em] transition-all duration-300 overflow-hidden",
+            autonomousMode ? "text-brand-400 max-h-4 opacity-100 mt-1" : "text-white max-h-0 opacity-0 group-hover:max-h-4 group-hover:opacity-100 group-hover:mt-1"
           )}>Autonomous</span>
         </div>
 
@@ -160,7 +160,7 @@ export default function GlobalDock() {
           <Link 
             href="/settings"
             className={cn(
-              "flex flex-col items-center gap-1 p-2 rounded-2xl transition-all group active:scale-90",
+              "flex flex-col items-center p-2 rounded-2xl transition-all group active:scale-90",
               pathname === '/settings' ? "bg-white/5 text-brand-400" : "text-slate-400 hover:text-white hover:bg-white/5"
             )}
           >
@@ -169,24 +169,18 @@ export default function GlobalDock() {
               pathname === '/settings' ? "rotate-45" : "group-hover:rotate-45"
             )} />
             <span className={cn(
-              "text-[8px] font-black uppercase tracking-[0.2em] transition-colors",
-              pathname === '/settings' ? "text-brand-400" : "text-slate-500 group-hover:text-white"
+              "text-[8px] font-black uppercase tracking-[0.2em] transition-all duration-300 overflow-hidden",
+              pathname === '/settings' ? "text-brand-400 max-h-4 opacity-100 mt-1" : "text-white max-h-0 opacity-0 group-hover:max-h-4 group-hover:opacity-100 group-hover:mt-1"
             )}>Setup</span>
             
-            {/* Setting Info Tooltip */}
-            <div className="absolute bottom-full mb-4 left-1/2 -translate-x-1/2 px-3 py-2 rounded-xl bg-[#0a0a14] border border-white/10 shadow-2xl opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300 pointer-events-none min-w-[140px] z-[100]">
-               <div className="text-[9px] font-black text-brand-400 uppercase tracking-widest mb-1">System Config</div>
-               <div className="text-[8px] text-slate-500 leading-tight">Neural ID: pilot@autopilot.ai<br/>Security: V4 Matrix Active</div>
-               <div className="absolute bottom-[-5px] left-1/2 -translate-x-1/2 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[5px] border-t-white/10" />
-            </div>
           </Link>
 
           <button 
             onClick={handleLogout}
-            className="flex flex-col items-center gap-1 p-2 rounded-2xl text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-all group active:scale-90"
+            className="flex flex-col items-center p-2 rounded-2xl text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-all group active:scale-90"
           >
             <LogOut className="h-4 w-4 group-hover:translate-x-0.5 transition-transform duration-300" />
-            <span className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-500 group-hover:text-red-400 transition-colors">Exit</span>
+            <span className="text-[8px] font-black uppercase tracking-[0.2em] text-red-400 transition-all duration-300 overflow-hidden max-h-0 opacity-0 group-hover:max-h-4 group-hover:opacity-100 group-hover:mt-1">Exit</span>
           </button>
         </div>
       </motion.nav>

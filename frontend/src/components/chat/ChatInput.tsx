@@ -98,11 +98,7 @@ export default function ChatInput({ onSend, disabled, loading }: ChatInputProps)
 
           <div className="flex items-center justify-between mt-1 px-1">
             <div className="flex items-center gap-2">
-              <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-all text-[11px] font-bold uppercase tracking-wider">
-                <Paperclip className="h-3.5 w-3.5" />
-                <span>Attach</span>
-              </button>
-              <div className="h-4 w-px bg-white/10 mx-1" />
+
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-500/10 border border-brand-500/20 text-[10px] font-black uppercase text-brand-400 tracking-widest">
                 <Sparkles className="h-3 w-3 animate-pulse" />
                 <span>Autonomous</span>

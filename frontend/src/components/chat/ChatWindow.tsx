@@ -210,22 +210,26 @@ export default function ChatWindow() {
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl">
                 {[
-                  { title: "Launch SaaS", desc: "Build a developer-first platform", icon: Rocket },
-                  { title: "Market Research", desc: "Analyze AI startup trends 2024", icon: Search },
-                  { title: "Social Campaign", desc: "Multi-agent marketing automation", icon: Share2 },
-                  { title: "Process Automation", desc: "Scale your customer outreach", icon: Cpu }
+                  { title: "Product Manager", desc: "Define goals, user stories & roadmaps", icon: Rocket, msg: "Act as the Product Manager and help me define a roadmap for a new app." },
+                  { title: "Lead Developer", desc: "Generate architecture and write code", icon: Cpu, msg: "Act as the Lead Developer and help me design the system architecture." },
+                  { title: "Marketing Expert", desc: "Draft campaigns and growth strategies", icon: Share2, msg: "Act as the Marketing Expert and create a growth campaign for my product." },
+                  { title: "Data Analyst", desc: "Extract insights and define KPIs", icon: Search, msg: "Act as the Data Analyst and define key metrics for my business." }
                 ].map((item) => (
                   <button 
                     key={item.title}
-                    onClick={() => handleSendMessage(item.desc)}
-                    className="flex flex-col items-start p-5 rounded-[20px] bg-white/[0.03] border border-white/5 hover:border-brand-500/30 hover:bg-white/[0.05] transition-all group text-left relative overflow-hidden"
+                    onClick={() => handleSendMessage(item.msg)}
+                    className="flex flex-col items-start p-5 rounded-[20px] bg-white/[0.03] border border-white/5 hover:border-brand-500/30 hover:bg-white/[0.05] transition-all duration-300 group text-left relative overflow-hidden h-28"
                   >
-                    <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
+                    <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity duration-300">
                       <item.icon size={48} />
                     </div>
-                    <div className="text-[10px] font-black text-brand-500 uppercase tracking-widest mb-1">Suggestion</div>
-                    <div className="text-sm font-bold text-white mb-1">{item.title}</div>
-                    <div className="text-xs text-slate-500 line-clamp-1">{item.desc}</div>
+                    <div className="text-[10px] font-black text-brand-500 uppercase tracking-widest mb-1 transition-transform duration-300 group-hover:-translate-y-1">Agent</div>
+                    <div className="text-sm font-bold text-white mb-1 transition-transform duration-300 group-hover:-translate-y-1">{item.title}</div>
+                    
+                    {/* Words displayed in bottom side on mouse over */}
+                    <div className="absolute bottom-5 left-5 right-5 text-xs text-slate-500 opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 pointer-events-none">
+                      {item.desc}
+                    </div>
                   </button>
                 ))}
               </div>
