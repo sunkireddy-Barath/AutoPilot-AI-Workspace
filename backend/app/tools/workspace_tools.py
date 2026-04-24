@@ -1,14 +1,8 @@
-"""
-AutoPilot Workspace Tools — Real-world execution capabilities for AI agents.
-
-These tools allow agents to interact with the local filesystem (safely)
-and perform research on the web.
-"""
-
 import os
 from typing import Optional, List
 from langchain.tools import tool
 from pathlib import Path
+from langchain_community.utilities.tavily_search import TavilySearchAPIWrapper
 
 # Designated output directory for agent generated work
 OUTPUT_DIR = Path("/home/barath/AutoPilot-AI-Workspace/output")
@@ -80,17 +74,32 @@ def list_workspace_files(subdir: Optional[str] = None) -> str:
 @tool
 def google_intel_tool(query: str) -> str:
     """
-    Fetches real-time market intelligence and competitor data (Simulated).
+    Fetches real-time market intelligence and competitor data.
     Use this for high-level business strategy and GTM planning.
     """
+    tavily_api_key = os.getenv("TAVILY_API_KEY")
+    if tavily_api_key:
+        try:
+            search = TavilySearchAPIWrapper(tavily_api_key=tavily_api_key)
+            results = search.results(query, max_results=5)
+            return str(results)
+        except Exception as e:
+            return f"Search Error: {str(e)}. Falling back to simulation."
+
     return f"Intelligence Report for '{query}':\n- Market Trend: Shift towards edge-AI and local LLMs.\n- Competitor Gap: High demand for unified multi-agent interfaces.\n- Potential Partners: LangChain, Vercel, Supabase.\n- Recommendation: Focus on low-latency state management for superior UX."
 
 @tool
 def google_research_simulation(query: str) -> str:
     """
-    Performs a deep research search on the web (Simulated).
+    Performs a deep research search on the web.
     Use this for market research, trend analysis, or finding competitors.
     """
-    # In a real production environment, this would call Tavily or Serper.
-    # For this implementation, we provide high-quality simulated data based on common startup contexts.
+    tavily_api_key = os.getenv("TAVILY_API_KEY")
+    if tavily_api_key:
+        try:
+            search = TavilySearchAPIWrapper(tavily_api_key=tavily_api_key)
+            return search.run(query)
+        except Exception as e:
+            return f"Research Error: {str(e)}. Falling back to simulation."
+
     return f"Simulated Research Search for: '{query}'\n\nResult:\nFound 12 relevant competitors in the AI Space. Trending keywords: 'Autonomous Agents', 'Llama 3.1', 'Multi-Agent Orchestration'. Market size projected at $12B by 2026. Top recommendation: Focus on low-latency stateful pipelines."

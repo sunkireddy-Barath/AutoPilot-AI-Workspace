@@ -82,11 +82,10 @@ export default function AuthPage() {
               <button
                 key={m}
                 onClick={() => setMode(m)}
-                className={`flex-1 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
-                  mode === m
+                className={`flex-1 py-2 rounded-md text-sm font-medium transition-all duration-200 ${mode === m
                     ? 'bg-brand-600 text-white shadow-glow-brand'
                     : 'text-slate-400 hover:text-white'
-                }`}
+                  }`}
               >
                 {m === 'login' ? 'Sign In' : 'Sign Up'}
               </button>

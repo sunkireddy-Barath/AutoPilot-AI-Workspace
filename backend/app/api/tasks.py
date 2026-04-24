@@ -11,7 +11,7 @@ from uuid import uuid4
 from app.models.schemas import Task, TaskCreate, TaskUpdate, TaskStatus
 from app.db.supabase_client import supabase_admin
 
-router = APIRouter(prefix="/tasks", tags=["tasks"])
+router = APIRouter(tags=["tasks"])
 
 
 @router.get("/", response_model=List[dict])

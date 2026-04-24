@@ -154,6 +154,23 @@ interface AppState {
 
 // ── Store Implementation ───────────────────────────────────────────────
 
+// ── Initial State Helpers ─────────────────────────────────────────────
+
+const initialWorkflowNodes: WorkflowNode[] = [
+  { id: 'agent_pm', type: 'agent', data: { label: '🧠 PM', role: 'product_manager', color: '#8B5CF6' }, position: { x: 50, y: 150 } },
+  { id: 'agent_dev', type: 'agent', data: { label: '💻 Dev', role: 'developer', color: '#06B6D4' }, position: { x: 250, y: 150 } },
+  { id: 'agent_mkt', type: 'agent', data: { label: '📣 Mkt', role: 'marketing', color: '#F59E0B' }, position: { x: 450, y: 150 } },
+  { id: 'agent_ops', type: 'agent', data: { label: '⚙️ Ops', role: 'operations', color: '#EC4899' }, position: { x: 650, y: 150 } },
+  { id: 'agent_analyst', type: 'agent', data: { label: '📊 Analyst', role: 'analyst', color: '#10B981' }, position: { x: 850, y: 150 } }
+]
+
+const initialWorkflowEdges: WorkflowEdge[] = [
+  { id: 'e_pm_dev', source: 'agent_pm', target: 'agent_dev', animated: true },
+  { id: 'e_dev_mkt', source: 'agent_dev', target: 'agent_mkt', animated: true },
+  { id: 'e_mkt_ops', source: 'agent_mkt', target: 'agent_ops', animated: true },
+  { id: 'e_ops_analyst', source: 'agent_ops', target: 'agent_analyst', animated: true }
+]
+
 export const useStore = create<AppState>()(
   persist(
     devtools(
@@ -187,8 +204,8 @@ export const useStore = create<AppState>()(
           })),
 
         // Workflow Graph
-        workflowNodes: [],
-        workflowEdges: [],
+        workflowNodes: initialWorkflowNodes,
+        workflowEdges: initialWorkflowEdges,
         setWorkflowGraph: (nodes, edges) =>
           set({ workflowNodes: nodes, workflowEdges: edges }),
 

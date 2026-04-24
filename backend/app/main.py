@@ -16,6 +16,7 @@ from app.api.workflows import router as workflows_router
 from app.api.conversations import router as conversations_router
 from app.api.agents import router as agents_router
 from app.api.chat import router as chat_router
+from app.api.files import router as files_router
 
 
 @asynccontextmanager
@@ -53,8 +54,9 @@ app.add_middleware(
 #  Routers
 # ─────────────────────────────────────────────
 app.include_router(health_router)
-app.include_router(tasks_router, prefix="/api/v1")
-app.include_router(workflows_router, prefix="/api/v1")
-app.include_router(conversations_router, prefix="/api/v1")
-app.include_router(agents_router, prefix="/api/v1")
+app.include_router(tasks_router, prefix="/api/v1/tasks")
+app.include_router(workflows_router, prefix="/api/v1/workflows")
+app.include_router(conversations_router, prefix="/api/v1/conversations")
+app.include_router(agents_router, prefix="/api/v1/agents")
 app.include_router(chat_router)  # chat + WebSocket (no prefix — /ws/{id} lives at root)
+app.include_router(files_router)

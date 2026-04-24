@@ -8,7 +8,8 @@ import {
   Clock, 
   AlertTriangle, 
   Activity,
-  ArrowRight
+  ArrowRight,
+  Sparkles
 } from 'lucide-react'
 import { useStore } from '@/lib/store'
 import { tasksApi, agentsApi } from '@/lib/api'
@@ -18,6 +19,9 @@ import TaskItem from '@/components/dashboard/TaskItem'
 import AgentActivityTimeline from '@/components/dashboard/AgentActivityTimeline'
 import Link from 'next/link'
 import InteractiveCard from '@/components/ui/InteractiveCard'
+import { cn } from '@/lib/utils'
+
+import FileExplorer from '@/components/dashboard/FileExplorer'
 
 export default function DashboardPage() {
   const { userId, tasks, setTasks, agentActivities, setAgentActivities } = useStore()
@@ -106,8 +110,15 @@ export default function DashboardPage() {
             </div>
             <div className="relative z-10">
               <div className="flex items-center gap-2 mb-4">
-                <span className="px-2 py-1 rounded bg-brand-500/20 text-brand-400 text-[10px] font-black uppercase tracking-widest">Autonomous Syncing</span>
-                <div className="h-1.5 w-1.5 rounded-full bg-brand-500 animate-pulse" />
+                <div className={cn(
+                "flex items-center gap-2 px-3 py-1.5 rounded-full transition-all duration-500 text-[10px] font-black uppercase tracking-widest",
+                loading 
+                  ? "bg-brand-500/20 text-brand-300 border-brand-500/40 animate-pulse" 
+                  : "bg-brand-500/10 border-brand-500/20 text-brand-400"
+              )}>
+                <Sparkles className={cn("h-3 w-3", loading ? "animate-spin" : "animate-pulse")} />
+                <span>{loading ? "Orchestrating Swarm..." : "Autonomous"}</span>
+              </div>
               </div>
               <h2 className="text-4xl font-bold text-white mb-4 leading-tight">Neural Core V4<br/><span className="text-slate-500">Operational</span></h2>
               <div className="flex items-center gap-6">
@@ -129,8 +140,8 @@ export default function DashboardPage() {
 
         {/* Small Stats Grid */}
         <div className="md:col-span-1 grid grid-cols-1 gap-6">
-          {stats.slice(2, 4).map((stat, i) => (
-            <InteractiveCard key={i} nodeId={`ST_0${i+2}`} className="h-full">
+          {stats.slice(0, 2).map((stat, i) => (
+            <InteractiveCard key={i} nodeId={`ST_0${i+1}`} className="h-full">
               <StatCard {...stat} />
             </InteractiveCard>
           ))}
@@ -151,31 +162,36 @@ export default function DashboardPage() {
               </Link>
             </div>
             
-            <div className="flex-1 divide-y divide-white/5 overflow-auto max-h-[400px]">
+            <div className="flex-1 divide-y divide-white/5 overflow-auto max-h-[400px] custom-scrollbar">
               {tasks.length > 0 ? (
                 tasks.slice(0, 5).map((task, i) => (
                   <TaskItem key={task.id} task={task} index={i} />
                 ))
               ) : (
                 <div className="p-12 text-center h-full flex flex-col items-center justify-center">
-                  <div className="text-4xl mb-4">🚀</div>
-                  <h4 className="text-white font-medium">No tasks yet</h4>
-                  <Link href="/chat" className="mt-4 text-xs font-bold text-brand-400 underline uppercase tracking-widest">Start Goal</Link>
+                  <div className="text-4xl mb-4 text-slate-600">📡</div>
+                  <h4 className="text-white font-medium uppercase text-[10px] tracking-widest">Awaiting Commands</h4>
+                  <Link href="/chat" className="mt-4 text-xs font-bold text-brand-400 underline uppercase tracking-widest">Initiate Core</Link>
                 </div>
               )}
             </div>
           </InteractiveCard>
         </div>
 
+        {/* File Explorer Module */}
+        <div className="md:col-span-2 h-[400px]">
+           <FileExplorer />
+        </div>
+
         {/* Agent Activity - Visual Timeline */}
-        <div className="md:col-span-1 h-full min-h-[400px]">
+        <div className="md:col-span-3 h-full min-h-[400px]">
           <AgentActivityTimeline />
         </div>
 
         {/* Remaining Stat Cards */}
         <div className="md:col-span-1 grid grid-cols-1 gap-6">
-          {stats.slice(0, 2).map((stat, i) => (
-            <InteractiveCard key={i} nodeId={`ST_0${i+1}`} className="h-full">
+          {stats.slice(2, 4).map((stat, i) => (
+            <InteractiveCard key={i} nodeId={`ST_0${i+3}`} className="h-full">
               <StatCard {...stat} />
             </InteractiveCard>
           ))}

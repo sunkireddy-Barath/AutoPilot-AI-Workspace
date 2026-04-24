@@ -11,7 +11,7 @@ from uuid import uuid4
 from app.models.schemas import Workflow, WorkflowCreate, WorkflowStatus
 from app.db.supabase_client import supabase_admin
 
-router = APIRouter(prefix="/workflows", tags=["workflows"])
+router = APIRouter(tags=["workflows"])
 
 
 @router.get("/", response_model=List[dict])

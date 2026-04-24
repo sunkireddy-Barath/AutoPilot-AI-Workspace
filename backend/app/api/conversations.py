@@ -11,7 +11,7 @@ from uuid import uuid4
 from app.models.schemas import ConversationCreate
 from app.db.supabase_client import supabase_admin
 
-router = APIRouter(prefix="/conversations", tags=["conversations"])
+router = APIRouter(tags=["conversations"])
 
 
 @router.get("/", response_model=List[dict])

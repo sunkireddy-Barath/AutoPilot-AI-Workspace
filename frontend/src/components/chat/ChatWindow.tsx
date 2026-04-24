@@ -46,6 +46,13 @@ export default function ChatWindow() {
   const [activeAgent, setActiveAgent] = useState<AgentRole | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
 
+  // Auto-initialize session if none exists
+  useEffect(() => {
+    if (userId && !activeConversationId && !loading) {
+      handleNewSession()
+    }
+  }, [userId, activeConversationId])
+
   // Scroll to bottom on new messages or streaming
   useEffect(() => {
     if (scrollRef.current) {
@@ -112,6 +119,24 @@ export default function ChatWindow() {
       updateTask(data.id, data)
     })
 
+    // Handle new agent messages arriving via WebSocket
+    const offAgentMsg = wsClient.on('agent_message', (e: WSEvent) => {
+      const data = e.data as any
+      addMessage({
+        id: data.id,
+        conversation_id: activeConversationId!,
+        role: 'agent',
+        agent_role: data.agent_role,
+        content: data.content,
+        created_at: data.created_at || new Date().toISOString()
+      })
+      // Highlight the agent on the graph
+      if (data.agent_role) {
+        setAgentStatus(data.agent_role, 'active')
+        setAgentsRunning(true)
+      }
+    })
+
     return () => {
       offThinking()
       offChunk()
@@ -120,6 +145,7 @@ export default function ChatWindow() {
       offWorkflow()
       offTaskCreated()
       offTaskUpdated()
+      offAgentMsg()
       wsClient.disconnect()
     }
   }, [activeConversationId, addMessage, appendStreamChunk, clearStream, setAgentStatus, addTask, updateTask, addAgentActivity, setWorkflowGraph, setAgentsRunning])
@@ -161,8 +187,8 @@ export default function ChatWindow() {
           created_at: result.message.created_at || new Date().toISOString()
         })
       }
-    } catch (error) {
-      toast.error('Failed to send message')
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to send message')
       console.error(error)
     } finally {
       setLoading(false)

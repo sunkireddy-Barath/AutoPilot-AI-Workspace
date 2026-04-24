@@ -11,6 +11,12 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   })
   if (!res.ok) {
     const err = await res.text()
+    try {
+      const jsonErr = JSON.parse(err)
+      if (jsonErr.detail) throw new Error(jsonErr.detail)
+    } catch (e) {
+      if (e instanceof Error && e.message === (JSON.parse(err).detail)) throw e
+    }
     throw new Error(`API Error ${res.status}: ${err}`)
   }
   return res.json()
@@ -79,4 +85,10 @@ export const agentsApi = {
     const qs = conversationId ? `conversation_id=${conversationId}` : ''
     return request<unknown[]>(`/api/v1/agent-activities?${qs}&limit=50`)
   },
+}
+
+// ── Files ──────────────────────────────────────────────────────────────
+export const filesApi = {
+  list: () => request<any[]>('/api/v1/files'),
+  getContent: (path: string) => request<{ content: string }>(`/api/v1/files/${path}`),
 }

@@ -19,10 +19,12 @@ import '@xyflow/react/dist/style.css'
 import { useStore, AgentRole } from '@/lib/store'
 import AgentNode from './AgentNode'
 import TaskNode from './TaskNode'
+import GoalNode from './GoalNode'
 
 const nodeTypes = {
   agent: AgentNode,
   task: TaskNode,
+  goal: GoalNode,
 }
 
 const dagreGraph = new dagre.graphlib.Graph()

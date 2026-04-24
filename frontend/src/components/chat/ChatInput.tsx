@@ -99,9 +99,14 @@ export default function ChatInput({ onSend, disabled, loading }: ChatInputProps)
           <div className="flex items-center justify-between mt-1 px-1">
             <div className="flex items-center gap-2">
 
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-500/10 border border-brand-500/20 text-[10px] font-black uppercase text-brand-400 tracking-widest">
-                <Sparkles className="h-3 w-3 animate-pulse" />
-                <span>Autonomous</span>
+              <div className={cn(
+                "flex items-center gap-2 px-3 py-1.5 rounded-full transition-all duration-500 text-[10px] font-black uppercase tracking-widest",
+                loading 
+                  ? "bg-brand-500/20 text-brand-300 border-brand-500/40 animate-pulse border" 
+                  : "bg-brand-500/10 border border-brand-500/20 text-brand-400"
+              )}>
+                <Sparkles className={cn("h-3 w-3", loading ? "animate-spin" : "animate-pulse")} />
+                <span>{loading ? "Orchestrating Swarm..." : "Autonomous"}</span>
               </div>
             </div>
 

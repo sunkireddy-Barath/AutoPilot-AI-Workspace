@@ -8,10 +8,10 @@ from typing import List, Optional
 
 from app.db.supabase_client import supabase_admin
 
-router = APIRouter(prefix="/agent-activities", tags=["agents"])
+router = APIRouter(tags=["agents"])
 
 
-@router.get("/", response_model=List[dict])
+@router.get("/activities", response_model=List[dict])
 async def get_agent_activities(
     conversation_id: Optional[str] = Query(None),
     agent_role: Optional[str] = Query(None),
