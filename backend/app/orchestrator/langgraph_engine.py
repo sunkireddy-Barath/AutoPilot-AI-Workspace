@@ -24,6 +24,7 @@ from app.agents.pm_agent import ProductManagerAgent
 from app.agents.dev_agent import DeveloperAgent
 from app.agents.marketing_agent import MarketingAgent
 from app.agents.analyst_agent import AnalystAgent
+from app.agents.operations_agent import OperationsAgent
 from app.models.schemas import (
     AgentActivity, AgentRole, TaskCreate, WorkflowNode, WorkflowEdge,
     TaskPriority, TaskStatus, WSEvent, WSEventType
@@ -48,6 +49,7 @@ class AgentState(TypedDict):
     dev_response: str
     marketing_response: str
     analyst_response: str
+    ops_response: str
     tasks: List[Dict[str, Any]]
     workflow_nodes: List[Dict[str, Any]]
     workflow_edges: List[Dict[str, Any]]
@@ -70,6 +72,7 @@ class MeDoOrchestrator:
         self.dev = DeveloperAgent()
         self.marketing = MarketingAgent()
         self.analyst = AnalystAgent()
+        self.ops = OperationsAgent()
 
         self.orchestrator_llm = ChatOpenAI(
             api_key=settings.openai_api_key,
@@ -87,6 +90,7 @@ class MeDoOrchestrator:
         workflow.add_node("dev_node", self._dev_node)
         workflow.add_node("marketing_node", self._marketing_node)
         workflow.add_node("analyst_node", self._analyst_node)
+        workflow.add_node("operations_node", self._operations_node)
         workflow.add_node("synthesize_node", self._synthesize_node)
         workflow.add_node("tools_node", self._tools_node)
 
@@ -114,9 +118,10 @@ class MeDoOrchestrator:
 
         workflow.add_conditional_edges(
             "marketing_node", route_tools,
-            {"tools_node": "tools_node", "next": "analyst_node"}
+            {"tools_node": "tools_node", "next": "operations_node"}
         )
 
+        workflow.add_edge("operations_node", "analyst_node")
         workflow.add_edge("tools_node", "analyst_node") # Tools proceed to analysis for verification
 
         workflow.add_conditional_edges(
@@ -219,6 +224,28 @@ class MeDoOrchestrator:
         state["messages"].append(response)
         return state
 
+    async def _operations_node(self, state: AgentState) -> AgentState:
+        state["current_agent"] = "operations"
+        context = f"Deploy and automate: {state['user_goal']}"
+        response = await self.ops.think(context, self._get_history(state))
+        state["ops_response"] = response
+        
+        reasoning = self._extract_reasoning(response)
+        if reasoning:
+            activity = self._create_activity(
+                AgentRole.OPERATIONS, "Thinking", reasoning, "completed", state["conversation_id"]
+            )
+            await global_bus.emit("agent_activity", {"conversation_id": state["conversation_id"], "activity": activity})
+
+        new_tasks = self._extract_tasks(response, "tasks", state)
+        state["tasks"].extend(new_tasks)
+        
+        for task in new_tasks:
+             await global_bus.emit("task_created", {"conversation_id": state["conversation_id"], "task": task})
+
+        state["messages"].append(AIMessage(content=response, additional_kwargs={"agent_role": "operations"}))
+        return state
+
     async def _analyst_node(self, state: AgentState) -> AgentState:
         state["current_agent"] = "analyst"
         response = await self.analyst.think("Evaluate full plan coherence.", self._get_history(state))
@@ -296,7 +323,7 @@ class MeDoOrchestrator:
         initial_state = {
             "user_goal": user_goal, "conversation_id": conversation_id, "user_id": user_id,
             "messages": lc_messages, "pm_response": "", "dev_response": "",
-            "marketing_response": "", "analyst_response": "", "tasks": [],
+            "marketing_response": "", "analyst_response": "", "ops_response": "", "tasks": [],
             "workflow_nodes": [], "workflow_edges": [], "agent_activities": [],
             "agent_messages": [], "autonomous_mode": autonomous, "current_agent": "orchestrator",
             "iteration": 0,

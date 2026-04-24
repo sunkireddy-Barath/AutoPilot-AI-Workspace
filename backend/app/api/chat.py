@@ -323,6 +323,6 @@ def _build_chat_response(state: dict) -> str:
         "## 🚀 MeDo — Plan Generated\n",
         pm_summary,
         f"\n\n---\n**✅ {task_count} tasks created** across Product, Development, Marketing, and Analytics.\n",
-        "\n**Agents activated:** 🎯 PM · 💻 Developer · 📣 Marketing · 📊 Analyst",
+        "\n**Agents activated:** 🎯 PM · 💻 Developer · 📣 Marketing · ⚙️ Operations · 📊 Analyst",
     ]
     return "".join(lines)

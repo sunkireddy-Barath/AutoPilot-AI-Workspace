@@ -22,6 +22,7 @@ class AgentRole(str, Enum):
     MARKETING = "marketing"
     ANALYST = "analyst"
     ORCHESTRATOR = "orchestrator"
+    OPERATIONS = "operations"
 
 
 class TaskStatus(str, Enum):
