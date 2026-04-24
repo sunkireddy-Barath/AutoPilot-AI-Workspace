@@ -44,6 +44,17 @@ export default function DashboardPage() {
     fetchData()
   }, [userId, setTasks, setAgentActivities])
 
+  // --- Dynamic Calculations ---
+  const totalTasks = tasks.length || 1
+  const completedTasks = tasks.filter(t => t.status === 'completed').length
+  const blockedTasks = tasks.filter(t => t.status === 'blocked').length
+  
+  const systemHealth = Math.round((completedTasks / totalTasks) * 100)
+  const displayHealth = tasks.length === 0 ? 100 : systemHealth
+  
+  const efficiency = 100 - Math.round((blockedTasks / totalTasks) * 100)
+  const displayEfficiency = tasks.length === 0 ? 100 : efficiency
+
   const stats = [
     { 
       label: 'Active Tasks', 
@@ -59,7 +70,7 @@ export default function DashboardPage() {
     },
     { 
       label: 'System Health', 
-      value: '98%', 
+      value: `${displayHealth}%`, 
       icon: Activity, 
       color: '#06b6d4' 
     },
@@ -106,7 +117,7 @@ export default function DashboardPage() {
                 </div>
                 <div className="flex flex-col">
                   <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Efficiency</span>
-                  <span className="text-2xl font-bold text-green-400">98.4%</span>
+                  <span className="text-2xl font-bold text-green-400">{displayEfficiency.toFixed(1)}%</span>
                 </div>
                 <Link href="/chat" className="ml-auto px-6 py-3 rounded-xl bg-white text-black font-bold text-sm hover:bg-brand-400 hover:text-white transition-all active:scale-95">
                   Launch Explorer

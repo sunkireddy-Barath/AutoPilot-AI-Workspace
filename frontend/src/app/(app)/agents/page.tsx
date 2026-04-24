@@ -9,7 +9,23 @@ import { cn } from '@/lib/utils'
 import toast from 'react-hot-toast'
 
 export default function AgentsPage() {
-  const { isAgentsRunning, setAgentsRunning } = useStore()
+  const { isAgentsRunning, setAgentsRunning, tasks, agentActivities, agentStatuses } = useStore()
+
+  // --- Dynamic Data Calculations ---
+  
+  // 1. Intelligence Health (Task completion rate)
+  const completedCount = tasks.filter(t => t.status === 'completed').length
+  const totalTasks = tasks.length || 1
+  const healthScore = Math.round((completedCount / totalTasks) * 100)
+  // Ensure it looks healthy even at the start
+  const displayHealth = tasks.length === 0 ? 100 : healthScore
+
+  // 2. Active Shards (Count of non-idle agents)
+  const activeShards = Object.values(agentStatuses).filter(status => status !== 'idle').length
+  const displayShards = activeShards < 10 ? `0${activeShards}` : activeShards.toString()
+
+  // 3. Neural Logs (Latest activities)
+  const recentLogs = agentActivities.slice(0, 4)
 
   return (
     <div className="p-8 w-full max-w-full px-4 lg:px-16 space-y-8 pb-32">
@@ -85,7 +101,7 @@ export default function AgentsPage() {
           <div className="relative z-10 flex flex-wrap items-center gap-12 mt-12">
             {[
               { label: 'Cluster Uptime', value: '99.98%', sub: 'Real-time' },
-              { label: 'Active Shards', value: '05', sub: 'Synchronized' },
+              { label: 'Active Shards', value: displayShards, sub: 'Synchronized' },
               { label: 'Neural Latency', value: '12ms', sub: 'Optimal', color: 'text-brand-400' },
               { label: 'Secure Buffer', value: 'Encrypted', sub: 'AES-256' },
             ].map((stat, idx) => (
@@ -129,7 +145,7 @@ export default function AgentsPage() {
                  />
                </svg>
                <div className="absolute flex flex-col items-center">
-                 <span className="text-4xl font-black text-white tracking-tighter">98<span className="text-xl text-brand-500">%</span></span>
+                 <span className="text-4xl font-black text-white tracking-tighter">{displayHealth}<span className="text-xl text-brand-500">%</span></span>
                </div>
              </div>
              
@@ -150,25 +166,19 @@ export default function AgentsPage() {
                <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
              </div>
              <div className="space-y-4">
-                {[
-                  { label: 'Reasoning', val: '450ms', trend: 'UP' },
-                  { label: 'Retrieval', val: '1.2s', trend: 'STABLE' },
-                  { label: 'Sync', val: '120ms', trend: 'DOWN' },
-                ].map(item => (
-                  <div key={item.label} className="flex flex-col gap-1 group">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{item.label}</span>
-                      <span className="text-xs font-mono text-white group-hover:text-brand-400 transition-colors">{item.val}</span>
-                    </div>
-                    <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
-                       <motion.div 
-                         initial={{ width: 0 }}
-                         animate={{ width: item.label === 'Retrieval' ? '80%' : '40%' }}
-                         className="h-full bg-brand-500/40 group-hover:bg-brand-500 transition-colors"
-                       />
-                    </div>
-                  </div>
-                ))}
+               {recentLogs.length > 0 ? (
+                 recentLogs.map((log, idx) => (
+                   <div key={log.id || idx} className="flex gap-3 items-start group/log">
+                     <div className="mt-1 h-1.5 w-1.5 rounded-full bg-brand-500 shadow-glow-brand group-hover/log:scale-150 transition-transform flex-shrink-0" />
+                     <div className="min-w-0 flex-1">
+                       <div className="text-[10px] font-black text-brand-400 uppercase tracking-widest truncate">{log.agent_role.split('_').join(' ')}</div>
+                       <p className="text-xs text-slate-400 mt-0.5 line-clamp-2">{log.action}: {log.detail}</p>
+                     </div>
+                   </div>
+                 ))
+               ) : (
+                 <div className="text-xs text-slate-500 text-center py-4">No neural activity recorded yet.</div>
+               )}
              </div>
            </motion.div>
         </div>
