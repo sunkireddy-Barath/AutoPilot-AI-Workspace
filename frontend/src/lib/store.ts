@@ -81,6 +81,16 @@ export interface AgentInfo {
   status: 'idle' | 'thinking' | 'active' | 'completed'
 }
 
+export interface Notification {
+  id: string
+  title: string
+  message: string
+  type: 'info' | 'success' | 'warning' | 'error'
+  agent_role?: AgentRole
+  timestamp: string
+  read: boolean
+}
+
 // ── Store State Interface ──────────────────────────────────────────────
 
 interface AppState {
@@ -134,6 +144,12 @@ interface AppState {
   streamingContent: string
   appendStreamChunk: (chunk: string) => void
   clearStream: () => void
+
+  // Notifications
+  notifications: Notification[]
+  addNotification: (n: Omit<Notification, 'id' | 'timestamp' | 'read'>) => void
+  markNotificationsRead: () => void
+  clearNotifications: () => void
 }
 
 // ── Store Implementation ───────────────────────────────────────────────
@@ -213,6 +229,21 @@ export const useStore = create<AppState>()(
         appendStreamChunk: (chunk) =>
           set((s) => ({ streamingContent: s.streamingContent + chunk })),
         clearStream: () => set({ streamingContent: '' }),
+
+        // Notifications
+        notifications: [],
+        addNotification: (n) => set((s) => ({
+          notifications: [{
+            ...n,
+            id: crypto.randomUUID(),
+            timestamp: new Date().toISOString(),
+            read: false
+          }, ...s.notifications].slice(0, 20)
+        })),
+        markNotificationsRead: () => set((s) => ({
+          notifications: s.notifications.map(n => ({ ...n, read: true }))
+        })),
+        clearNotifications: () => set({ notifications: [] }),
       }),
       { name: 'autopilot-store' }
     ),
