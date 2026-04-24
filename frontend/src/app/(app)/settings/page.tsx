@@ -18,21 +18,49 @@ import {
   Activity,
   Users,
   Cloud,
-  Database
+  Database,
+  Key,
+  Shield
 } from 'lucide-react'
 import { useState } from 'react'
 import toast from 'react-hot-toast'
 import { cn } from '@/lib/utils'
+import { supabase } from '@/lib/supabase'
 
 export default function SettingsPage() {
   const [email, setEmail] = useState('neural.pilot@autopilot.ai')
   const [name, setName] = useState('Neural Pilot')
   const [theme, setTheme] = useState('neural')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [settings, setSettings] = useState({
     thoughtStream: true,
     audioFeedback: false,
     successHUD: true
   })
+  const [loading, setLoading] = useState(false)
+
+  const handleUpdatePassword = async () => {
+    if (!newPassword) return toast.error('Please enter a new password')
+    if (newPassword !== confirmPassword) return toast.error('Passwords do not match')
+    if (newPassword.length < 6) return toast.error('Password must be at least 6 characters')
+
+    setLoading(true)
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword })
+      if (error) throw error
+      toast.success('Security credentials updated successfully!', {
+        icon: '🛡️',
+        style: { borderRadius: '16px', background: '#0a0a14', color: '#fff', border: '1px solid rgba(239, 68, 68, 0.2)' }
+      })
+      setNewPassword('')
+      setConfirmPassword('')
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to update password')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const toggleSetting = (key: keyof typeof settings) => {
     setSettings(prev => ({ ...prev, [key]: !prev[key] }))
@@ -255,6 +283,59 @@ export default function SettingsPage() {
              <button className="text-[10px] font-black text-brand-400 uppercase tracking-widest hover:text-white transition-colors flex items-center gap-2">
                 Reset HUD <ChevronRight className="h-3 w-3" />
              </button>
+          </div>
+        </motion.div>
+
+        {/* Security Protocol Module */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
+          className="lg:col-span-3 glass-strong p-8 rounded-[32px] border border-white/10 shadow-2xl"
+        >
+          <div className="flex items-center gap-3 mb-8">
+            <div className="p-2.5 rounded-xl bg-red-500/10 text-red-400 border border-red-500/20">
+              <Shield className="h-5 w-5" />
+            </div>
+            <h3 className="text-lg font-black text-white tracking-tight uppercase">Security Protocol</h3>
+          </div>
+
+          <div className="space-y-5">
+            <div>
+              <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">New Access Key</label>
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-600" />
+                <input 
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="••••••••••••"
+                  className="w-full bg-white/[0.02] border border-white/5 rounded-2xl pl-12 pr-4 py-3 text-sm text-white outline-none focus:border-brand-500/30 transition-all"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Verify Access Key</label>
+              <div className="relative">
+                <Key className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-600" />
+                <input 
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="••••••••••••"
+                  className="w-full bg-white/[0.02] border border-white/5 rounded-2xl pl-12 pr-4 py-3 text-sm text-white outline-none focus:border-brand-500/30 transition-all"
+                />
+              </div>
+            </div>
+
+            <button 
+              onClick={handleUpdatePassword}
+              disabled={loading}
+              className="w-full py-4 rounded-2xl bg-white/[0.03] border border-white/5 text-white text-[10px] font-black uppercase tracking-widest hover:bg-red-500/10 hover:border-red-500/30 transition-all flex items-center justify-center gap-2 group"
+            >
+              {loading ? "Synchronizing..." : "Rotate Security Keys"}
+            </button>
           </div>
         </motion.div>
          
