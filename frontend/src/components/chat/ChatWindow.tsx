@@ -36,7 +36,10 @@ export default function ChatWindow() {
     setAgentStatus,
     agentStatuses,
     addTask,
-    updateTask
+    updateTask,
+    addAgentActivity,
+    setWorkflowGraph,
+    setAgentsRunning
   } = useStore()
 
   const [loading, setLoading] = useState(false)
@@ -61,6 +64,7 @@ export default function ChatWindow() {
       const data = e.data as { agent_role: AgentRole }
       setActiveAgent(data.agent_role)
       setAgentStatus(data.agent_role, 'thinking')
+      setAgentsRunning(true)
     })
 
     // Handle message streaming chunks
@@ -71,18 +75,29 @@ export default function ChatWindow() {
 
     // Handle stream completion
     const offDone = wsClient.on('stream_done', (e: WSEvent) => {
-      const data = e.data as { full_message: string; agent_role: AgentRole; message_id: string }
       clearStream()
       setActiveAgent(null)
-      addMessage({
-        id: data.message_id,
-        conversation_id: activeConversationId,
-        role: 'agent',
-        agent_role: data.agent_role,
-        content: data.full_message,
-        created_at: new Date().toISOString()
-      })
-      setAgentStatus(data.agent_role, 'active')
+      setAgentsRunning(false)
+      // Reset all agent statuses back to idle
+      const roles: AgentRole[] = ['product_manager', 'developer', 'marketing', 'analyst', 'orchestrator']
+      roles.forEach(r => setAgentStatus(r, 'idle'))
+    })
+
+    // Handle real-time agent activities — update the global timeline
+    const offActivity = wsClient.on('agent_activity', (e: WSEvent) => {
+      addAgentActivity(e.data as any)
+      const data = e.data as any
+      if (data?.agent_role) {
+        setAgentStatus(data.agent_role, data.status === 'completed' ? 'active' : 'thinking')
+      }
+    })
+
+    // Handle workflow graph updates
+    const offWorkflow = wsClient.on('workflow_updated', (e: WSEvent) => {
+      const data = e.data as { nodes: any[]; edges: any[] }
+      if (data?.nodes) {
+        setWorkflowGraph(data.nodes, data.edges || [])
+      }
     })
 
     // Handle real-time task creation
@@ -101,11 +116,13 @@ export default function ChatWindow() {
       offThinking()
       offChunk()
       offDone()
+      offActivity()
+      offWorkflow()
       offTaskCreated()
       offTaskUpdated()
       wsClient.disconnect()
     }
-  }, [activeConversationId, addMessage, appendStreamChunk, clearStream, setAgentStatus, addTask, updateTask])
+  }, [activeConversationId, addMessage, appendStreamChunk, clearStream, setAgentStatus, addTask, updateTask, addAgentActivity, setWorkflowGraph, setAgentsRunning])
 
   const handleSendMessage = async (text: string) => {
     if (!userId || !activeConversationId) {
@@ -122,15 +139,28 @@ export default function ChatWindow() {
       created_at: new Date().toISOString()
     }
     addMessage(userMsg)
+    setAgentsRunning(true)
 
     setLoading(true)
     try {
-      await chatApi.sendMessage({
+      const result = await chatApi.sendMessage({
         conversation_id: activeConversationId!,
         user_id: userId,
         message: text,
         autonomous_mode: useStore.getState().autonomousMode
-      })
+      }) as any
+
+      // Add the final assistant message from the REST response
+      if (result?.message) {
+        addMessage({
+          id: result.message.id,
+          conversation_id: activeConversationId,
+          role: 'agent',
+          agent_role: 'orchestrator',
+          content: result.message.content,
+          created_at: result.message.created_at || new Date().toISOString()
+        })
+      }
     } catch (error) {
       toast.error('Failed to send message')
       console.error(error)
