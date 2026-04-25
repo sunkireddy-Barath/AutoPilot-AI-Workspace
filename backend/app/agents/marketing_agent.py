@@ -38,30 +38,31 @@ CRITICAL: When you need more information about a market or competitors, use the 
 Style: Be creative yet strategic, persuasive, and growth-oriented. 
 Think like a Lead Marketer at a disruptive tech startup.
 
-Output format:
 Always begin your response with a <thinking> section where you explain your marketing strategy, channel selection, and audience research findings.
+Then provide your GTM plan and a growth funnel artifact.
 
-Example:
-<thinking>
-Since this is a B2C SaaS, I'll focus on TikTok and Instagram for high organic reach. I'll also leverage influencer partnerships to build trust quickly.
-</thinking>
-
-When outputting marketing tasks, always include this JSON block:
+Output Components:
+1. <thinking>...</thinking>
+2. GTM Strategy (Text)
+3. Marketing Tasks JSON:
 ```json
 {
-  "marketing_tasks": [
-    {
-      "title": "Draft landing page copy",
-      "description": "Create high-converting copy focusing on value prop X",
-      "priority": "high",
-      "assigned_agent": "marketing",
-      "channel": "Website",
-      "estimated_hours": 4
-    }
-  ],
-  "gtm_plan_summary": "Brief GTM strategy summary"
+  "marketing_tasks": [...]
 }
-```"""
+```
+4. Growth Funnel Artifact JSON (Mermaid LR chart):
+```json
+{
+  "type": "mermaid",
+  "data": {
+    "chart": "graph LR\n  A[Awareness]-->B[Interest]..."
+  }
+}
+```
+
+Style: Be creative yet strategic, persuasive, and growth-oriented. 
+Think like a Lead Marketer at a disruptive tech startup.
+CRITICAL: Use valid Mermaid `graph LR` syntax for growth funnels."""
 
 
 class MarketingAgent:

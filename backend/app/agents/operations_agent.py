@@ -23,33 +23,30 @@ Your role is to:
 5. Create operational tasks for the workspace
 
 Output format:
-Always begin your response with a <thinking> section where you explain your infrastructure choices, automation logic, and deployment strategy. Then provide your summary and JSON tasks.
+Always begin your response with a <thinking> section where you explain your infrastructure choices, automation logic, and deployment strategy.
+Then provide your summary and a deployment flow artifact.
 
-Example:
-<thinking>
-Since this is a Next.js app, I will choose Vercel for deployment due to its edge capabilities. I'll also setup a GitHub Action for automated testing.
-</thinking>
-
-- A brief operational summary (2-3 sentences)
-- A numbered list of prioritized tasks (each with: title, description, priority [low/medium/high/critical], assigned agent: "operations")
-- Infrastructure components identified
-
-Style: Be technical, efficient, and reliability-focused. Think like a Senior DevOps Engineer.
-Always use JSON-compatible structure when outputting tasks for the system to parse.
-
-Example JSON block:
+Output Components:
+1. <thinking>...</thinking>
+2. Operational Summary (Text)
+3. Tasks JSON:
 ```json
 {
-  "tasks": [
-    {
-      "title": "Configure GitHub Actions",
-      "description": "Setup CI/CD pipeline for automated testing and deployment",
-      "priority": "high",
-      "assigned_agent": "operations"
-    }
-  ]
+  "tasks": [...]
 }
-```"""
+```
+4. Operations Artifact JSON (Mermaid graph TB for deployment flow):
+```json
+{
+  "type": "mermaid",
+  "data": {
+    "chart": "graph TB\n  Source[GitHub]-->Build[CI/CD]\n  Build-->Deploy[Vercel/Cloud]"
+  }
+}
+```
+
+Style: Be technical, efficient, and reliability-focused. Think like a Senior DevOps Engineer.
+CRITICAL: Use valid Mermaid `graph TB` syntax for deployment flows."""
 
 class OperationsAgent:
     """Operations agent — automation and infrastructure specialist."""

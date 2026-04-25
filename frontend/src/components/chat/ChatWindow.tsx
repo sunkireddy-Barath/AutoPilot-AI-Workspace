@@ -128,6 +128,7 @@ export default function ChatWindow() {
         role: 'agent',
         agent_role: data.agent_role,
         content: data.content,
+        metadata: data.metadata || {},
         created_at: data.created_at || new Date().toISOString()
       })
       // Highlight the agent on the graph
@@ -151,15 +152,28 @@ export default function ChatWindow() {
   }, [activeConversationId, addMessage, appendStreamChunk, clearStream, setAgentStatus, addTask, updateTask, addAgentActivity, setWorkflowGraph, setAgentsRunning])
 
   const handleSendMessage = async (text: string) => {
-    if (!userId || !activeConversationId) {
-      toast.error('Session error. Please refresh.')
-      return
+    if (!userId) return
+
+    let currentConvId = activeConversationId
+    
+    // Auto-create session if none exists
+    if (!currentConvId) {
+      setLoading(true)
+      try {
+        const newConv = await conversationsApi.create(userId, "Autonomous Project Session") as any
+        currentConvId = newConv.id
+        setActiveConversation(currentConvId!)
+      } catch (error) {
+        toast.error('Failed to initialize session')
+        setLoading(false)
+        return
+      }
     }
 
     // Add user message locally for immediate feedback
     const userMsg: Message = {
       id: crypto.randomUUID(),
-      conversation_id: activeConversationId,
+      conversation_id: currentConvId!,
       role: 'user',
       content: text,
       created_at: new Date().toISOString()
@@ -170,7 +184,7 @@ export default function ChatWindow() {
     setLoading(true)
     try {
       const result = await chatApi.sendMessage({
-        conversation_id: activeConversationId!,
+        conversation_id: currentConvId!,
         user_id: userId,
         message: text,
         autonomous_mode: useStore.getState().autonomousMode
@@ -180,7 +194,7 @@ export default function ChatWindow() {
       if (result?.message) {
         addMessage({
           id: result.message.id,
-          conversation_id: activeConversationId,
+          conversation_id: currentConvId!,
           role: 'agent',
           agent_role: 'orchestrator',
           content: result.message.content,
@@ -321,7 +335,7 @@ export default function ChatWindow() {
       <ChatInput 
         onSend={handleSendMessage} 
         loading={loading} 
-        disabled={!activeConversationId}
+        disabled={!userId}
       />
     </div>
   )

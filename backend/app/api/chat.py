@@ -101,7 +101,7 @@ async def on_bus_event(event_type: str, data: dict):
                 "role": "assistant",
                 "content": data.get("content"),
                 "agent_role": data.get("agent_role"),
-                "metadata": {},
+                "metadata": data.get("metadata") or {},
                 "created_at": data.get("created_at") or datetime.utcnow().isoformat(),
             }
             if supabase_admin:

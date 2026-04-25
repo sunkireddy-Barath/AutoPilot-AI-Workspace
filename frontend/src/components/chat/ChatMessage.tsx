@@ -5,6 +5,7 @@ import ReactMarkdown from 'react-markdown'
 import { Message, AgentRole } from '@/lib/store'
 import { cn } from '@/lib/utils'
 import { User, ShieldCheck } from 'lucide-react'
+import ArtifactRenderer from './ArtifactRenderer'
 
 const agentAvatars: Record<AgentRole, string> = {
   product_manager: '🎯',
@@ -58,7 +59,7 @@ export default function ChatMessage({ message }: ChatMessageProps) {
       <div className="flex-1 min-w-0 space-y-2">
         <div className="flex items-center gap-2">
           <span className="text-sm font-bold text-white">
-            {isUser ? 'You' : (message.agent_role ? message.agent_role.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : 'MeDO')}
+            {isUser ? 'You' : (message.agent_role ? `MeDo ${message.agent_role.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')} Agent` : 'MeDo Agent')}
           </span>
           {!isUser && (
             <div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-brand-500/10 text-brand-400 text-[10px] font-black uppercase tracking-tighter border border-brand-500/20">
@@ -79,6 +80,14 @@ export default function ChatMessage({ message }: ChatMessageProps) {
             {message.content}
           </ReactMarkdown>
         </div>
+
+        {/* Structured Artifact Rendering (Roadmap, Architecture, etc) */}
+        {message.metadata?.artifact && (
+          <ArtifactRenderer 
+            type={message.metadata.artifact.type as any} 
+            data={message.metadata.artifact.data} 
+          />
+        )}
 
         {Boolean(message.metadata?.task_count) && (
           <div className="mt-4 flex items-center gap-2">

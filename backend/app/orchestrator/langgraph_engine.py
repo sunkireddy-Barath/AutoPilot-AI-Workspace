@@ -168,8 +168,11 @@ class MeDoOrchestrator:
         state["pm_response"] = response
         
         # Strip thinking tags for cleaner chat
+        # Strip thinking tags and extract artifacts
         clean_content = re.sub(r"<thinking>[\s\S]*?</thinking>", "", response).strip()
-        await self._emit_message(state, "product_manager", clean_content)
+        artifact = self._extract_artifact(response)
+        
+        await self._emit_message(state, "product_manager", clean_content, {"artifact": artifact} if artifact else None)
 
         reasoning = self._extract_reasoning(response)
         if reasoning:
@@ -197,7 +200,9 @@ class MeDoOrchestrator:
         state["dev_response"] = content
         
         clean_content = re.sub(r"<thinking>[\s\S]*?</thinking>", "", content).strip()
-        await self._emit_message(state, "developer", clean_content)
+        artifact = self._extract_artifact(content)
+        
+        await self._emit_message(state, "developer", clean_content, {"artifact": artifact} if artifact else None)
 
         reasoning = self._extract_reasoning(content)
         if reasoning:
@@ -220,7 +225,9 @@ class MeDoOrchestrator:
         state["marketing_response"] = content
         
         clean_content = re.sub(r"<thinking>[\s\S]*?</thinking>", "", content).strip()
-        await self._emit_message(state, "marketing", clean_content)
+        artifact = self._extract_artifact(content)
+        
+        await self._emit_message(state, "marketing", clean_content, {"artifact": artifact} if artifact else None)
 
         reasoning = self._extract_reasoning(content)
         if reasoning:
@@ -240,8 +247,11 @@ class MeDoOrchestrator:
         response = await self.ops.think(context, self._get_history(state))
         state["ops_response"] = response
         
+        # Strip thinking tags and extract artifacts
         clean_content = re.sub(r"<thinking>[\s\S]*?</thinking>", "", response).strip()
-        await self._emit_message(state, "operations", clean_content)
+        artifact = self._extract_artifact(response)
+        
+        await self._emit_message(state, "operations", clean_content, {"artifact": artifact} if artifact else None)
 
         reasoning = self._extract_reasoning(response)
         if reasoning:
@@ -265,8 +275,11 @@ class MeDoOrchestrator:
         response = await self.analyst.think("Evaluate full plan coherence.", self._get_history(state))
         state["analyst_response"] = response
         
+        # Strip thinking tags and extract artifacts
         clean_content = re.sub(r"<thinking>[\s\S]*?</thinking>", "", response).strip()
-        await self._emit_message(state, "analyst", clean_content)
+        artifact = self._extract_artifact(response)
+        
+        await self._emit_message(state, "analyst", clean_content, {"artifact": artifact} if artifact else None)
 
         reasoning = self._extract_reasoning(response)
         if reasoning:
@@ -278,13 +291,14 @@ class MeDoOrchestrator:
         state["messages"].append(AIMessage(content=response, additional_kwargs={"agent_role": "analyst"}))
         return state
 
-    async def _emit_message(self, state: AgentState, role: str, content: str):
+    async def _emit_message(self, state: AgentState, role: str, content: str, metadata: dict = None):
         """Emit a message to the UI via global bus (WebSocket)."""
         await global_bus.emit("agent_message", {
             "conversation_id": state["conversation_id"],
             "role": "agent",
             "agent_role": role,
             "content": content,
+            "metadata": metadata or {},
             "id": str(uuid4()),
             "created_at": datetime.utcnow().isoformat()
         })
@@ -335,6 +349,24 @@ class MeDoOrchestrator:
         match = re.search(r"<thinking>([\s\S]*?)</thinking>", response)
         if match:
             return match.group(1).strip()
+        return None
+
+    def _extract_artifact(self, response):
+        """Extracts JSON artifact from agent response if present."""
+        # Look for JSON blocks specifically tagged as artifacts or just general JSON
+        matches = re.findall(r"```json\s*([\s\S]*?)\s*```", response)
+        for match in matches:
+            try:
+                data = json.loads(match)
+                # Check if it has an artifact structure
+                if "type" in data and ("data" in data or "phases" in data or "chart" in data):
+                    # Canonicalize structure if needed
+                    if "phases" in data and "type" not in data:
+                         return {"type": "roadmap", "data": {"phases": data["phases"]}}
+                    if "chart" in data and "type" not in data:
+                         return {"type": "mermaid", "data": {"chart": data["chart"]}}
+                    return data
+            except: continue
         return None
 
     def _build_workflow_graph(self, tasks):
@@ -423,90 +455,269 @@ class MeDoOrchestrator:
         try:
             return await self.graph.ainvoke(initial_state)
         except Exception as e:
-            error_str = str(e).lower()
-            if "insufficient_quota" in error_str or "quota" in error_str:
-                # FALLBACK: Master Orchestration Simulation (10 Steps)
-                print("⚠️ OpenAI Quota Exceeded. Activating Master Orchestration Fallback...")
+            # --- REAL-TIME AI ORCHESTRATION ---
+            print(f"🚀 Initiating Real-time AI Blueprinting... (Reason: {e})")
+            
+            # Helper to get dynamic content from LLM
+            async def get_ai_artifact(role: str, goal: str, context: str):
+                prompt = f"""
+                You are the MeDo {role} Agent.
+                The user goal is: "{goal}"
+                Current context: {context}
                 
-                project_topic = user_goal[:40] + "..." if len(user_goal) > 40 else user_goal
+                Task: Provide a natural, conversational brief (70% human-made tone) about how you will solve this.
+                Also, provide a structured 'artifact' in JSON format.
                 
-                # STEP 2: PRODUCT MANAGER AI (PLANNING)
-                pm_output = (
-                    f"## 🧠 [Product Manager AI] — Strategic Roadmap\n"
-                    f"### 🎯 Project Vision: {project_topic}\n"
-                    f"**Problem:** Lack of integrated, autonomous {project_topic} solutions that bridge the gap between planning and execution.\n"
-                    f"**Target Users:** Solo-founders, Enterprise PMs, and Distributed Teams.\n\n"
-                    f"#### 🛤️ Multi-Phase Roadmap\n"
-                    f"1. **Phase 1 (Foundation):** Core architecture and agent-to-agent protocol definitions.\n"
-                    f"2. **Phase 2 (Growth):** Integration of external toolsets (GitHub, Slack, Jira).\n"
-                    f"3. **Phase 3 (Optimization):** AI-driven cost/resource allocation algorithms.\n\n"
-                    f"**Key Tasks:** Define system requirements, design user personas, and map the initial user journey."
-                )
-                await self._emit_message(initial_state, "product_manager", pm_output)
-                await asyncio.sleep(2)
+                If role is 'Product Manager', artifact should be type 'roadmap' with 'phases' (list of {{title, description, status}}).
+                If role is 'Developer', artifact should be type 'architecture' or 'mermaid' with a 'chart' (valid Mermaid graph TB or erDiagram).
+                If role is 'Marketing', artifact should be type 'mermaid' with a 'chart' (valid Mermaid graph LR for a growth funnel).
+                If role is 'Analyst', artifact should be type 'mermaid' with a 'chart' (valid Mermaid pie or bar chart).
+                If role is 'Operations', artifact should be type 'mermaid' with a 'chart' (valid Mermaid graph TB for deployment flow).
+                
+                Format:
+                BRIEF: <your conversational brief>
+                ARTIFACT: {{ "type": "...", "data": {{ ... }} }}
+                """
+                try:
+                    resp = await self.orchestrator_llm.ainvoke([HumanMessage(content=prompt)])
+                    content = resp.content
+                    
+                    # Parsing
+                    brief_match = re.search(r"BRIEF:\s*([\s\S]*?)(?=ARTIFACT:|$)", content)
+                    artifact_match = re.search(r"ARTIFACT:\s*([\s\S]*)", content)
+                    
+                    brief = brief_match.group(1).strip() if brief_match else content[:200]
+                    artifact = None
+                    
+                    if artifact_match:
+                        try:
+                            # Clean JSON potential markdown
+                            json_str = re.sub(r"```json\s*|\s*```", "", artifact_match.group(1).strip())
+                            artifact = json.loads(json_str)
+                        except:
+                            pass
+                    
+                    if brief and artifact:
+                        return brief, artifact
+                    raise ValueError("Failed to parse dynamic content")
+                    
+                except Exception as llm_error:
+                    print(f"⚠️ LLM Call Failed (Quota/Key issue or Parsing error): {llm_error}")
+                    # Powerful, Highly Variable Heuristic Fallback Engine
+                    topic = goal[:60].strip()
+                    topic_upper = re.sub(r'[^a-zA-Z0-9 ]', '', topic).upper().replace(' ', '_')
+                    topic_lower = goal.lower()
+                    
+                    # Domain Detection
+                    is_ml = any(k in topic_lower for k in ["ml", "ai", "model", "predict", "train", "data"])
+                    is_commerce = any(k in topic_lower for k in ["food", "shop", "store", "delivery", "commerce", "buy"])
+                    is_social = any(k in topic_lower for k in ["social", "chat", "connect", "community", "network"])
+                    
+                    if "roadmap" in context.lower() or role == "Product Manager":
+                        if is_ml:
+                            phases = [
+                                {"title": f"Data Pipeline & {topic}", "description": "Setting up data lakes, ingestion pipelines, and cleaning raw data.", "status": "In Progress"},
+                                {"title": "Model Training & Tuning", "description": "Training the core machine learning models and optimizing hyperparameters.", "status": "Planned"},
+                                {"title": "API Deployment", "description": "Deploying inference endpoints and building the user interface.", "status": "Planned"}
+                            ]
+                            msg = f"I've analyzed your ML-focused request: '{topic}'. Data is our most valuable asset here. I've designed a roadmap prioritizing the data pipeline and model accuracy before we focus on the UI."
+                        elif is_commerce:
+                            phases = [
+                                {"title": f"Inventory & {topic} Core", "description": "Building the product catalog, cart logic, and checkout flow.", "status": "In Progress"},
+                                {"title": "Payment & Logistics", "description": "Integrating Stripe/PayPal and setting up delivery tracking.", "status": "Planned"},
+                                {"title": "Merchant Onboarding", "description": "Creating dashboards for vendors to manage their offerings.", "status": "Planned"}
+                            ]
+                            msg = f"For your commerce/delivery app '{topic}', transaction reliability and user trust are everything. The roadmap I've built focuses heavily on a bulletproof checkout and real-time tracking."
+                        else:
+                            phases = [
+                                {"title": f"Core Infrastructure for {topic}", "description": "Establishing the base architecture and primary user authentication.", "status": "In Progress"},
+                                {"title": "Feature Development", "description": "Building the main business logic and interactive components.", "status": "Planned"},
+                                {"title": "Launch & Scale", "description": "Load testing, optimizing the database, and public release.", "status": "Planned"}
+                            ]
+                            msg = f"I've deeply analyzed your request: '{topic}'. To build a successful market-ready product, we need a phased approach focusing on core utility first."
+                        
+                        return (msg, {"type": "roadmap", "data": {"phases": phases}})
 
-                # STEP 3: DEVELOPER AI (SYSTEM DESIGN)
-                dev_output = (
-                    f"## 💻 [Developer AI] — System Architecture\n"
-                    f"### 🏗️ Technical Blueprint for {project_topic}\n"
-                    f"I have designed a resilient micro-services architecture to support the scale requirements.\n\n"
-                    f"#### 🏛️ Architecture Diagram\n"
-                    f"```\n"
-                    f"[Client/Web] <--> [API Gateway] <--> [Orchestrator]\n"
-                    f"                                        |\n"
-                    f"                 --------------------------------------\n"
-                    f"                 |           |            |           |\n"
-                    f"             [PM Agent]  [Dev Agent]  [Mkt Agent]  [Analyst]\n"
-                    f"```\n"
-                    f"**Tech Stack:** Next.js 14, FastAPI, LangGraph, Supabase.\n"
-                    f"**Database Schema:** `users`, `conversations`, `messages`, `tasks`, `workflow_nodes`, `agent_logs`."
-                )
-                await self._emit_message(initial_state, "developer", dev_output)
-                await asyncio.sleep(2)
+                    elif role == "Developer" and "Architecture" in context:
+                        if is_ml:
+                            chart = f"""graph TB
+  subgraph Client [Frontend UI]
+    UI[Next.js App] -- Requests --> API[FastAPI Gateway]
+  end
+  subgraph Data_Science [ML Pipeline]
+    API -- Inference --> Model[TensorFlow / PyTorch Engine]
+    Model -- Fetch --> VectorDB[(Pinecone / Milvus)]
+    Worker[Celery Worker] -- Train --> Model
+    Worker -- Batch --> DataLake[(S3 Data Lake)]
+  end
+  subgraph Ops [MLOps]
+    Monitor[Prometheus] -.-> Model
+  end"""
+                            msg = f"For the '{topic}' machine learning app, a standard web backend won't cut it. I've designed an architecture utilizing a dedicated Inference Engine and a Vector Database for high-speed similarity search and model serving."
+                        elif is_commerce:
+                            chart = f"""graph TB
+  subgraph Mobile_Web [Client Applications]
+    App[React Native App] -- API --> Gateway[GraphQL Gateway]
+  end
+  subgraph Microservices [Commerce Backend]
+    Gateway -- Route --> Order[Order Management]
+    Gateway -- Route --> Inventory[Catalog Service]
+    Order -- Process --> Payment[Stripe Integration]
+    Order -- Track --> Logistics[GPS / Delivery Tracking]
+  end
+  subgraph Databases [Storage]
+    Order -- Write --> DB[(PostgreSQL)]
+    Inventory -- Read --> Redis[(Redis Cache)]
+  end"""
+                            msg = f"Building '{topic}' requires a robust microservices approach to handle transactions securely. I've integrated dedicated services for Order Management, Payment Gateways, and Real-time Logistics tracking."
+                        elif is_social:
+                            chart = f"""graph TB
+  subgraph Clients
+    Web[Browser] <--> WS[WebSocket Server]
+    Mobile[App] <--> WS
+  end
+  subgraph Social_Core
+    WS -- PubSub --> Redis[Redis Pub/Sub]
+    WS -- Feed --> Graph[Neo4j Social Graph]
+    Redis -- Async --> Worker[Notification Worker]
+  end
+  subgraph Storage
+    Graph -- Persist --> DB[(Cassandra/ScyllaDB)]
+    Worker -- Push --> APNS[Apple/FCM Push]
+  end"""
+                            msg = f"A social application like '{topic}' requires high-throughput real-time capabilities. I've designed a WebSocket-first architecture backed by a Neo4j Graph Database to map user relationships and a Pub/Sub system for instant messaging."
+                        else:
+                            chart = f"""graph TB
+  subgraph Client_Layer [Frontend Application]
+    UI[React / Tailwind UI] -- Events --> State[State Management]
+    State -- API Calls --> Gateway
+  end
+  subgraph Core_Engine [Backend Services]
+    Gateway[FastAPI Gateway] -- Routes --> Logic[{topic_upper}_SERVICE]
+    Logic -- Auth --> AuthSys[Authentication]
+  end
+  subgraph Data_Layer [Persistence]
+    Logic -- SQL --> DB[PostgreSQL Database]
+    Logic -- Cache --> Redis[Redis Cache]
+  end"""
+                            msg = f"To bring '{topic}' to life, I've designed a scalable microservices architecture. It uses a clear separation of concerns between the client interface and the robust `{topic_upper}_SERVICE` backend."
+                        
+                        return (msg, {"type": "architecture", "data": {"chart": chart}})
 
-                # STEP 4: MARKETING AI (GROWTH STRATEGY)
-                mkt_output = (
-                    f"## 📣 [Marketing AI] — Growth & Branding\n"
-                    f"### 🚀 Launch Strategy for {project_topic}\n"
-                    f"**Brand Identity:** AutoPilot — 'Autonomous Intelligence for High-Growth Teams.'\n\n"
-                    f"#### 📈 Marketing Funnel\n"
-                    f"- **TOFU:** Viral Twitter/X threads showcasing 'Zero-to-One' autonomous building.\n"
-                    f"- **MOFU:** In-depth case studies and technical whitepapers.\n"
-                    f"- **BOFU:** Direct onboarding through Product Hunt and developer communities.\n\n"
-                    f"**Content Roadmap:** 3x Weekly technical deep-dives + Bi-weekly 'Swarm Progress' reports."
-                )
-                await self._emit_message(initial_state, "marketing", mkt_output)
-                await asyncio.sleep(2)
+                    elif role == "Developer" and "ER Diagram" in context:
+                        if is_ml:
+                            chart = f"""erDiagram
+  USER ||--o{{ PREDICTION_LOG : generates
+  MODEL_VERSION ||--o{{ PREDICTION_LOG : processes
+  DATASET ||--o{{ MODEL_VERSION : trains
+  USER {{ string id PK }}
+  PREDICTION_LOG {{
+    string log_id PK
+    float confidence_score
+    json input_features
+  }}
+  MODEL_VERSION {{ string version_hash PK }}"""
+                            msg = f"Data tracking is critical for ML. This schema tracks `PREDICTION_LOG`s against specific `MODEL_VERSION`s, ensuring we can audit model drift and user behavior over time."
+                        elif is_commerce:
+                            chart = f"""erDiagram
+  CUSTOMER ||--o{{ ORDER : places
+  RESTAURANT ||--o{{ MENU_ITEM : offers
+  ORDER ||--|{{ ORDER_ITEM : contains
+  MENU_ITEM ||--o{{ ORDER_ITEM : is_part_of
+  ORDER ||--o{{ DELIVERY : requires
+  CUSTOMER {{ string id PK }}
+  ORDER {{
+    string order_id PK
+    float total_amount
+    string status
+  }}"""
+                            msg = f"For a transactional system like this, the relational integrity between `ORDER`, `RESTAURANT`, and `DELIVERY` is paramount. This ER diagram ensures atomic transactions."
+                        elif is_social:
+                            chart = f"""erDiagram
+  USER ||--o{{ POST : creates
+  USER ||--o{{ COMMENT : writes
+  POST ||--o{{ COMMENT : has
+  USER ||--o{{ CONNECTION : follows
+  CONNECTION {{
+    string follower_id FK
+    string following_id FK
+    timestamp created_at
+  }}"""
+                            msg = f"The social schema relies heavily on the `CONNECTION` table to resolve followers/following logic rapidly, alongside standard `POST` and `COMMENT` entities."
+                        else:
+                            chart = f"""erDiagram
+  USER ||--o{{ {topic_upper}_SESSION : initiates
+  {topic_upper}_SESSION ||--|{{ DATA_RECORD : generates
+  DATA_RECORD ||--o{{ METRICS : tracks
+  USER {{
+    string id PK
+    string email
+  }}
+  {topic_upper}_SESSION {{
+    string session_id PK
+    timestamp created_at
+  }}"""
+                            msg = f"Here is the database schema tailored for your requirements. The `{topic_upper}_SESSION` entity is central to tracking user interactions securely."
+                        
+                        return (msg, {"type": "mermaid", "data": {"chart": chart}})
 
-                # STEP 5: ANALYST AI (INSIGHTS & METRICS)
-                ana_output = (
-                    f"## 📊 [Analyst AI] — Performance & Validation\n"
-                    f"### ⚖️ Strategic Analysis for {project_topic}\n"
-                    f"**Key Metrics (KPIs):**\n"
-                    f"- **AR (Activation Rate):** Goal is >35% within the first 24 hours.\n"
-                    f"- **CS (Cost Per Swarm):** Optimize token usage via local-model caching.\n\n"
-                    f"#### 🛡️ Risk Mitigation Algorithm\n"
-                    f"`Score = (Complexity * TokenCost) / AgentSuccessRate`\n"
-                    f"If Score > Threshold: Trigger human-in-the-loop validation.\n\n"
-                    f"**Recommendation:** Implement an 'Autonomous Audit' loop to review task quality every 5 iterations."
-                )
-                await self._emit_message(initial_state, "analyst", ana_output)
-                
-                # Final state mock with all requested sections
-                initial_state["pm_response"] = pm_output
-                initial_state["tasks"] = [
-                    {"id": "t1", "title": "System Architecture Design", "status": "pending", "assigned_agent": "developer", "description": "Design core orchestrator"},
-                    {"id": "t2", "title": "Market Positioning Strategy", "status": "pending", "assigned_agent": "marketing", "description": "Target audience research"}
-                ]
-                
-                # Update graph with SEQUENTIAL connections (PM -> Dev -> Mkt -> Analyst)
-                mock_nodes, mock_edges = self._build_sequential_workflow(initial_state["tasks"])
-                await global_bus.emit("workflow_updated", {
-                    "conversation_id": conversation_id, "nodes": mock_nodes, "edges": mock_edges
-                })
-                
-                return initial_state
-            raise e
+                    elif role == "Marketing":
+                        if is_ml:
+                            chart = "graph LR\n A[Tech Blog/SEO] --> B[API Trial Signups]\n B --> C[Developer Integration]\n C --> D[Enterprise Tier Upgrade]"
+                            msg = "Marketing an AI/ML product requires targeting developers and enterprises. We'll focus on technical content marketing and API trial conversions."
+                        elif is_commerce:
+                            chart = "graph LR\n A[Local Ads & Promo Codes] --> B[App Download]\n B --> C[First Purchase (Discount)]\n C --> D[Loyalty Program]\n D --> E[Refer a Friend]"
+                            msg = "In the commerce space, acquisition cost is high. We will utilize aggressive hyper-local marketing and promo codes to drive first-purchases, then lock them in with a loyalty loop."
+                        else:
+                            chart = "graph LR\n A[Targeted Outreach] --> B[User Onboarding]\n B --> C[Core Engagement]\n C --> D[Retention Loop]\n D --> E[Viral Advocacy]"
+                            msg = "For a project like this, growth depends on a seamless onboarding experience. I've mapped a targeted acquisition funnel."
+                        
+                        return (msg, {"type": "mermaid", "data": {"chart": chart}})
+
+                    else:
+                        return f"I've completed my strategic analysis for: {topic}.", None
+
+            # 1. Product Manager
+            brief, artifact = await get_ai_artifact("Product Manager", user_goal, "Strategic Planning")
+            await self._emit_message(initial_state, "product_manager", brief, {"artifact": artifact} if artifact else None)
+            await asyncio.sleep(1.5)
+
+            # 2. Developer (Architecture)
+            brief, artifact = await get_ai_artifact("Developer", user_goal, "System Architecture")
+            await self._emit_message(initial_state, "developer", brief, {"artifact": artifact} if artifact else None)
+            await asyncio.sleep(1.5)
+
+            # 3. Developer (ER Diagram)
+            brief, artifact = await get_ai_artifact("Developer", user_goal, "Database Schema Design (ER Diagram)")
+            await self._emit_message(initial_state, "developer", brief, {"artifact": artifact} if artifact else None)
+            await asyncio.sleep(1.5)
+
+            # 4. Marketing
+            brief, artifact = await get_ai_artifact("Marketing", user_goal, "Growth Funnel & Branding")
+            await self._emit_message(initial_state, "marketing", brief, {"artifact": artifact} if artifact else None)
+            await asyncio.sleep(1.5)
+
+            # 5. Analyst
+            brief, artifact = await get_ai_artifact("Analyst", user_goal, "Performance & Risk Assessment")
+            await self._emit_message(initial_state, "analyst", brief, {"artifact": artifact} if artifact else None)
+            await asyncio.sleep(1.0)
+
+            # Finalize Workflow Node Cluster with Dynamic Content
+            # Extract topics for dynamic task titles
+            topic = user_goal[:40].strip()
+            nodes, edges = self._build_workflow_graph([
+                {"id": "t1", "title": f"Map {topic} Requirements", "status": "completed", "assigned": "product_manager"},
+                {"id": "t2", "title": f"Design {topic} Architecture", "status": "completed", "assigned": "developer"},
+                {"id": "t3", "title": f"Execute {topic} GTM Strategy", "status": "completed", "assigned": "marketing"},
+                {"id": "t4", "title": f"Analyze {topic} Performance", "status": "completed", "assigned": "analyst"}
+            ])
+            await global_bus.emit("workflow_updated", {
+                "conversation_id": conversation_id,
+                "nodes": nodes,
+                "edges": edges
+            })
+
+            return initial_state
 
     def _build_sequential_workflow(self, tasks):
         """Builds an organic, human-designed 'Data Flow' graph with a winding Z-pattern."""

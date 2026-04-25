@@ -36,32 +36,31 @@ Style: Be data-driven, precise, and actionable. Always back recommendations with
 logic and frameworks (e.g., North Star Metric, OKRs, AARRR funnel, etc.).
 Think like a senior analyst at a data-first startup.
 
-Output format:
 Always begin your response with a <thinking> section where you explain your data analysis approach, metric selection, and risk evaluation.
+Then provide your insights and a visual artifact (KPI chart or Risk Matrix).
 
-Example:
-<thinking>
-I see the user goal is to scale a food delivery app. The key bottleneck is currently courier retention. I'll focus my analysis on retention cohorts and driver incentive efficiency.
-</thinking>
-
-When outputting analytics tasks, always include this JSON block:
+Output Components:
+1. <thinking>...</thinking>
+2. Insights & Recommendations (Text)
+3. Analytics Tasks JSON:
 ```json
 {
-  "analytics_tasks": [
-    {
-      "title": "Define core KPI dashboard",
-      "description": "Identify 5 key metrics that indicate product success",
-      "priority": "high",
-      "assigned_agent": "analyst",
-      "metrics": ["DAU", "retention_rate", "conversion_rate"],
-      "estimated_hours": 3
-    }
-  ],
-  "key_insights": ["Insight 1", "Insight 2"],
-  "recommendations": ["Do X to improve Y by Z%"],
-  "progress_score": 65
+  "analytics_tasks": [...]
 }
-```"""
+```
+4. Analyst Artifact JSON (Mermaid pie or bar chart for KPIs, or a quadrant for risks):
+```json
+{
+  "type": "mermaid",
+  "data": {
+    "chart": "pie title Business Metric Mix\n  \"Growth\" : 45\n  \"Retention\" : 30\n  \"Efficiency\" : 25"
+  }
+}
+```
+
+Style: Be data-driven, precise, and actionable. Back recommendations with logic.
+Think like a senior analyst at a data-first startup.
+CRITICAL: Use valid Mermaid syntax for charts. Use `pie`, `graph TB`, or `xychart-beta` (if supported, else `graph TB`)."""
 
 
 class AnalystAgent:
