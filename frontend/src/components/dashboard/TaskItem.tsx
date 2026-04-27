@@ -18,6 +18,7 @@ const agentColors: Record<AgentRole, string> = {
 interface TaskItemProps {
   task: Task
   index: number
+  projectTitle?: string
 }
 
 export default function TaskItem({ task, index }: TaskItemProps) {
@@ -33,7 +34,7 @@ export default function TaskItem({ task, index }: TaskItemProps) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ x: 4, backgroundColor: 'rgba(255,255,255,0.05)' }}
-      whileTap={{ scale: 0.98 }}
+      whileTap={{ scale: 0.99 }}
       transition={{ 
         delay: index * 0.05,
         backgroundColor: { duration: 0.2 } 
@@ -51,7 +52,14 @@ export default function TaskItem({ task, index }: TaskItemProps) {
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between">
-          <h4 className="text-sm font-bold text-white truncate">{task.title}</h4>
+          <div>
+            {projectTitle && (
+              <div className="text-[10px] font-black text-brand-500 uppercase tracking-[0.2em] mb-1">
+                {projectTitle}
+              </div>
+            )}
+            <h4 className="text-sm font-bold text-white truncate">{task.title}</h4>
+          </div>
           {task.metadata?.artifact_path && (
             <button className="text-[10px] font-bold text-brand-400 hover:text-brand-300 transition-colors flex items-center gap-1">
               <div className="h-1.5 w-1.5 rounded-full bg-brand-500 animate-pulse" />

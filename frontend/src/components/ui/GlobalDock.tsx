@@ -59,21 +59,21 @@ export default function GlobalDock() {
           <Link 
             href="/dashboard" 
             className={cn(
-              "flex flex-col items-center p-2 rounded-2xl transition-all duration-300 active:scale-90",
+              "flex flex-col items-center p-2 rounded-2xl transition-all duration-200 active:scale-95",
               pathname === '/dashboard' ? "bg-brand-600/20" : "hover:bg-white/5"
             )}
           >
             <motion.div 
               whileHover={{ y: -2 }}
               className={cn(
-                "p-2 rounded-xl transition-all duration-300",
+                "p-2 rounded-xl transition-all duration-200",
                 pathname === '/dashboard' ? "bg-brand-600 shadow-glow-brand" : "bg-surface-700 border border-white/10"
               )}
             >
               <Zap className={cn("h-5 w-5", pathname === '/dashboard' ? "text-white" : "text-brand-400")} />
             </motion.div>
             <span className={cn(
-              "text-[8px] font-black uppercase tracking-[0.2em] transition-all duration-300 overflow-hidden",
+              "text-[8px] font-black uppercase tracking-[0.2em] transition-all duration-200 overflow-hidden",
               pathname === '/dashboard' ? "text-brand-400 max-h-4 opacity-100 mt-1.5" : "text-white max-h-0 opacity-0 group-hover:max-h-4 group-hover:opacity-100 group-hover:mt-1.5"
             )}>
               Launch
@@ -97,7 +97,7 @@ export default function GlobalDock() {
                 <Link
                   href={item.href}
                   className={cn(
-                    "flex flex-col items-center px-4 py-2 rounded-2xl transition-all duration-300 group active:scale-90",
+                    "flex flex-col items-center px-4 py-2 rounded-2xl transition-all duration-200 group active:scale-95",
                     isActive 
                       ? "bg-white/5 text-brand-400" 
                       : "text-slate-400 hover:text-white hover:bg-white/5"
@@ -108,13 +108,13 @@ export default function GlobalDock() {
                     transition={springConfig}
                   >
                     <item.icon className={cn(
-                      "h-4 w-4 transition-colors duration-300",
+                      "h-4 w-4 transition-colors duration-200",
                       isActive ? "text-brand-400" : "group-hover:text-white"
                     )} />
                   </motion.div>
                   
                   <span className={cn(
-                    "text-[8px] font-black uppercase tracking-[0.2em] transition-all duration-300 overflow-hidden whitespace-nowrap",
+                    "text-[8px] font-black uppercase tracking-[0.2em] transition-all duration-200 overflow-hidden whitespace-nowrap",
                     isActive ? "text-brand-400 max-h-4 opacity-100 mt-1.5" : "text-white max-h-0 opacity-0 group-hover:max-h-4 group-hover:opacity-100 group-hover:mt-1.5"
                   )}>
                     {item.name}
@@ -156,7 +156,7 @@ export default function GlobalDock() {
             />
           </button>
           <span className={cn(
-            "text-[8px] font-black uppercase tracking-[0.2em] transition-all duration-300 overflow-hidden",
+            "text-[8px] font-black uppercase tracking-[0.2em] transition-all duration-200 overflow-hidden",
             autonomousMode ? "text-brand-400 max-h-4 opacity-100 mt-1.5" : "text-white max-h-0 opacity-0 group-hover:max-h-4 group-hover:opacity-100 group-hover:mt-1.5"
           )}>Auto</span>
         </div>
@@ -168,7 +168,7 @@ export default function GlobalDock() {
           <Link 
             href="/settings"
             className={cn(
-              "flex flex-col items-center p-2 rounded-2xl transition-all group active:scale-90",
+              "flex flex-col items-center p-2 rounded-2xl transition-all group active:scale-95",
               pathname === '/settings' ? "bg-white/5 text-brand-400" : "text-slate-400 hover:text-white hover:bg-white/5"
             )}
           >
@@ -179,14 +179,14 @@ export default function GlobalDock() {
               )} />
             </motion.div>
             <span className={cn(
-              "text-[8px] font-black uppercase tracking-[0.2em] transition-all duration-300 overflow-hidden",
+              "text-[8px] font-black uppercase tracking-[0.2em] transition-all duration-200 overflow-hidden",
               pathname === '/settings' ? "text-brand-400 max-h-4 opacity-100 mt-1.5" : "text-white max-h-0 opacity-0 group-hover:max-h-4 group-hover:opacity-100 group-hover:mt-1.5"
             )}>Setup</span>
           </Link>
 
           <button 
             onClick={handleLogout}
-            className="flex flex-col items-center p-2 rounded-2xl text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-all group active:scale-90"
+            className="flex flex-col items-center p-2 rounded-2xl text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-all group active:scale-95"
           >
             <motion.div whileHover={{ x: 2 }} transition={springConfig}>
               <LogOut className="h-4 w-4" />

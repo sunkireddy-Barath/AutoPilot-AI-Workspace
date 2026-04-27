@@ -50,7 +50,7 @@ export default function TopBar() {
           </button>
 
           {/* Dropdown Menu */}
-          <div className="absolute top-full right-0 mt-4 w-80 opacity-0 translate-y-4 pointer-events-none group-hover/nav:opacity-100 group-hover/nav:translate-y-0 group-hover/nav:pointer-events-auto transition-all duration-300 z-[70]">
+          <div className="absolute top-full right-0 mt-4 w-80 opacity-0 translate-y-4 pointer-events-none group-hover/nav:opacity-100 group-hover/nav:translate-y-0 group-hover/nav:pointer-events-auto transition-all duration-200 z-[70]">
             <div className="glass-strong rounded-[24px] border border-white/10 shadow-2xl overflow-hidden">
               <div className="p-4 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
                 <span className="text-[10px] font-black text-white uppercase tracking-widest">Neural Signals</span>

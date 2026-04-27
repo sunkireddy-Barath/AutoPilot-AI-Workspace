@@ -14,6 +14,14 @@ export default function FileExplorer() {
 
   useEffect(() => {
     fetchFiles()
+
+    // Listen for global workspace updates from the orchestrator
+    const handleUpdate = () => fetchFiles()
+    window.addEventListener('workspace_files_updated', handleUpdate)
+    
+    return () => {
+      window.removeEventListener('workspace_files_updated', handleUpdate)
+    }
   }, [])
 
   const fetchFiles = async () => {

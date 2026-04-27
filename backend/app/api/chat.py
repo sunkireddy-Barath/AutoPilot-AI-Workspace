@@ -108,7 +108,26 @@ async def on_bus_event(event_type: str, data: dict):
                 try:
                     supabase_admin.table("messages").insert(msg_data).execute()
                 except Exception as e:
-                    print(f"Error persisting agent message: {e}")
+                    print(f"❌ Supabase Persistence Error (Agent Message): {e}")
+                    if hasattr(e, 'message'): print(f"Detail: {e.message}")
+
+        # PERSIST: Tasks
+        elif event_type == "task_created" and supabase_admin:
+            task = data.get("task")
+            if task:
+                try:
+                    supabase_admin.table("tasks").insert(task).execute()
+                except Exception as e:
+                    print(f"❌ Supabase Persistence Error (Task): {e}")
+
+        # PERSIST: Activities
+        elif event_type == "agent_activity" and supabase_admin:
+            activity = data.get("activity")
+            if activity:
+                try:
+                    supabase_admin.table("agent_activities").insert(activity).execute()
+                except Exception as e:
+                    print(f"❌ Supabase Persistence Error (Activity): {e}")
 
         # Use the whole data object for agent_message to preserve all fields (id, agent_role, content)
         event_payload = data
@@ -155,7 +174,7 @@ async def chat(request: ChatRequest):
                 "updated_at": datetime.utcnow().isoformat()
             }).execute()
         except Exception as e:
-            print(f"Error ensuring conversation exists: {e}")
+            print(f"❌ Supabase Persistence Error (Upsert Conversation): {e}")
 
     # 1. Save user message to Supabase
     user_msg = {
@@ -170,7 +189,23 @@ async def chat(request: ChatRequest):
         try:
             supabase_admin.table("messages").insert(user_msg).execute()
         except Exception as e:
-            print(f"Error saving user message: {e}")
+            print(f"❌ Supabase Persistence Error (User Message): {e}")
+
+    # 0.5 Ensure workflow exists (Initial Draft)
+    workflow_id = str(uuid4())
+    if supabase_admin:
+        try:
+            supabase_admin.table("workflows").insert({
+                "id": workflow_id,
+                "user_id": user_id,
+                "conversation_id": conversation_id,
+                "title": f"Blueprint: {request.message[:40]}...",
+                "status": "running",
+                "created_at": datetime.utcnow().isoformat(),
+                "updated_at": datetime.utcnow().isoformat(),
+            }).execute()
+        except Exception as e:
+            print(f"❌ Supabase Persistence Error (Initial Workflow): {e}")
 
     # 2. Broadcast: user message received, agents starting
     await manager.broadcast(conversation_id, WSEvent(
@@ -207,6 +242,7 @@ async def chat(request: ChatRequest):
             user_id=user_id,
             history=history,
             autonomous=request.autonomous_mode,
+            workflow_id=workflow_id,
         )
     except Exception as exc:
         await manager.broadcast(conversation_id, WSEvent(
@@ -216,73 +252,23 @@ async def chat(request: ChatRequest):
         ))
         raise HTTPException(status_code=500, detail=f"Agent pipeline error: {exc}")
 
-    # 5. Persist all generated tasks
-    saved_tasks = []
-    if supabase_admin:
-        for task in final_state.get("tasks", []):
-            task_row = {
-                "id": task["id"],
-                "user_id": user_id,
-                "conversation_id": conversation_id,
-                "title": task["title"],
-                "description": task["description"],
-                "status": task.get("status", "pending"),
-                "priority": task.get("priority", "medium"),
-                "assigned_agent": task.get("assigned_agent"),
-                "progress": 0,
-                "created_at": datetime.utcnow().isoformat(),
+    # 5. Finalize the workflow graph
+    if supabase_admin and workflow_id:
+        try:
+            supabase_admin.table("workflows").update({
+                "nodes": final_state.get("workflow_nodes", []),
+                "edges": final_state.get("workflow_edges", []),
+                "status": "completed",
                 "updated_at": datetime.utcnow().isoformat(),
-            }
-            try:
-                result = supabase_admin.table("tasks").insert(task_row).execute()
-                if result.data:
-                    saved_tasks.append(result.data[0])
-                    # Broadcast each new task
-                    await manager.broadcast(conversation_id, WSEvent(
-                        event=WSEventType.TASK_CREATED,
-                        data=result.data[0],
-                        conversation_id=conversation_id,
-                    ))
-            except Exception:
-                continue  # skip duplicates
-    else:
-        # Demo mode: return in-memory tasks
-        saved_tasks = final_state.get("tasks", [])
-
-    # 6. Persist all agent activities
-    if supabase_admin:
-        for activity in final_state.get("agent_activities", []):
-            try:
-                supabase_admin.table("agent_activities").insert({
-                    "id": activity["id"],
-                    "agent_role": activity["agent_role"],
-                    "action": activity["action"],
-                    "detail": activity["detail"],
-                    "status": activity["status"],
-                    "conversation_id": conversation_id,
-                    "metadata": {},
-                    "timestamp": activity["timestamp"],
-                }).execute()
-                await manager.broadcast(conversation_id, WSEvent(
-                    event=WSEventType.AGENT_ACTIVITY,
-                    data=activity,
-                    conversation_id=conversation_id,
-                ))
-            except Exception:
-                continue
-    else:
-        # Demo mode: broadcast activities only
-        for activity in final_state.get("agent_activities", []):
-            await manager.broadcast(conversation_id, WSEvent(
-                event=WSEventType.AGENT_ACTIVITY,
-                data=activity,
-                conversation_id=conversation_id,
-            ))
+            }).eq("id", workflow_id).execute()
+        except Exception as e:
+            print(f"❌ Supabase Persistence Error (Final Workflow): {e}")
 
     return {
         "status": "success",
         "conversation_id": conversation_id,
-        "tasks": saved_tasks,
+        "workflow_id": workflow_id,
+        "tasks": final_state.get("tasks", []),
         "workflow_nodes": final_state.get("workflow_nodes", []),
         "workflow_edges": final_state.get("workflow_edges", []),
         "agent_activities": final_state.get("agent_activities", []),

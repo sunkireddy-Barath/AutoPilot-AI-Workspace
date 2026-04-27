@@ -38,7 +38,7 @@ export default function ChatInput({ onSend, disabled, loading }: ChatInputProps)
   }, [input])
 
   return (
-    <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-full max-w-3xl px-6 z-20">
+    <div className="absolute bottom-32 left-1/2 -translate-x-1/2 w-full max-w-3xl px-6 z-20">
       <motion.div 
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -48,7 +48,7 @@ export default function ChatInput({ onSend, disabled, loading }: ChatInputProps)
         <div className="absolute -inset-1 bg-gradient-to-r from-brand-500/20 via-brand-400/10 to-brand-600/20 rounded-[24px] blur-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-700" />
         
         <div className={cn(
-          "relative flex flex-col gap-2 p-3 rounded-[24px] border border-white/10 transition-all duration-500 shadow-2xl overflow-hidden",
+          "relative flex flex-col gap-2 p-3 rounded-[24px] border border-white/10 transition-all duration-300 shadow-2xl overflow-hidden",
           "bg-[#111118]/80 backdrop-blur-3xl focus-within:border-brand-500/40 focus-within:shadow-glow-brand/20",
           "hover:border-white/20"
         )}>
@@ -81,7 +81,7 @@ export default function ChatInput({ onSend, disabled, loading }: ChatInputProps)
                   : "bg-white/5 text-slate-500 cursor-not-allowed"
               )}
             >
-              <AnimatePresence mode="wait">
+              <AnimatePresence mode="popLayout">
                 {loading ? (
                   <motion.div
                     key="loading"

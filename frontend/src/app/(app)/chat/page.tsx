@@ -61,10 +61,10 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="w-full h-full max-w-full flex flex-col bg-[#050508]">
+    <div className="w-full h-full max-w-full flex flex-col bg-[#050508] pt-6 overflow-hidden">
       <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
+        initial={{ opacity: 0, scale: 0.98 }}
+        animate={{ opacity: 1, scale: 1 }}
         className="flex-1 min-h-0 relative overflow-hidden"
       >
         <ChatWindow />

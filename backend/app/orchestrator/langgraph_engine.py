@@ -45,6 +45,7 @@ class AgentState(TypedDict):
     user_goal: str
     conversation_id: str
     user_id: str
+    workflow_id: Optional[str]
     messages: Annotated[List[BaseMessage], add_messages]
     pm_response: str
     dev_response: str
@@ -151,7 +152,7 @@ class MeDoOrchestrator:
                 activity = self._create_activity(
                     AgentRole.ORCHESTRATOR, "Tool Call",
                     f"Executed {tool_name}: {result[:60]}...", "completed",
-                    state["conversation_id"]
+                    state["conversation_id"], state.get("workflow_id")
                 )
                 state["agent_activities"].append(activity)
                 await global_bus.emit("agent_activity", {"conversation_id": state["conversation_id"], "activity": activity})
@@ -177,7 +178,7 @@ class MeDoOrchestrator:
         reasoning = self._extract_reasoning(response)
         if reasoning:
             activity = self._create_activity(
-                AgentRole.PRODUCT_MANAGER, "Thinking", reasoning, "completed", state["conversation_id"]
+                AgentRole.PRODUCT_MANAGER, "Thinking", reasoning, "completed", state["conversation_id"], state.get("workflow_id")
             )
             await global_bus.emit("agent_activity", {"conversation_id": state["conversation_id"], "activity": activity})
 
@@ -207,7 +208,7 @@ class MeDoOrchestrator:
         reasoning = self._extract_reasoning(content)
         if reasoning:
             activity = self._create_activity(
-                AgentRole.DEVELOPER, "Thinking", reasoning, "completed", state["conversation_id"]
+                AgentRole.DEVELOPER, "Thinking", reasoning, "completed", state["conversation_id"], state.get("workflow_id")
             )
             await global_bus.emit("agent_activity", {"conversation_id": state["conversation_id"], "activity": activity})
             
@@ -232,7 +233,7 @@ class MeDoOrchestrator:
         reasoning = self._extract_reasoning(content)
         if reasoning:
             activity = self._create_activity(
-                AgentRole.MARKETING, "Thinking", reasoning, "completed", state["conversation_id"]
+                AgentRole.MARKETING, "Thinking", reasoning, "completed", state["conversation_id"], state.get("workflow_id")
             )
             await global_bus.emit("agent_activity", {"conversation_id": state["conversation_id"], "activity": activity})
 
@@ -256,7 +257,7 @@ class MeDoOrchestrator:
         reasoning = self._extract_reasoning(response)
         if reasoning:
             activity = self._create_activity(
-                AgentRole.OPERATIONS, "Thinking", reasoning, "completed", state["conversation_id"]
+                AgentRole.OPERATIONS, "Thinking", reasoning, "completed", state["conversation_id"], state.get("workflow_id")
             )
             await global_bus.emit("agent_activity", {"conversation_id": state["conversation_id"], "activity": activity})
 
@@ -284,7 +285,7 @@ class MeDoOrchestrator:
         reasoning = self._extract_reasoning(response)
         if reasoning:
             activity = self._create_activity(
-                AgentRole.ANALYST, "Thinking", reasoning, "completed", state["conversation_id"]
+                AgentRole.ANALYST, "Thinking", reasoning, "completed", state["conversation_id"], state.get("workflow_id")
             )
             await global_bus.emit("agent_activity", {"conversation_id": state["conversation_id"], "activity": activity})
 
@@ -311,10 +312,11 @@ class MeDoOrchestrator:
 
     # ── Helpers ──────────────────────────────────────────────────────────
 
-    def _create_activity(self, agent_role, action, detail, status, conv_id):
+    def _create_activity(self, agent_role, action, detail, status, conv_id, workflow_id=None):
         return {
             "id": str(uuid4()), "agent_role": agent_role.value, "action": action,
             "detail": detail, "status": status, "conversation_id": conv_id,
+            "workflow_id": workflow_id,
             "timestamp": datetime.utcnow().isoformat(),
         }
 
@@ -339,7 +341,9 @@ class MeDoOrchestrator:
                         "description": t.get("description", ""), "status": "pending",
                         "priority": "medium", "assigned_agent": t.get("assigned_agent", "pm"),
                         "progress": 0, "user_id": state["user_id"],
-                        "conversation_id": state["conversation_id"], "created_at": datetime.utcnow().isoformat(),
+                        "conversation_id": state["conversation_id"], 
+                        "workflow_id": state.get("workflow_id"),
+                        "created_at": datetime.utcnow().isoformat(),
                     })
             except: continue
         return tasks
@@ -433,7 +437,7 @@ class MeDoOrchestrator:
 
         return nodes, edges
 
-    async def run(self, user_goal, conversation_id, user_id, history=None, autonomous=False):
+    async def run(self, user_goal, conversation_id, user_id, history=None, autonomous=False, workflow_id=None):
         # Emit initial nodes immediately for UI responsiveness
         nodes, edges = self._build_workflow_graph([])
         await global_bus.emit("workflow_updated", {
@@ -445,6 +449,7 @@ class MeDoOrchestrator:
         lc_messages = [HumanMessage(content=user_goal)]
         initial_state = {
             "user_goal": user_goal, "conversation_id": conversation_id, "user_id": user_id,
+            "workflow_id": workflow_id,
             "messages": lc_messages, "pm_response": "", "dev_response": "",
             "marketing_response": "", "analyst_response": "", "ops_response": "", "tasks": [],
             "workflow_nodes": nodes, "workflow_edges": edges, "agent_activities": [],
@@ -680,37 +685,62 @@ class MeDoOrchestrator:
             # 1. Product Manager
             brief, artifact = await get_ai_artifact("Product Manager", user_goal, "Strategic Planning")
             await self._emit_message(initial_state, "product_manager", brief, {"artifact": artifact} if artifact else None)
+            activity = self._create_activity(AgentRole.PRODUCT_MANAGER, "Planning", "Strategic Roadmap Generated", "completed", conversation_id, workflow_id)
+            initial_state["agent_activities"].append(activity)
+            await global_bus.emit("agent_activity", {"conversation_id": conversation_id, "activity": activity})
             await asyncio.sleep(1.5)
 
             # 2. Developer (Architecture)
             brief, artifact = await get_ai_artifact("Developer", user_goal, "System Architecture")
             await self._emit_message(initial_state, "developer", brief, {"artifact": artifact} if artifact else None)
+            activity = self._create_activity(AgentRole.DEVELOPER, "Architecting", "System Blueprint Designed", "completed", conversation_id, workflow_id)
+            initial_state["agent_activities"].append(activity)
+            await global_bus.emit("agent_activity", {"conversation_id": conversation_id, "activity": activity})
             await asyncio.sleep(1.5)
 
             # 3. Developer (ER Diagram)
             brief, artifact = await get_ai_artifact("Developer", user_goal, "Database Schema Design (ER Diagram)")
             await self._emit_message(initial_state, "developer", brief, {"artifact": artifact} if artifact else None)
+            activity = self._create_activity(AgentRole.DEVELOPER, "Data Modeling", "ER Diagram Generated", "completed", conversation_id, workflow_id)
+            initial_state["agent_activities"].append(activity)
+            await global_bus.emit("agent_activity", {"conversation_id": conversation_id, "activity": activity})
             await asyncio.sleep(1.5)
 
             # 4. Marketing
             brief, artifact = await get_ai_artifact("Marketing", user_goal, "Growth Funnel & Branding")
             await self._emit_message(initial_state, "marketing", brief, {"artifact": artifact} if artifact else None)
+            activity = self._create_activity(AgentRole.MARKETING, "Market Analysis", "Growth Funnel Mapped", "completed", conversation_id, workflow_id)
+            initial_state["agent_activities"].append(activity)
+            await global_bus.emit("agent_activity", {"conversation_id": conversation_id, "activity": activity})
             await asyncio.sleep(1.5)
 
             # 5. Analyst
             brief, artifact = await get_ai_artifact("Analyst", user_goal, "Performance & Risk Assessment")
             await self._emit_message(initial_state, "analyst", brief, {"artifact": artifact} if artifact else None)
+            activity = self._create_activity(AgentRole.ANALYST, "Analysis", "Risk Assessment Finalized", "completed", conversation_id, workflow_id)
+            initial_state["agent_activities"].append(activity)
+            await global_bus.emit("agent_activity", {"conversation_id": conversation_id, "activity": activity})
             await asyncio.sleep(1.0)
 
             # Finalize Workflow Node Cluster with Dynamic Content
             # Extract topics for dynamic task titles
             topic = user_goal[:40].strip()
-            nodes, edges = self._build_workflow_graph([
-                {"id": "t1", "title": f"Map {topic} Requirements", "status": "completed", "assigned": "product_manager"},
-                {"id": "t2", "title": f"Design {topic} Architecture", "status": "completed", "assigned": "developer"},
-                {"id": "t3", "title": f"Execute {topic} GTM Strategy", "status": "completed", "assigned": "marketing"},
-                {"id": "t4", "title": f"Analyze {topic} Performance", "status": "completed", "assigned": "analyst"}
-            ])
+            fallback_tasks = [
+                {"id": str(uuid4()), "title": f"Map {topic} Requirements", "status": "completed", "assigned_agent": "product_manager", "user_id": user_id, "conversation_id": conversation_id, "workflow_id": workflow_id},
+                {"id": str(uuid4()), "title": f"Design {topic} Architecture", "status": "completed", "assigned_agent": "developer", "user_id": user_id, "conversation_id": conversation_id, "workflow_id": workflow_id},
+                {"id": str(uuid4()), "title": f"Execute {topic} GTM Strategy", "status": "completed", "assigned_agent": "marketing", "user_id": user_id, "conversation_id": conversation_id, "workflow_id": workflow_id},
+                {"id": str(uuid4()), "title": f"Analyze {topic} Performance", "status": "completed", "assigned_agent": "analyst", "user_id": user_id, "conversation_id": conversation_id, "workflow_id": workflow_id}
+            ]
+            initial_state["tasks"].extend(fallback_tasks)
+            
+            # Broadcast tasks so they are persisted by on_bus_event
+            for t in fallback_tasks:
+                await global_bus.emit("task_created", {"conversation_id": conversation_id, "task": t})
+
+            nodes, edges = self._build_workflow_graph(fallback_tasks)
+            initial_state["workflow_nodes"] = nodes
+            initial_state["workflow_edges"] = edges
+            
             await global_bus.emit("workflow_updated", {
                 "conversation_id": conversation_id,
                 "nodes": nodes,

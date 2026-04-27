@@ -69,7 +69,17 @@ function RoadmapRenderer({ phases }: { phases: any[] }) {
                 <span className="text-[10px] font-bold text-slate-500">{phase.status || 'Planned'}</span>
               </div>
               <h5 className="text-sm font-bold text-white mb-1">{phase.title}</h5>
-              <p className="text-xs text-slate-400 leading-relaxed">{phase.description}</p>
+              <p className="text-xs text-slate-400 leading-relaxed mb-3">{phase.description}</p>
+              
+              {phase.milestones && phase.milestones.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {phase.milestones.map((m: string, mIdx: number) => (
+                    <span key={mIdx} className="text-[9px] px-2 py-0.5 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-400 font-bold uppercase tracking-tighter">
+                      {m}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
             
             {/* Connector Line */}

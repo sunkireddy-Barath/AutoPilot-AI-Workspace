@@ -12,6 +12,7 @@ import { Toaster } from 'react-hot-toast'
 import CursorSpotlight from '@/components/ui/CursorSpotlight'
 
 import TopBar from '@/components/ui/TopBar'
+import GlobalOrchestrator from '@/components/ui/GlobalOrchestrator'
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
@@ -25,8 +26,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         if (!userId) {
           router.replace('/auth')
         }
-        // Artificial delay for premium feel
-        setTimeout(() => setLoading(false), 1200)
+        // Removed artificial delay for snappy performance
+        setLoading(false)
         return
       }
 
@@ -59,18 +60,19 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-screen overflow-hidden bg-[#050508] relative">
       <MeshBackground />
+      <GlobalOrchestrator />
       
-      <main className="flex-1 overflow-auto relative pb-28">
-        <AnimatePresence mode="wait">
+      <main className="flex-1 overflow-y-auto overflow-x-hidden relative">
+        <AnimatePresence mode="popLayout">
           <motion.div
             key={pathname}
-            initial={{ opacity: 0, y: 10, filter: 'blur(10px)' }}
+            initial={{ opacity: 0, y: 8, filter: 'blur(8px)' }}
             animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-            exit={{ opacity: 0, y: -10, filter: 'blur(10px)' }}
+            exit={{ opacity: 0, y: -8, filter: 'blur(8px)' }}
             transition={{ 
-              duration: 0.5, 
-              ease: [0.22, 1, 0.36, 1],
-              opacity: { duration: 0.4 }
+              duration: 0.3, 
+              ease: [0.23, 1, 0.32, 1],
+              opacity: { duration: 0.2 }
             }}
             className="h-full"
           >

@@ -83,7 +83,7 @@ export const workflowsApi = {
 export const agentsApi = {
   getActivities: (conversationId?: string) => {
     const qs = conversationId ? `conversation_id=${conversationId}` : ''
-    return request<unknown[]>(`/api/v1/agent-activities?${qs}&limit=50`)
+    return request<unknown[]>(`/api/v1/agents/activities?${qs}&limit=50`)
   },
 }
 
