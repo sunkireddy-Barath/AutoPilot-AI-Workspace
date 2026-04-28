@@ -9,10 +9,10 @@ import { motion } from 'framer-motion'
 import { Network, Share2, Download, Maximize2 } from 'lucide-react'
 
 export default function WorkflowsPage() {
-  const { userId, setWorkflowGraph, workflowNodes, agentActivities, tasks } = useStore()
+  const { userId, setWorkflowGraph, workflowNodes, agentActivities, tasks, isAgentsRunning, setAgentsRunning } = useStore()
 
   // Dynamic Calculations
-  const activeNodes = workflowNodes.length
+  const activeNodes = workflowNodes.filter(n => n.data?.role !== 'orchestrator').length
   
   const orchestratorLog = agentActivities.find(a => a.agent_role === 'orchestrator')
   const insightText = orchestratorLog ? orchestratorLog.detail : "Graph initialized. Awaiting orchestrator routing."
@@ -54,6 +54,12 @@ export default function WorkflowsPage() {
               <div className="h-2 w-2 rounded-full bg-brand-500 shadow-glow-brand" />
               <span className="text-xs font-bold text-white uppercase tracking-tighter">Live Connection</span>
             </div>
+            <button 
+              onClick={() => setAgentsRunning(!isAgentsRunning)}
+              className="px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase transition-all bg-brand-500/20 text-brand-400 hover:bg-brand-500/30 border border-brand-500/30"
+            >
+              {isAgentsRunning ? 'Stop Simulation' : 'Simulate'}
+            </button>
             <div className="flex items-center gap-2">
               <Network className="h-4 w-4 text-slate-500" />
               <span className="text-xs text-slate-400 font-medium">{activeNodes} Active Nodes</span>

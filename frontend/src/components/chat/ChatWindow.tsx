@@ -2,12 +2,12 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { 
-  PlusCircle, 
-  Settings2, 
-  History, 
-  Bot, 
-  Cpu, 
+import {
+  PlusCircle,
+  Settings2,
+  History,
+  Bot,
+  Cpu,
   Zap,
   RefreshCw,
   Rocket,
@@ -23,11 +23,11 @@ import ThinkingIndicator from './ThinkingIndicator'
 import toast from 'react-hot-toast'
 
 export default function ChatWindow() {
-  const { 
-    userId, 
-    activeConversationId, 
-    messages, 
-    setMessages, 
+  const {
+    userId,
+    activeConversationId,
+    messages,
+    setMessages,
     addMessage,
     setActiveConversation,
     streamingContent,
@@ -78,7 +78,7 @@ export default function ChatWindow() {
     if (!userId) return
 
     let currentConvId = activeConversationId
-    
+
     // Auto-create session if none exists
     if (!currentConvId) {
       setLoading(true)
@@ -134,7 +134,7 @@ export default function ChatWindow() {
 
   const handleNewSession = async () => {
     if (!userId) return
-    
+
     setLoading(true)
     try {
       const newConv = await conversationsApi.create(userId, "New Analysis Session") as any
@@ -167,8 +167,8 @@ export default function ChatWindow() {
           {/* Actions Section */}
           <div className="flex items-center gap-3">
             <div className="hidden sm:flex items-center gap-1.5 mr-3">
-               <span className="flex h-1.5 w-1.5 rounded-full bg-green-500" />
-               <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Core Status: <span className="text-green-400">Optimal</span></span>
+              <span className="flex h-1.5 w-1.5 rounded-full bg-green-500" />
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Core Status: <span className="text-green-400">Optimal</span></span>
             </div>
 
             <div className="flex items-center gap-1 border-l border-white/10 pl-4 mr-2">
@@ -176,7 +176,7 @@ export default function ChatWindow() {
               <button className="p-2 text-slate-500 hover:text-white transition-all rounded-lg hover:bg-white/5" title="Settings"><Settings2 className="h-4 w-4" /></button>
             </div>
 
-            <button 
+            <button
               onClick={handleNewSession}
               disabled={loading}
               className="flex items-center gap-2 h-9 px-4 rounded-xl bg-white text-black font-black text-[10px] uppercase tracking-widest hover:bg-brand-500 hover:text-white transition-all active:scale-95 shadow-sm"
@@ -189,14 +189,14 @@ export default function ChatWindow() {
       </header>
 
       {/* Messages Area */}
-      <div 
+      <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto scroll-smooth custom-scrollbar pb-72"
+        className="flex-1 overflow-y-auto scroll-smooth custom-scrollbar pb-72 flex flex-col"
       >
-        <div className="max-w-3xl mx-auto py-12 px-6">
+        <div className="max-w-3xl w-full mx-auto px-6 flex-1 flex flex-col">
           {messages.length === 0 && !loading && (
-            <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
-              <motion.div 
+            <div className="flex flex-col items-center my-auto text-center px-4 py-12">
+              <motion.div
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 className="w-20 h-20 rounded-3xl bg-brand-600/10 flex items-center justify-center mb-8 border border-brand-500/20 shadow-glow-brand/20 relative"
@@ -204,14 +204,14 @@ export default function ChatWindow() {
                 <div className="absolute inset-0 bg-brand-500/20 blur-2xl rounded-full" />
                 <Zap className="h-10 w-10 text-brand-400 fill-brand-400/20 relative z-10" />
               </motion.div>
-              
+
               <h1 className="text-4xl font-black text-white mb-4 tracking-tighter">
                 Neural <span className="text-brand-500">AutoPilot</span>
               </h1>
               <p className="text-slate-500 max-w-sm text-base font-medium leading-relaxed mb-12">
                 The next generation of autonomous project execution. Describe your goal to begin.
               </p>
-              
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl">
                 {[
                   { title: "Product Manager", desc: "Define goals, user stories & roadmaps", icon: Rocket, msg: "Act as the Product Manager and help me define a roadmap for a new app." },
@@ -219,7 +219,7 @@ export default function ChatWindow() {
                   { title: "Marketing Expert", desc: "Draft campaigns and growth strategies", icon: Share2, msg: "Act as the Marketing Expert and create a growth campaign for my product." },
                   { title: "Data Analyst", desc: "Extract insights and define KPIs", icon: Search, msg: "Act as the Data Analyst and define key metrics for my business." }
                 ].map((item) => (
-                  <button 
+                  <button
                     key={item.title}
                     onClick={() => handleSendMessage(item.msg)}
                     className="flex flex-col items-start p-5 rounded-[20px] bg-white/[0.03] border border-white/5 hover:border-brand-500/30 hover:bg-white/[0.05] transition-all duration-300 group text-left relative overflow-hidden h-28"
@@ -229,7 +229,7 @@ export default function ChatWindow() {
                     </div>
                     <div className="text-[10px] font-black text-brand-500 uppercase tracking-widest mb-1 transition-transform duration-300 group-hover:-translate-y-1">Agent</div>
                     <div className="text-sm font-bold text-white mb-1 transition-transform duration-300 group-hover:-translate-y-1">{item.title}</div>
-                    
+
                     {/* Words displayed in bottom side on mouse over */}
                     <div className="absolute bottom-5 left-5 right-5 text-xs text-slate-500 opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 pointer-events-none">
                       {item.desc}
@@ -244,9 +244,9 @@ export default function ChatWindow() {
             {messages.map((msg) => (
               <ChatMessage key={msg.id} message={msg} />
             ))}
-            
+
             {streamingContent && (
-              <ChatMessage 
+              <ChatMessage
                 message={{
                   id: 'streaming',
                   conversation_id: activeConversationId!,
@@ -254,10 +254,10 @@ export default function ChatWindow() {
                   agent_role: activeAgent || 'orchestrator',
                   content: streamingContent,
                   created_at: new Date().toISOString()
-                }} 
+                }}
               />
             )}
-            
+
             {activeAgent && !streamingContent && (
               <ThinkingIndicator role={activeAgent} />
             )}
@@ -266,9 +266,9 @@ export default function ChatWindow() {
       </div>
 
       {/* Input Area */}
-      <ChatInput 
-        onSend={handleSendMessage} 
-        loading={loading} 
+      <ChatInput
+        onSend={handleSendMessage}
+        loading={loading}
         disabled={!userId}
       />
     </div>
@@ -277,18 +277,18 @@ export default function ChatWindow() {
 
 function ArrowRight(props: any) {
   return (
-    <svg 
+    <svg
       {...props}
-      xmlns="http://www.w3.org/2000/svg" 
-      width="24" height="24" 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="2" 
-      strokeLinecap="round" 
+      xmlns="http://www.w3.org/2000/svg"
+      width="24" height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
       strokeLinejoin="round"
     >
-      <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
+      <path d="M5 12h14" /><path d="m12 5 7 7-7 7" />
     </svg>
   )
 }

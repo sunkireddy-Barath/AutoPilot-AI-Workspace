@@ -20,11 +20,16 @@ import { useStore, AgentRole } from '@/lib/store'
 import AgentNode from './AgentNode'
 import TaskNode from './TaskNode'
 import GoalNode from './GoalNode'
+import CustomEdge from './CustomEdge'
 
 const nodeTypes = {
   agent: AgentNode,
   task: TaskNode,
   goal: GoalNode,
+}
+
+const edgeTypes = {
+  custom: CustomEdge,
 }
 
 const dagreGraph = new dagre.graphlib.Graph()
@@ -33,34 +38,43 @@ dagreGraph.setDefaultEdgeLabel(() => ({}))
 const nodeWidth = 200
 const nodeHeight = 100
 
-const getLayoutedElements = (nodes: any[], edges: any[], direction = 'TB') => {
-  const isHorizontal = direction === 'LR'
-  dagreGraph.setGraph({ rankdir: direction })
+const getLayoutedElements = (nodes: any[], edges: any[]) => {
+  // Find the center node (orchestrator or the first node if none)
+  const centerNodeIndex = nodes.findIndex(n => n.data?.role === 'orchestrator' || n.id.includes('orchestrator'));
+  const centerNode = centerNodeIndex !== -1 ? nodes[centerNodeIndex] : (nodes.length > 0 ? nodes[0] : null);
+  
+  if (!centerNode) return { nodes, edges };
 
-  nodes.forEach((node) => {
-    dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight })
-  })
-
-  edges.forEach((edge) => {
-    dagreGraph.setEdge(edge.source, edge.target)
-  })
-
-  dagre.layout(dagreGraph)
+  const radiusX = 550;
+  const radiusY = 250;
+  const otherNodes = nodes.filter(n => n.id !== centerNode.id);
+  const angleStep = (2 * Math.PI) / (otherNodes.length || 1);
 
   const layoutedNodes = nodes.map((node) => {
-    const nodeWithPosition = dagreGraph.node(node.id)
+    if (node.id === centerNode.id) {
+      return {
+        ...node,
+        targetPosition: 'top',
+        sourcePosition: 'bottom',
+        position: { x: 0, y: 0 },
+      };
+    }
+
+    const index = otherNodes.findIndex(n => n.id === node.id);
+    const angle = index * angleStep - Math.PI / 2; // Start from top
+    
     return {
       ...node,
-      targetPosition: isHorizontal ? 'left' : 'top',
-      sourcePosition: isHorizontal ? 'right' : 'bottom',
+      targetPosition: 'top',
+      sourcePosition: 'bottom',
       position: {
-        x: nodeWithPosition.x - nodeWidth / 2,
-        y: nodeWithPosition.y - nodeHeight / 2,
+        x: radiusX * Math.cos(angle),
+        y: radiusY * Math.sin(angle),
       },
-    }
-  })
+    };
+  });
 
-  return { nodes: layoutedNodes, edges }
+  return { nodes: layoutedNodes, edges };
 }
 
 export default function WorkflowGraph() {
@@ -92,8 +106,10 @@ export default function WorkflowGraph() {
     // Animate edges if agents are running
     const enrichedEdges = workflowEdges.map(edge => ({
       ...edge,
-      animated: isAgentsRunning,
-      style: { stroke: isAgentsRunning ? '#6366f1' : 'rgba(255,255,255,0.1)', strokeWidth: 2 },
+      type: 'custom',
+      animated: false,
+      data: { ...edge.data, isSimulating: isAgentsRunning },
+      style: { stroke: 'rgba(255,255,255,0.1)', strokeWidth: 2 },
     }))
 
     const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
@@ -119,6 +135,7 @@ export default function WorkflowGraph() {
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
         fitView
         colorMode="dark"
         proOptions={{ hideAttribution: true }}

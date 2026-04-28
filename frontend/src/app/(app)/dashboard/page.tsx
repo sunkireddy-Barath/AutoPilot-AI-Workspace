@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { 
   Rocket, 
@@ -16,7 +17,6 @@ import { tasksApi, agentsApi, conversationsApi } from '@/lib/api'
 import DashboardHeader from '@/components/dashboard/DashboardHeader'
 import StatCard from '@/components/dashboard/StatCard'
 import TaskItem from '@/components/dashboard/TaskItem'
-import AgentActivityTimeline from '@/components/dashboard/AgentActivityTimeline'
 import Link from 'next/link'
 import InteractiveCard from '@/components/ui/InteractiveCard'
 import { cn } from '@/lib/utils'
@@ -25,6 +25,7 @@ import { formatDistanceToNow } from 'date-fns'
 import FileExplorer from '@/components/dashboard/FileExplorer'
 
 export default function DashboardPage() {
+  const router = useRouter()
   const { 
     userId, 
     tasks, 
@@ -239,14 +240,14 @@ export default function DashboardPage() {
               </h3>
             </div>
             
-            <div className="flex-1 divide-y divide-white/5 overflow-auto custom-scrollbar">
+            <div className="flex-1 divide-y divide-white/5 overflow-y-scroll history-scrollbar min-h-0 pr-1">
               {conversations.length > 0 ? (
-                conversations.slice(0, 10).map((conv: any, i) => (
+                conversations.map((conv: any, i) => (
                   <motion.div
                     key={conv.id}
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.05 }}
+                    transition={{ delay: Math.min(i, 10) * 0.05 }}
                     onClick={() => {
                       setActiveConversation(conv.id)
                       const router = require('next/navigation').useRouter()
@@ -281,23 +282,11 @@ export default function DashboardPage() {
         </div>
 
         {/* File Explorer Module */}
-        <div className="md:col-span-2 h-[450px]">
+        <div className="md:col-span-4 h-[450px]">
            <FileExplorer />
         </div>
 
-        {/* Agent Activity - Visual Timeline */}
-        <div className="md:col-span-2 h-[450px]">
-          <AgentActivityTimeline />
-        </div>
 
-        {/* Remaining Stat Cards */}
-        <div className="md:col-span-1 grid grid-cols-1 gap-6">
-          {stats.slice(2, 4).map((stat, i) => (
-            <InteractiveCard key={i} nodeId={`ST_0${i+3}`} className="h-full">
-              <StatCard {...stat} />
-            </InteractiveCard>
-          ))}
-        </div>
       </div>
     </div>
   )

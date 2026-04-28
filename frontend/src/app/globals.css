@@ -40,6 +40,23 @@ body {
 ::-webkit-scrollbar-thumb { background: var(--surface-500); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--surface-400, #3d3d52); }
 
+.history-scrollbar::-webkit-scrollbar {
+  width: 10px;
+  display: block;
+}
+.history-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-left: 1px solid rgba(255,255,255,0.05);
+}
+.history-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.5); /* Brand colored scrollbar! */
+  border-radius: 10px;
+  border: 2px solid #0a0a0f;
+}
+.history-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.8);
+}
+
 /* ── Glass card ──────────────────────────────────────────── */
 @layer components {
   .glass {

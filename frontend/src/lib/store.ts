@@ -158,9 +158,20 @@ interface AppState {
 
 // ── Initial State Helpers ─────────────────────────────────────────────
 
-const initialWorkflowNodes: WorkflowNode[] = []
+const initialWorkflowNodes: WorkflowNode[] = [
+  { id: 'agent_orchestrator', type: 'agent', data: { label: '🧠 Orchestrator', role: 'orchestrator', color: '#6366f1' }, position: { x: 0, y: 0 } },
+  { id: 'agent_pm', type: 'agent', data: { label: '🧠 PM', role: 'product_manager', color: '#8B5CF6' }, position: { x: 0, y: 0 } },
+  { id: 'agent_dev', type: 'agent', data: { label: '💻 Dev', role: 'developer', color: '#06B6D4' }, position: { x: 0, y: 0 } },
+  { id: 'agent_mkt', type: 'agent', data: { label: '📣 Mkt', role: 'marketing', color: '#F59E0B' }, position: { x: 0, y: 0 } },
+  { id: 'agent_analyst', type: 'agent', data: { label: '📊 Analyst', role: 'analyst', color: '#10B981' }, position: { x: 0, y: 0 } }
+]
 
-const initialWorkflowEdges: WorkflowEdge[] = []
+const initialWorkflowEdges: WorkflowEdge[] = [
+  { id: 'e_orch_pm', source: 'agent_orchestrator', target: 'agent_pm', animated: true },
+  { id: 'e_orch_dev', source: 'agent_orchestrator', target: 'agent_dev', animated: true },
+  { id: 'e_orch_mkt', source: 'agent_orchestrator', target: 'agent_mkt', animated: true },
+  { id: 'e_orch_analyst', source: 'agent_orchestrator', target: 'agent_analyst', animated: true }
+]
 
 export const useStore = create<AppState>()(
   persist(
