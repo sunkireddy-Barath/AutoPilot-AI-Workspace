@@ -21,7 +21,7 @@ interface TaskItemProps {
   projectTitle?: string
 }
 
-export default function TaskItem({ task, index }: TaskItemProps) {
+export default function TaskItem({ task, index, projectTitle }: TaskItemProps) {
   const StatusIcon = {
     pending: Circle,
     in_progress: Clock,
@@ -79,7 +79,17 @@ export default function TaskItem({ task, index }: TaskItemProps) {
           
           <div className="flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-wider text-slate-500">
             <Calendar className="h-3 w-3" />
-            <span>{formatDistanceToNow(new Date(task.created_at))} ago</span>
+            <span>
+              {(() => {
+                try {
+                  const d = new Date(task.created_at)
+                  if (isNaN(d.getTime())) return 'just now'
+                  return `${formatDistanceToNow(d)} ago`
+                } catch {
+                  return 'just now'
+                }
+              })()}
+            </span>
           </div>
 
           <div className={cn(

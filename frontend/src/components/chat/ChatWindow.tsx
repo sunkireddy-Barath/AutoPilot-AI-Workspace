@@ -20,6 +20,7 @@ import { chatApi, conversationsApi } from '@/lib/api'
 import ChatMessage from './ChatMessage'
 import ChatInput from './ChatInput'
 import ThinkingIndicator from './ThinkingIndicator'
+import ConversationHistory from './ConversationHistory'
 import toast from 'react-hot-toast'
 
 export default function ChatWindow() {
@@ -44,6 +45,7 @@ export default function ChatWindow() {
 
   const [loading, setLoading] = useState(false)
   const [activeAgent, setActiveAgent] = useState<AgentRole | null>(null)
+  const [historyOpen, setHistoryOpen] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   // Auto-initialize session if none exists
@@ -150,7 +152,9 @@ export default function ChatWindow() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-transparent overflow-hidden relative">
+    <>
+      <ConversationHistory open={historyOpen} onClose={() => setHistoryOpen(false)} />
+      <div className="flex flex-col h-full bg-transparent overflow-hidden relative">
       {/* Professional SaaS Header */}
       <header className="w-full h-20 flex-shrink-0 bg-[#050508]/80 backdrop-blur-xl border-b border-white/5 z-50 relative">
         <div className="max-w-[1280px] mx-auto w-full h-full flex items-center justify-between px-6 lg:px-8 pt-4">
@@ -172,7 +176,7 @@ export default function ChatWindow() {
             </div>
 
             <div className="flex items-center gap-1 border-l border-white/10 pl-4 mr-2">
-              <button className="p-2 text-slate-500 hover:text-white transition-all rounded-lg hover:bg-white/5" title="History"><History className="h-4 w-4" /></button>
+              <button onClick={() => setHistoryOpen(true)} className="p-2 text-slate-500 hover:text-white transition-all rounded-lg hover:bg-white/5" title="History"><History className="h-4 w-4" /></button>
               <button className="p-2 text-slate-500 hover:text-white transition-all rounded-lg hover:bg-white/5" title="Settings"><Settings2 className="h-4 w-4" /></button>
             </div>
 
@@ -272,6 +276,7 @@ export default function ChatWindow() {
         disabled={!userId}
       />
     </div>
+    </>
   )
 }
 

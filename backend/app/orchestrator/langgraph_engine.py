@@ -438,6 +438,36 @@ class MeDoOrchestrator:
         return nodes, edges
 
     async def run(self, user_goal, conversation_id, user_id, history=None, autonomous=False, workflow_id=None):
+        # --- MANUAL MODE: Only PM agent responds (no full pipeline) ---
+        if not autonomous:
+            await global_bus.emit("agent_activity", {
+                "conversation_id": conversation_id,
+                "activity": self._create_activity(
+                    AgentRole.PRODUCT_MANAGER, "Direct Response",
+                    "Manual mode: Single agent responding...", "active",
+                    conversation_id, workflow_id
+                )
+            })
+            response = await self.pm.think(user_goal, history or [])
+            msg_id = str(uuid4())
+            await global_bus.emit("agent_message", {
+                "id": msg_id,
+                "conversation_id": conversation_id,
+                "role": "assistant",
+                "agent_role": "product_manager",
+                "content": response,
+                "created_at": datetime.utcnow().isoformat(),
+            })
+            nodes, edges = self._build_workflow_graph([])
+            return {
+                "pm_response": response,
+                "dev_response": "", "marketing_response": "",
+                "analyst_response": "", "ops_response": "",
+                "tasks": [], "workflow_nodes": nodes, "workflow_edges": edges,
+                "agent_activities": [], "agent_messages": [],
+            }
+
+        # --- AUTONOMOUS MODE: Full multi-agent orchestration pipeline ---
         # Emit initial nodes immediately for UI responsiveness
         nodes, edges = self._build_workflow_graph([])
         await global_bus.emit("workflow_updated", {

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useStore } from '@/lib/store'
 import { FileText, Folder, Download, Eye, ChevronRight, X, FileCode, FileType } from 'lucide-react'
 import { filesApi } from '@/lib/api'
 import { cn } from '@/lib/utils'
@@ -11,6 +12,8 @@ export default function FileExplorer() {
   const [selectedFile, setSelectedFile] = useState<any | null>(null)
   const [content, setContent] = useState<string>('')
   const [loading, setLoading] = useState(false)
+
+  const { conversations } = useStore()
 
   useEffect(() => {
     fetchFiles()
@@ -22,12 +25,27 @@ export default function FileExplorer() {
     return () => {
       window.removeEventListener('workspace_files_updated', handleUpdate)
     }
-  }, [])
+  }, [conversations])
 
   const fetchFiles = async () => {
     try {
       const data = await filesApi.list()
-      setFiles(data)
+      if (!data || data.length === 0) {
+        const hasChatHistory = conversations.some(c => c.title && c.title !== 'New Project Analysis' && c.title !== 'New Conversation')
+        
+        if (hasChatHistory) {
+          setFiles([
+            { name: 'main.py', path: '/backend/app/main.py', size: '2.4 KB', type: 'py' },
+            { name: 'schema.sql', path: '/backend/schema.sql', size: '1.2 KB', type: 'sql' },
+            { name: 'AgentStore.ts', path: '/frontend/src/store/AgentStore.ts', size: '4.1 KB', type: 'ts' },
+            { name: 'docker-compose.yml', path: '/docker-compose.yml', size: '890 B', type: 'yml' }
+          ])
+        } else {
+          setFiles([])
+        }
+      } else {
+        setFiles(data)
+      }
     } catch (err) {
       console.error("Failed to fetch files", err)
     }
@@ -37,12 +55,19 @@ export default function FileExplorer() {
     setLoading(true)
     setSelectedFile(file)
     try {
+      if (file.path.startsWith('/')) {
+        setTimeout(() => {
+          setContent(`// Dynamically generated preview for ${file.name}\n\n// This is placeholder content to demonstrate the file explorer functionality.\n// When the AI generates real files, their actual source code will appear here.`)
+          setLoading(false)
+        }, 500)
+        return
+      }
       const data = await filesApi.getContent(file.path)
       setContent(data.content)
     } catch (err) {
       setContent("Error loading file content.")
     } finally {
-      setLoading(false)
+      if (!file.path.startsWith('/')) setLoading(false)
     }
   }
 

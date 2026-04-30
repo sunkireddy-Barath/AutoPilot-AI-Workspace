@@ -9,7 +9,6 @@ export default function CustomEdge({
   targetY,
   sourcePosition,
   targetPosition,
-  style = {},
   markerEnd,
   data
 }: EdgeProps) {
@@ -29,7 +28,18 @@ export default function CustomEdge({
 
   return (
     <>
-      <BaseEdge path={edgePath} markerEnd={markerEnd} style={style} />
+      {/* Force white visible line using BaseEdge */}
+      <BaseEdge
+        path={edgePath}
+        markerEnd={markerEnd}
+        style={{
+          stroke: 'rgba(255, 255, 255, 0.55)',
+          strokeWidth: 2,
+          strokeLinecap: 'round',
+          fill: 'none',
+        }}
+      />
+
       {data?.isSimulating && (
         <>
           <circle r="3" fill="#ffffff" filter="drop-shadow(0 0 6px rgba(255,255,255,0.9))">
@@ -43,7 +53,7 @@ export default function CustomEdge({
               calcMode="linear"
             />
           </circle>
-          <circle r="3" fill="#6366f1" filter="drop-shadow(0 0 6px rgba(99,102,241,0.9))">
+          <circle r="3" fill="#ffffff" filter="drop-shadow(0 0 8px rgba(255,255,255,0.9))">
             <animateMotion 
               dur={`${dur2}s`} 
               begin={`${begin2}s`}

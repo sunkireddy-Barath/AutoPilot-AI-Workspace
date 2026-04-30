@@ -137,28 +137,36 @@ export default function GlobalDock() {
         <div className="w-px h-8 bg-white/5 mx-1 opacity-50" />
 
         {/* Autonomous Mode Toggle */}
-        <div className="flex flex-col items-center px-4 group active:scale-95 transition-transform">
+        <div 
+          className="flex flex-col items-center px-4 active:scale-95 transition-transform"
+          title={autonomousMode ? "AUTO ON — Full multi-agent orchestration running" : "AUTO OFF — Manual single-agent mode"}
+        >
           <button 
             onClick={() => setAutonomousMode(!autonomousMode)}
             className={cn(
-              "relative inline-flex h-5 w-9 items-center rounded-full transition-all duration-500 group overflow-hidden shadow-inner",
-              autonomousMode ? "bg-brand-600 shadow-glow-brand" : "bg-surface-800 border border-white/5"
+              "relative inline-flex h-5 w-9 items-center rounded-full transition-all duration-300 overflow-hidden shadow-inner",
+              autonomousMode ? "bg-brand-600 shadow-glow-brand" : "bg-surface-700 border border-white/10"
             )}
           >
-            <div className={cn(
-              "absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_2s_infinite]",
-              !autonomousMode && "hidden"
-            )} />
+            {/* Pulse ring when active */}
+            {autonomousMode && (
+              <span className="absolute inset-0 rounded-full animate-ping bg-brand-500/30" />
+            )}
             <motion.span 
               animate={{ x: autonomousMode ? 20 : 4 }}
               transition={springConfig}
-              className="inline-block h-3 w-3 rounded-full bg-white shadow-lg" 
+              className={cn(
+                "relative inline-block h-3 w-3 rounded-full shadow-lg transition-colors",
+                autonomousMode ? "bg-white" : "bg-slate-500"
+              )}
             />
           </button>
           <span className={cn(
-            "text-[8px] font-black uppercase tracking-[0.2em] transition-all duration-200 overflow-hidden",
-            autonomousMode ? "text-brand-400 max-h-4 opacity-100 mt-1.5" : "text-white max-h-0 opacity-0 group-hover:max-h-4 group-hover:opacity-100 group-hover:mt-1.5"
-          )}>Auto</span>
+            "text-[8px] font-black uppercase tracking-[0.2em] mt-1.5 transition-colors duration-200",
+            autonomousMode ? "text-brand-400" : "text-slate-500"
+          )}>
+            {autonomousMode ? "Auto" : "Off"}
+          </span>
         </div>
 
         <div className="w-px h-8 bg-white/5 mx-1 opacity-50" />

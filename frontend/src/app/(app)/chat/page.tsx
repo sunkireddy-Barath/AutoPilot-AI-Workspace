@@ -19,28 +19,34 @@ export default function ChatPage() {
 
     const initChat = async () => {
       try {
-        const data = await conversationsApi.list(userId) as any[]
-        
-        if (data.length > 0) {
-          const latest = data[0]
-          setActiveConversation(latest.id)
-          const msgs = await conversationsApi.getMessages(latest.id)
+        if (activeConversationId) {
+          // If navigated from dashboard project history
+          const msgs = await conversationsApi.getMessages(activeConversationId)
           setMessages(msgs as any[])
         } else {
-          const newConv = await conversationsApi.create(userId, "New Project Analysis") as any
-          setActiveConversation(newConv.id)
-          setMessages([])
+          // Initial load without a selected conversation
+          const data = await conversationsApi.list(userId) as any[]
+          
+          if (data.length > 0) {
+            const latest = data[0]
+            setActiveConversation(latest.id)
+            const msgs = await conversationsApi.getMessages(latest.id)
+            setMessages(msgs as any[])
+          } else {
+            const newConv = await conversationsApi.create(userId, "New Project Analysis") as any
+            setActiveConversation(newConv.id)
+            setMessages([])
+          }
         }
       } catch (error) {
         console.error('Failed to initialize chat:', error)
-        // Set a dummy ID or handle error UI if needed
       } finally {
         setInitializing(false)
       }
     }
 
     initChat()
-  }, [userId, setActiveConversation, setMessages])
+  }, [userId, activeConversationId]) // Re-run if user selects a different conversation from dashboard
 
   if (initializing) {
     return (
@@ -63,8 +69,9 @@ export default function ChatPage() {
   return (
     <div className="w-full h-full max-w-full flex flex-col bg-[#050508] pt-6 overflow-hidden">
       <motion.div 
-        initial={{ opacity: 0, scale: 0.98 }}
-        animate={{ opacity: 1, scale: 1 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.1 }}
         className="flex-1 min-h-0 relative overflow-hidden"
       >
         <ChatWindow />

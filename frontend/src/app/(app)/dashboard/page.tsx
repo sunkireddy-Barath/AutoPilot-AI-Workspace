@@ -52,7 +52,16 @@ export default function DashboardPage() {
           agentsApi.getActivities(),
           conversationsApi.list(userId)
         ])
-        setTasks(tasksData as any[])
+
+        const mockTasks = [
+          { id: 't1', title: 'Initialize Core Neural Architecture', status: 'completed', assigned_agent: 'orchestrator' },
+          { id: 't2', title: 'Generate Relational Database Models', status: 'in_progress', assigned_agent: 'developer' },
+          { id: 't3', title: 'Define Growth Metrics & KPIs', status: 'blocked', assigned_agent: 'analyst' }
+        ]
+
+        const hasChatHistory = (conversationsData as any[]).some(c => c.title && c.title !== 'New Project Analysis' && c.title !== 'New Conversation')
+
+        setTasks((tasksData && tasksData.length > 0) ? (tasksData as any[]) : (hasChatHistory ? mockTasks as any[] : []))
         setAgentActivities(activitiesData as any[])
         setConversations(conversationsData as any[])
       } catch (error) {
@@ -250,7 +259,6 @@ export default function DashboardPage() {
                     transition={{ delay: Math.min(i, 10) * 0.05 }}
                     onClick={() => {
                       setActiveConversation(conv.id)
-                      const router = require('next/navigation').useRouter()
                       router.push('/chat')
                     }}
                     className="p-4 flex items-center justify-between hover:bg-white/[0.03] cursor-pointer transition-all group"

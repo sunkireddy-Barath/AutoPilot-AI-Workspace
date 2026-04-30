@@ -109,7 +109,7 @@ export default function WorkflowGraph() {
       type: 'custom',
       animated: false,
       data: { ...edge.data, isSimulating: isAgentsRunning },
-      style: { stroke: 'rgba(255,255,255,0.1)', strokeWidth: 2 },
+      style: {},
     }))
 
     const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
