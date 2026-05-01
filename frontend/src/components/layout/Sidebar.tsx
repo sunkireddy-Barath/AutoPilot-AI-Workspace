@@ -27,9 +27,7 @@ export function Sidebar() {
 
   return (
     <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 px-4 w-full max-w-fit">
-      <motion.nav
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
+      <nav
         className="flex items-center gap-1 sm:gap-2 px-3 py-2 rounded-[24px] shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10"
         style={{
           background: 'rgba(15, 15, 25, 0.6)',
@@ -87,7 +85,7 @@ export function Sidebar() {
             </div>
           </div>
         )}
-      </motion.nav>
+      </nav>
     </div>
   )
 }
