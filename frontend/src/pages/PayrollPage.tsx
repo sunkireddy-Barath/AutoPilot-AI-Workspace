@@ -274,8 +274,8 @@ export default function PayrollPage() {
   return (
     <AppLayout pageTitle="Private Payroll" pageSubtitle="Confidential salary payments via Umbra Protocol">
       <div className="space-y-6 w-full">
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-4">
+        {/* Bento Grid Stats & Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
             { label: 'Active Employees', value: activeCount, icon: Users, color: '#7c3aed' },
             { label: 'Monthly Payroll', value: formatAmount(totalPayroll), icon: DollarSign, color: '#6366f1' },
@@ -286,41 +286,57 @@ export default function PayrollPage() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.08 }}
-              className="glass-card p-4 flex items-center gap-4"
+              className="glass-card p-6 flex flex-col justify-center relative overflow-hidden group"
             >
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: `${stat.color}20`, border: `1px solid ${stat.color}30` }}>
-                <stat.icon className="w-5 h-5" style={{ color: stat.color }} />
+              <div className="absolute top-0 right-0 w-32 h-32 opacity-10 translate-x-8 -translate-y-8 rounded-full blur-2xl group-hover:opacity-20 transition-opacity"
+                style={{ background: stat.color }} />
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 mb-4"
+                style={{ background: `${stat.color}15`, border: `1px solid ${stat.color}30` }}>
+                <stat.icon className="w-6 h-6" style={{ color: stat.color }} />
               </div>
               <div>
-                <div className="text-xl font-bold text-white">{stat.value}</div>
-                <div className="text-xs text-zinc-500">{stat.label}</div>
+                <div className="text-3xl font-black text-white tracking-tight">{stat.value}</div>
+                <div className="text-sm font-medium text-zinc-500 uppercase tracking-wider mt-1">{stat.label}</div>
               </div>
             </motion.div>
           ))}
+
+          {/* Quick Actions Bento Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.24 }}
+            className="glass-card p-6 flex flex-col justify-between relative overflow-hidden"
+            style={{ background: 'linear-gradient(135deg, rgba(15,15,25,0.8), rgba(124,58,237,0.05))' }}
+          >
+            <div>
+              <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-1">Quick Actions</h3>
+              <p className="text-xs text-zinc-500">Manage your roster</p>
+            </div>
+            <div className="flex flex-col gap-2 mt-4">
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                onClick={() => setShowRunPayroll(true)}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold shadow-[0_0_15px_rgba(124,58,237,0.2)] bg-violet-600 hover:bg-violet-700 text-white transition-all"
+              >
+                <Send className="w-4 h-4" />
+                Run Payroll
+              </motion.button>
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                onClick={() => setShowAdd(true)}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold border border-white/10 hover:bg-white/5 text-zinc-300 transition-all"
+              >
+                <Plus className="w-4 h-4" />
+                Add Employee
+              </motion.button>
+            </div>
+          </motion.div>
         </div>
 
-        {/* Actions */}
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-white">Employee Roster</h2>
-          <div className="flex gap-2">
-            <motion.button
-              whileTap={{ scale: 0.97 }}
-              onClick={() => setShowAdd(true)}
-              className="btn-ghost text-sm"
-            >
-              <Plus className="w-4 h-4" />
-              Add Employee
-            </motion.button>
-            <motion.button
-              whileTap={{ scale: 0.97 }}
-              onClick={() => setShowRunPayroll(true)}
-              className="btn-primary text-sm"
-            >
-              <Send className="w-4 h-4" />
-              Run Payroll
-            </motion.button>
-          </div>
+        {/* Roster Header */}
+        <div className="flex items-center justify-between mt-4">
+          <h2 className="text-sm font-bold text-white uppercase tracking-wider">Employee Roster</h2>
         </div>
 
         {/* Employee Table */}
@@ -328,72 +344,74 @@ export default function PayrollPage() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="glass-card overflow-hidden"
+          className="glass-card overflow-hidden bg-black/20"
         >
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-white/5">
-                {['Employee', 'Department', 'Wallet Address', 'Monthly Salary', 'Last Paid', 'Status', ''].map(h => (
-                  <th key={h} className="text-left px-4 py-3 text-xs font-medium text-zinc-500">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/5">
-              <AnimatePresence>
-                {employees.map((emp, i) => (
-                  <motion.tr
-                    key={emp.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ delay: i * 0.05 }}
-                    className="table-row-hover group"
-                  >
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
-                          style={{ background: `hsl(${(i * 67) % 360}, 60%, 35%)` }}>
-                          {emp.name.split(' ').map(n => n[0]).join('')}
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-white/5 bg-white/[0.02]">
+                  {['Employee', 'Department', 'Wallet Address', 'Monthly Salary', 'Last Paid', 'Status', ''].map(h => (
+                    <th key={h} className="text-left px-6 py-4 text-xs font-bold text-zinc-500 uppercase tracking-wider">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                <AnimatePresence>
+                  {employees.map((emp, i) => (
+                    <motion.tr
+                      key={emp.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      transition={{ delay: i * 0.05 }}
+                      className="table-row-hover group transition-colors"
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-black text-white flex-shrink-0 shadow-lg"
+                            style={{ background: `linear-gradient(135deg, hsl(${(i * 67) % 360}, 70%, 45%), hsl(${(i * 67) % 360}, 80%, 25%))` }}>
+                            {emp.name.split(' ').map(n => n[0]).join('')}
+                          </div>
+                          <div>
+                            <div className="text-sm font-bold text-white tracking-tight">{emp.name}</div>
+                            <div className="text-xs text-zinc-500">{emp.email}</div>
+                          </div>
                         </div>
-                        <div>
-                          <div className="text-sm font-medium text-white">{emp.name}</div>
-                          <div className="text-xs text-zinc-500">{emp.email}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-zinc-400">{emp.department}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="text-xs font-mono font-medium text-zinc-500 bg-black/20 px-2 py-1 rounded-md border border-white/5">{truncateAddress(emp.walletAddress)}</span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-2 bg-violet-500/10 border border-violet-500/20 px-3 py-1.5 rounded-lg w-fit">
+                          <Lock className="w-3 h-3 text-violet-400" />
+                          <span className="text-sm font-bold text-violet-300 privacy-mask cursor-pointer tracking-tight">
+                            {formatAmount(emp.salary)}
+                          </span>
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-zinc-400">{emp.department}</td>
-                    <td className="px-4 py-3">
-                      <span className="text-xs font-mono text-zinc-500">{truncateAddress(emp.walletAddress)}</span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <Lock className="w-3 h-3 text-violet-400" />
-                        <span className="text-sm font-semibold text-violet-300 privacy-mask cursor-pointer">
-                          {formatAmount(emp.salary)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-xs font-medium text-zinc-500 uppercase tracking-wider">
+                        {emp.lastPaid ? new Date(emp.lastPaid).toLocaleDateString() : '—'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={emp.status === 'active' ? 'badge-success shadow-[0_0_10px_rgba(16,185,129,0.2)]' : 'badge-warning'}>
+                          {emp.status}
                         </span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-xs text-zinc-500">
-                      {emp.lastPaid ? new Date(emp.lastPaid).toLocaleDateString() : '—'}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={emp.status === 'active' ? 'badge-success' : 'badge-warning'}>
-                        {emp.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <button
-                        onClick={() => { removeEmployee(emp.id); addToast({ type: 'info', title: 'Employee Removed' }) }}
-                        className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg hover:bg-red-500/10 transition-all"
-                      >
-                        <Trash2 className="w-3.5 h-3.5 text-red-400" />
-                      </button>
-                    </td>
-                  </motion.tr>
-                ))}
-              </AnimatePresence>
-            </tbody>
-          </table>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right">
+                        <button
+                          onClick={() => { removeEmployee(emp.id); addToast({ type: 'info', title: 'Employee Removed' }) }}
+                          className="opacity-0 group-hover:opacity-100 p-2 rounded-xl hover:bg-red-500/10 transition-all border border-transparent hover:border-red-500/20"
+                        >
+                          <Trash2 className="w-4 h-4 text-red-400" />
+                        </button>
+                      </td>
+                    </motion.tr>
+                  ))}
+                </AnimatePresence>
+              </tbody>
+            </table>
+          </div>
         </motion.div>
       </div>
 

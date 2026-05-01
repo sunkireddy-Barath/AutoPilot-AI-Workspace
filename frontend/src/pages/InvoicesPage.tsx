@@ -221,41 +221,70 @@ export default function InvoicesPage() {
 
   return (
     <AppLayout pageTitle="Invoices & Billing" pageSubtitle="Private invoice management with confidential payments">
-      <div className="space-y-5 w-full">
-        <div className="grid grid-cols-4 gap-4">
-          {[
-            { label: 'Total', value: invoices.length, color: '#7c3aed' },
-            { label: 'Pending', value: invoices.filter(i => i.status === 'pending').length, color: '#f59e0b' },
-            { label: 'Paid', value: invoices.filter(i => i.status === 'paid').length, color: '#10b981' },
-            { label: 'Overdue', value: invoices.filter(i => i.status === 'overdue').length, color: '#ef4444' },
-          ].map((s, i) => (
-            <motion.div key={s.label} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.06 }} className="glass-card p-4">
-              <div className="text-2xl font-bold text-white">{s.value}</div>
-              <div className="text-xs text-zinc-500">{s.label} Invoices</div>
-            </motion.div>
-          ))}
+      <div className="flex flex-col lg:flex-row gap-6 w-full">
+        {/* Left Side: Stats Bento */}
+        <div className="w-full lg:w-1/3 flex flex-col gap-4">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="glass-card p-6 relative overflow-hidden"
+            style={{ background: 'linear-gradient(135deg, rgba(15,15,25,0.8), rgba(124,58,237,0.05))' }}
+          >
+            <div className="absolute top-0 right-0 w-32 h-32 opacity-10 translate-x-8 -translate-y-8 rounded-full blur-2xl bg-violet-500" />
+            <div className="text-sm font-bold text-white uppercase tracking-wider mb-6">Overview</div>
+            <div className="space-y-4">
+              {[
+                { label: 'Total Invoices', value: invoices.length, color: '#7c3aed' },
+                { label: 'Pending', value: invoices.filter(i => i.status === 'pending').length, color: '#f59e0b' },
+                { label: 'Paid', value: invoices.filter(i => i.status === 'paid').length, color: '#10b981' },
+                { label: 'Overdue', value: invoices.filter(i => i.status === 'overdue').length, color: '#ef4444' },
+              ].map((s, i) => (
+                <div key={s.label} className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 rounded-full shadow-[0_0_10px_rgba(255,255,255,0.2)]" style={{ background: s.color }} />
+                    <span className="text-sm text-zinc-400 font-medium">{s.label}</span>
+                  </div>
+                  <span className="text-lg font-bold text-white">{s.value}</span>
+                </div>
+              ))}
+            </div>
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              onClick={() => setShowCreate(true)}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold shadow-[0_0_15px_rgba(124,58,237,0.2)] bg-violet-600 hover:bg-violet-700 text-white transition-all mt-6"
+            >
+              <Plus className="w-5 h-5" />
+              Create Invoice
+            </motion.button>
+          </motion.div>
         </div>
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'rgba(255,255,255,0.04)' }}>
-            {(['all', 'pending', 'paid', 'overdue', 'draft'] as const).map(f => (
-              <button key={f} onClick={() => setFilter(f)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium capitalize transition-all
-                  ${filter === f ? 'bg-violet-600 text-white' : 'text-zinc-400 hover:text-white'}`}>
-                {f}
-              </button>
-            ))}
+
+        {/* Right Side: Invoice List */}
+        <div className="w-full lg:w-2/3 flex flex-col gap-4">
+          <div className="glass-card p-6 flex flex-col h-full min-h-[500px]">
+            <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
+              <h2 className="text-sm font-bold text-white uppercase tracking-wider">All Invoices</h2>
+              <div className="flex gap-1 p-1 rounded-xl bg-black/40 border border-white/5">
+                {(['all', 'pending', 'paid', 'overdue', 'draft'] as const).map(f => (
+                  <button key={f} onClick={() => setFilter(f)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold capitalize transition-all
+                      ${filter === f ? 'bg-violet-600 text-white shadow-[0_0_10px_rgba(124,58,237,0.3)]' : 'text-zinc-500 hover:text-white hover:bg-white/5'}`}>
+                    {f}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="space-y-2 overflow-y-auto pr-2 custom-scrollbar flex-1">
+              <AnimatePresence>
+                {filtered.map(inv => (
+                  <InvoiceRow key={inv.id} inv={inv} onClick={() => setSelected(inv)} />
+                ))}
+                {filtered.length === 0 && (
+                  <div className="text-center py-12 text-zinc-500 text-sm font-medium">No invoices found.</div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
-          <motion.button whileTap={{ scale: 0.97 }} onClick={() => setShowCreate(true)} className="btn-primary text-sm">
-            <Plus className="w-4 h-4" /> Create Invoice
-          </motion.button>
-        </div>
-        <div className="space-y-2">
-          <AnimatePresence>
-            {filtered.map(inv => (
-              <InvoiceRow key={inv.id} inv={inv} onClick={() => setSelected(inv)} />
-            ))}
-          </AnimatePresence>
         </div>
       </div>
       <AnimatePresence>

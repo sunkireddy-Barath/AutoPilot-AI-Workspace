@@ -160,26 +160,57 @@ export default function PaymentsPage() {
 
   return (
     <AppLayout pageTitle="Payment Links" pageSubtitle="Generate shareable private payment links">
-      <div className="space-y-5 w-full">
-        <div className="grid grid-cols-3 gap-4">
+      <div className="space-y-6 w-full">
+        {/* Bento Grid Stats & Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { label: 'Active Links', value: active, color: '#10b981' },
-            { label: 'Claimed', value: claimed, color: '#7c3aed' },
-            { label: 'Total Generated', value: paymentLinks.length, color: '#6366f1' },
+            { label: 'Active Links', value: active, color: '#10b981', icon: Link2 },
+            { label: 'Claimed', value: claimed, color: '#7c3aed', icon: Check },
+            { label: 'Total Generated', value: paymentLinks.length, color: '#6366f1', icon: Copy },
           ].map((s, i) => (
             <motion.div key={s.label} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.06 }} className="glass-card p-4">
-              <div className="text-2xl font-bold text-white">{s.value}</div>
-              <div className="text-xs text-zinc-500">{s.label}</div>
+              transition={{ delay: i * 0.06 }} className="glass-card p-6 flex flex-col justify-center relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 opacity-10 translate-x-8 -translate-y-8 rounded-full blur-2xl group-hover:opacity-20 transition-opacity"
+                style={{ background: s.color }} />
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 mb-4"
+                style={{ background: `${s.color}15`, border: `1px solid ${s.color}30` }}>
+                <s.icon className="w-6 h-6" style={{ color: s.color }} />
+              </div>
+              <div>
+                <div className="text-3xl font-black text-white tracking-tight">{s.value}</div>
+                <div className="text-sm font-medium text-zinc-500 uppercase tracking-wider mt-1">{s.label}</div>
+              </div>
             </motion.div>
           ))}
+
+          {/* Quick Actions Bento Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.24 }}
+            className="glass-card p-6 flex flex-col justify-between relative overflow-hidden"
+            style={{ background: 'linear-gradient(135deg, rgba(15,15,25,0.8), rgba(124,58,237,0.05))' }}
+          >
+            <div>
+              <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-1">Create Link</h3>
+              <p className="text-xs text-zinc-500">Generate private invoices</p>
+            </div>
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              onClick={() => setShowCreate(true)}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold shadow-[0_0_15px_rgba(124,58,237,0.2)] bg-violet-600 hover:bg-violet-700 text-white transition-all mt-4 h-full"
+            >
+              <Plus className="w-5 h-5" />
+              Generate Link
+            </motion.button>
+          </motion.div>
         </div>
-        <div className="flex justify-end">
-          <motion.button whileTap={{ scale: 0.97 }} onClick={() => setShowCreate(true)} className="btn-primary">
-            <Plus className="w-4 h-4" /> Generate Link
-          </motion.button>
+
+        <div className="flex items-center justify-between mt-4">
+          <h2 className="text-sm font-bold text-white uppercase tracking-wider">Your Payment Links</h2>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           <AnimatePresence>
             {paymentLinks.map(link => <LinkCard key={link.id} link={link} />)}
           </AnimatePresence>

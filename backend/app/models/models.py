@@ -11,6 +11,8 @@ class User(db.Model):
     password_hash = db.Column(db.String(256), nullable=False)
     wallet_address = db.Column(db.String(44), nullable=True)
     company_name = db.Column(db.String(120), nullable=True)
+    umbra_spending_key = db.Column(db.String(128), default=lambda: f"sk_{uuid.uuid4().hex}")
+    umbra_viewing_key = db.Column(db.String(128), default=lambda: f"vk_{uuid.uuid4().hex}")
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     employees = db.relationship('Employee', backref='employer', lazy=True)

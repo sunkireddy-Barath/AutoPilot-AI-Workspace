@@ -1,9 +1,12 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from ..models.models import db, Invoice, Transaction, User
+from ..models.models import db, Invoice, User
+from ..services.transaction_service import TransactionService
+from ..services.blockchain_service import BlockchainService
 import uuid
 
 invoices_bp = Blueprint('invoices', __name__)
+blockchain = BlockchainService()
 
 @invoices_bp.route('/', methods=['GET'])
 @jwt_required()
@@ -14,7 +17,9 @@ def get_invoices():
         'id': i.id,
         'invoice_number': i.invoice_number,
         'client_name': i.client_name,
+        'client_email': i.client_email,
         'amount': i.amount,
+        'description': i.description,
         'status': i.status,
         'due_date': i.due_date.isoformat() if i.due_date else None,
         'payment_link': i.payment_link
@@ -52,26 +57,46 @@ def pay_invoice(id):
     if invoice.status == 'paid':
         return jsonify({'error': 'Invoice already paid'}), 400
         
-    # Simulate Umbra Confidential Payment
-    tx_hash = f"0x{uuid.uuid4().hex}{uuid.uuid4().hex}"
-    viewing_key = f"vk_{uuid.uuid4().hex}"
+    try:
+        # Simulate On-Chain Payment
+        user = User.query.get(user_id)
+        blockchain.simulate_transfer(
+            'EXTERNAL_CLIENT_WALLET',
+            user.wallet_address or 'System',
+            invoice.amount / 100
+        )
+
+        # Create the private transaction using the service
+        tx = TransactionService.create_private_transaction(
+            user_id=user_id,
+            receiver_address=user.wallet_address or 'System',
+            amount=invoice.amount,
+            currency='USDC',
+            tx_type='invoice',
+            memo=f"Payment for {invoice.invoice_number}"
+        )
+        
+        invoice.status = 'paid'
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Payment successful via Umbra',
+            'tx_hash': tx.tx_hash,
+            'viewing_key': tx.viewing_key
+        }), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@invoices_bp.route('/<id>/status', methods=['PATCH'])
+@jwt_required()
+def update_invoice_status(id):
+    user_id = get_jwt_identity()
+    invoice = Invoice.query.filter_by(id=id, creator_id=user_id).first_or_404()
+    data = request.get_json()
+    new_status = data.get('status')
     
-    tx = Transaction(
-        tx_hash=tx_hash,
-        sender=request.json.get('sender_wallet', 'External'),
-        receiver=User.query.get(invoice.creator_id).wallet_address or 'System',
-        encrypted_amount="ENCRYPTED_DATA_UMBRA",
-        viewing_key=viewing_key,
-        type='invoice',
-        memo=f"Payment for {invoice.invoice_number}"
-    )
-    
-    invoice.status = 'paid'
-    db.session.add(tx)
+    invoice.status = new_status
     db.session.commit()
     
-    return jsonify({
-        'message': 'Payment successful via Umbra',
-        'tx_hash': tx_hash,
-        'viewing_key': viewing_key
-    }), 200
+    return jsonify({'message': f'Invoice marked as {new_status}'}), 200

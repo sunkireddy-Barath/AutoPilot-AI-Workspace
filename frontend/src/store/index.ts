@@ -168,8 +168,17 @@ export const useAppStore = create<AppState>()(
         }
       },
 
-      removeEmployee: (id) =>
-        set(s => ({ employees: s.employees.filter(e => e.id !== id) })),
+      removeEmployee: async (id) => {
+        const token = localStorage.getItem('stealthpay_token')
+        const res = await fetch(`/api/payroll/employees/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        if (res.ok) {
+          get().fetchEmployees()
+          get().addToast({ type: 'info', title: 'Employee Removed' })
+        }
+      },
 
       isProcessingPayroll: false,
       runPayroll: async (employeeIds) => {
@@ -185,10 +194,9 @@ export const useAppStore = create<AppState>()(
             if (!emp) continue
 
             // 1. Prepare Confidential Transfer via Umbra
-            // Note: In a real app, we'd pass the actual wallet object from useWallet()
             const umbraData = await UmbraService.confidentialTransfer(null, emp.walletAddress, emp.salary, emp.currency)
             
-            // 2. Submit to Backend (which stores the metadata and tracks the TX on-chain)
+            // 2. Submit to Backend
             const res = await fetch('/api/payroll/run', {
               method: 'POST',
               headers: { 
@@ -197,7 +205,7 @@ export const useAppStore = create<AppState>()(
               },
               body: JSON.stringify({ 
                 employee_ids: [eid],
-                umbra_metadata: umbraData // Sending stealth info to backend
+                umbra_metadata: umbraData
               }),
             })
             
@@ -237,8 +245,6 @@ export const useAppStore = create<AppState>()(
       },
       fetchTransactions: async () => {
         const token = localStorage.getItem('stealthpay_token')
-        // In a real app, we might have a dedicated transactions endpoint
-        // For now, we fetch from a common source or use the payroll/invoices results
         const res = await fetch('/api/compliance/transactions', {
           headers: { 'Authorization': `Bearer ${token}` }
         })
@@ -276,10 +282,21 @@ export const useAppStore = create<AppState>()(
         }
       },
 
-      updateInvoiceStatus: (id, status) =>
-        set(s => ({
-          invoices: s.invoices.map(inv => inv.id === id ? { ...inv, status } : inv),
-        })),
+      updateInvoiceStatus: async (id, status) => {
+        const token = localStorage.getItem('stealthpay_token')
+        const res = await fetch(`/api/invoices/${id}/status`, {
+          method: 'PATCH',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ status }),
+        })
+        if (res.ok) {
+          get().fetchInvoices()
+          get().addToast({ type: 'info', title: 'Invoice Updated', message: `Status changed to ${status}` })
+        }
+      },
 
       decryptTransaction: async (txHash: string, viewingKey: string) => {
         const token = localStorage.getItem('stealthpay_token')

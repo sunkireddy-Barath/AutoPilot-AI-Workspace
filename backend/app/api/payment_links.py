@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from ..models.models import db, PaymentLink, Transaction, User
+from ..models.models import db, PaymentLink, User
+from ..services.transaction_service import TransactionService
 import uuid
 from datetime import datetime
 
@@ -58,29 +59,28 @@ def claim_link(id):
     data = request.get_json()
     claimed_by = data.get('wallet_address', 'External')
     
-    # Simulate Umbra Confidential Transfer
-    tx_hash = f"0x{uuid.uuid4().hex}{uuid.uuid4().hex}"
-    viewing_key = f"vk_{uuid.uuid4().hex}"
-    
-    tx = Transaction(
-        tx_hash=tx_hash,
-        sender=claimed_by,
-        receiver=User.query.get(link.creator_id).wallet_address or 'System',
-        encrypted_amount="ENCRYPTED_DATA_UMBRA",
-        viewing_key=viewing_key,
-        type='payment_link',
-        memo=f"Payment for: {link.title}"
-    )
-    
-    link.status = 'claimed'
-    link.claimed_at = datetime.utcnow()
-    link.claimed_by = claimed_by
-    
-    db.session.add(tx)
-    db.session.commit()
-    
-    return jsonify({
-        'message': 'Payment successful via Umbra',
-        'tx_hash': tx_hash,
-        'viewing_key': viewing_key
-    }), 200
+    try:
+        # Create the private transaction using the service
+        tx = TransactionService.create_private_transaction(
+            user_id=user_id,
+            receiver_address=User.query.get(link.creator_id).wallet_address or 'System',
+            amount=link.amount,
+            currency=link.currency,
+            tx_type='payment_link',
+            memo=f"Payment for: {link.title}"
+        )
+        
+        link.status = 'claimed'
+        link.claimed_at = datetime.utcnow()
+        link.claimed_by = claimed_by
+        
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Payment successful via Umbra',
+            'tx_hash': tx.tx_hash,
+            'viewing_key': tx.viewing_key
+        }), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500

@@ -195,27 +195,98 @@ function HowItWorksPanel() {
 }
 
 export default function CompliancePage() {
+  const auditLogs = [
+    { id: 1, action: 'View Key Verified', target: 'TX...8a2f', time: '2 mins ago', status: 'success' },
+    { id: 2, action: 'Audit Log Export', target: 'Q1 2026', time: '1 hour ago', status: 'info' },
+    { id: 3, action: 'Privacy Shield Check', target: 'Umbra Node', time: '4 hours ago', status: 'success' },
+  ]
+
   return (
-    <AppLayout pageTitle="Compliance & Viewing Keys" pageSubtitle="Selective disclosure for regulatory compliance via Umbra">
-      <div className="w-full">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <DecryptForm />
-          <div className="space-y-4">
-            <HowItWorksPanel />
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
-              className="glass-card p-5"
-              style={{ borderColor: 'rgba(245,158,11,0.2)' }}>
-              <div className="flex items-center gap-2 mb-3">
-                <ShieldCheck className="w-4 h-4 text-amber-400" />
-                <span className="text-sm font-semibold text-white">Compliance Notice</span>
+    <AppLayout pageTitle="Compliance & Security" pageSubtitle="Selective disclosure and regulatory tools via Umbra Protocol">
+      <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6 w-full">
+        {/* Left Column: Privacy Metrics (3/12) */}
+        <div className="lg:col-span-3 space-y-6">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="glass-card p-6 relative overflow-hidden flex flex-col items-center text-center"
+            style={{ background: 'linear-gradient(135deg, rgba(16,185,129,0.05), rgba(15,15,25,0.8))', border: '1px solid rgba(16,185,129,0.2)' }}
+          >
+            <div className="absolute inset-0 opacity-10" style={{ background: 'radial-gradient(circle at center, #10b981, transparent 70%)' }} />
+            <div className="relative">
+              <div className="w-24 h-24 rounded-full border-4 border-emerald-500/20 flex items-center justify-center mb-4 relative">
+                <div className="absolute inset-0 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin-slow" />
+                <span className="text-3xl font-black text-white">98</span>
               </div>
-              <p className="text-xs text-zinc-400 leading-relaxed">
-                Viewing keys provide selective transparency while maintaining on-chain privacy.
-                All transaction data is encrypted by Umbra Protocol on Solana.
-                Only authorized parties with valid viewing keys can decrypt transaction details.
-              </p>
-            </motion.div>
-          </div>
+              <h3 className="text-sm font-bold text-white uppercase tracking-widest">Privacy Score</h3>
+              <p className="text-[10px] text-emerald-400 font-bold mt-1 uppercase">Excellent</p>
+            </div>
+            <div className="w-full mt-6 space-y-2">
+              <div className="flex justify-between text-[10px] uppercase font-bold text-zinc-500">
+                <span>Encryption</span>
+                <span className="text-emerald-400">100%</span>
+              </div>
+              <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+                <div className="h-full bg-emerald-500 w-full shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+              </div>
+            </div>
+          </motion.div>
+
+          <HowItWorksPanel />
+        </div>
+
+        {/* Center Column: Decrypt Terminal (5/12) */}
+        <div className="lg:col-span-5">
+          <DecryptForm />
+        </div>
+
+        {/* Right Column: Audit Logs & Notices (4/12) */}
+        <div className="lg:col-span-4 space-y-6">
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="glass-card p-6"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-sm font-bold text-white uppercase tracking-wider">Recent Activity</h3>
+              <ShieldCheck className="w-4 h-4 text-violet-400" />
+            </div>
+            <div className="space-y-4">
+              {auditLogs.map((log, i) => (
+                <div key={log.id} className="flex gap-4 p-3 rounded-xl bg-white/[0.02] border border-white/5 group hover:bg-white/[0.04] transition-colors">
+                  <div className={`w-2 h-2 rounded-full mt-1.5 shadow-[0_0_8px] ${log.status === 'success' ? 'bg-emerald-500 shadow-emerald-500/50' : 'bg-blue-500 shadow-blue-500/50'}`} />
+                  <div className="flex-1">
+                    <div className="text-xs font-bold text-white group-hover:text-violet-300 transition-colors">{log.action}</div>
+                    <div className="flex justify-between mt-1">
+                      <span className="text-[10px] font-mono text-zinc-500">{log.target}</span>
+                      <span className="text-[10px] text-zinc-600 font-medium">{log.time}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button className="w-full mt-6 py-2 rounded-xl text-[10px] font-bold text-zinc-500 border border-white/5 hover:bg-white/5 uppercase tracking-widest transition-all">
+              View Full Audit Log
+            </button>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="glass-card p-6"
+            style={{ borderLeft: '4px solid #f59e0b' }}
+          >
+            <div className="flex items-center gap-3 mb-3">
+              <AlertCircle className="w-5 h-5 text-amber-400" />
+              <span className="text-sm font-bold text-white uppercase tracking-wider">Compliance Notice</span>
+            </div>
+            <p className="text-xs text-zinc-400 leading-relaxed font-medium">
+              Viewing keys provide selective transparency while maintaining on-chain privacy. 
+              All transaction data is encrypted by Umbra Protocol on Solana. 
+              Only authorized parties with valid viewing keys can decrypt details.
+            </p>
+          </motion.div>
         </div>
       </div>
     </AppLayout>
