@@ -32,12 +32,12 @@ export function Sidebar() {
   return (
     <motion.aside
       animate={{ width: sidebarCollapsed ? 72 : 240 }}
-      transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-      className="fixed left-0 top-0 bottom-0 z-40 flex flex-col"
+      transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+      className="fixed left-6 top-6 bottom-6 z-40 flex flex-col rounded-[24px] overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.5)]"
       style={{
-        background: 'rgba(8, 8, 15, 0.95)',
-        borderRight: '1px solid rgba(255,255,255,0.06)',
-        backdropFilter: 'blur(20px)',
+        background: 'rgba(15, 15, 25, 0.7)',
+        border: '1px solid rgba(255,255,255,0.08)',
+        backdropFilter: 'blur(24px)',
       }}
     >
       {/* Logo */}
