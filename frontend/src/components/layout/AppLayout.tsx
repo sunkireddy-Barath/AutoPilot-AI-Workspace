@@ -42,9 +42,7 @@ export function AppLayout({ children, pageTitle, pageSubtitle }: AppLayoutProps)
 
       {/* Main content area */}
       <motion.main
-        animate={{ marginLeft: sidebarCollapsed ? 72 : 240 }}
-        transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-        className="flex-1 flex flex-col min-h-screen"
+        className="flex-1 flex flex-col min-h-screen relative z-10 pb-32"
       >
         <Topbar title={pageTitle} subtitle={pageSubtitle} />
 
@@ -54,8 +52,8 @@ export function AppLayout({ children, pageTitle, pageSubtitle }: AppLayoutProps)
           initial="initial"
           animate="animate"
           exit="exit"
-          transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
-          className="flex-1 p-6 overflow-y-auto"
+          transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+          className="flex-1 mt-6 max-w-[1600px] mx-auto w-full px-6 overflow-y-auto"
         >
           {children}
         </motion.div>
