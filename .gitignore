@@ -1,21 +1,17 @@
-# Dependencies
 node_modules/
-frontend/node_modules/
-backend/venv/
-venv/
-__pycache__/
-*.pyc
-
-# Database
-backend/instance/
-*.db
-
-# Build
 dist/
 build/
 .env
-
-# IDE
-.vscode/
-.idea/
+.env.local
 .DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+.venv/
+instance/
+*.sqlite3
+*.db

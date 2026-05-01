@@ -1,5 +1,5 @@
-import { 
-  getUmbraClient, 
+import {
+  getUmbraClient,
   getDefaultMasterSeedGenerator,
   IUmbraClient,
   UMBRA_MESSAGE_TO_SIGN
@@ -62,17 +62,17 @@ export class UmbraService {
     mint: string = 'USDC'
   ) {
     console.log(`[Umbra] Initiating confidential transfer of ${amount} ${mint} to ${receiverAddress}`);
-    
+
     // For the demo, we simulate the complex ZK and MPC steps 
     // but use real Umbra SDK concepts.
-    
+
     // 1. Generate Ephemeral Key for Stealth Address Derivation
     const ephemeralKey = await this.generateEphemeralKey();
-    
+
     // 2. Derive Stealth Address (Public Key)
     // S = R + H(e * R) * G
     const stealthAddress = `stealth_${Math.random().toString(36).substring(2, 15)}`;
-    
+
     // 3. Encrypt Metadata using the Receiver's Viewing Key
     const encryptedMetadata = btoa(JSON.stringify({
       amount,
@@ -86,7 +86,7 @@ export class UmbraService {
 
     return {
       success: true,
-      txHash: `0x${Array.from({length: 64}, () => Math.floor(Math.random() * 16).toString(16)).join('')}`,
+      txHash: `0x${Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}`,
       stealthAddress,
       encryptedAmount: encryptedMetadata,
       viewingKey,
@@ -99,7 +99,7 @@ export class UmbraService {
    */
   static async decryptTransaction(encryptedData: string, viewingKey: string) {
     if (!viewingKey.startsWith('vk_')) throw new Error('Invalid viewing key');
-    
+
     try {
       // In a real SDK, this would use the viewing key to decrypt the 
       // Poseidon-encrypted metadata from the transaction's instruction data.
