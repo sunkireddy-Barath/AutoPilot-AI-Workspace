@@ -43,14 +43,15 @@ export function Sidebar() {
                 whileHover={{ y: -4 }}
                 whileTap={{ scale: 0.95 }}
                 className={cn(
-                  'relative flex items-center justify-center w-11 h-11 rounded-xl transition-all duration-300',
+                  'relative flex flex-col items-center justify-center px-2 min-w-[4.5rem] h-14 rounded-xl transition-all duration-300',
                   isActive 
                     ? 'bg-violet-500/20 text-violet-400 border border-violet-500/30' 
                     : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/5'
                 )}
                 title={item.label}
               >
-                <Icon className="w-5 h-5" />
+                <Icon className="w-4 h-4 mb-1" />
+                <span className="text-[10px] font-medium tracking-tight leading-none text-center whitespace-nowrap">{item.label}</span>
                 {isActive && (
                   <motion.div
                     layoutId="activeDot"
@@ -62,16 +63,17 @@ export function Sidebar() {
           )
         })}
 
-        <div className="w-px h-6 bg-white/10 mx-2" />
+        <div className="w-px h-8 bg-white/10 mx-2" />
 
         <motion.button
           whileHover={{ y: -4 }}
           whileTap={{ scale: 0.95 }}
           onClick={logout}
-          className="flex items-center justify-center w-11 h-11 rounded-xl text-red-400/70 hover:text-red-400 hover:bg-red-500/10 transition-all"
+          className="flex flex-col items-center justify-center px-2 min-w-[4.5rem] h-14 rounded-xl text-red-400/70 hover:text-red-400 hover:bg-red-500/10 transition-all"
           title="Logout"
         >
-          <LogOut className="w-5 h-5" />
+          <LogOut className="w-4 h-4 mb-1" />
+          <span className="text-[10px] font-medium tracking-tight leading-none">Logout</span>
         </motion.button>
 
         {user && (
