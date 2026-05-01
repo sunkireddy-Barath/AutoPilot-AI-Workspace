@@ -48,7 +48,7 @@ export function AppLayout({ children, pageTitle, pageSubtitle }: AppLayoutProps)
 
         <div
           key={pageTitle}
-          className="flex-1 mt-6 max-w-[1600px] mx-auto w-full px-6 overflow-y-auto"
+          className="flex-1 mt-6 mx-auto w-full px-6 md:px-12 overflow-y-auto"
         >
           {children}
         </div>
