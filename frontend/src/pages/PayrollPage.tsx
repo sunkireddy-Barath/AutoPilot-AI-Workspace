@@ -273,7 +273,7 @@ export default function PayrollPage() {
 
   return (
     <AppLayout pageTitle="Private Payroll" pageSubtitle="Confidential salary payments via Umbra Protocol">
-      <div className="space-y-6 max-w-5xl">
+      <div className="space-y-6 w-full">
         {/* Stats */}
         <div className="grid grid-cols-3 gap-4">
           {[

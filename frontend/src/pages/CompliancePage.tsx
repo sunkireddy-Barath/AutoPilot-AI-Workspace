@@ -197,7 +197,7 @@ function HowItWorksPanel() {
 export default function CompliancePage() {
   return (
     <AppLayout pageTitle="Compliance & Viewing Keys" pageSubtitle="Selective disclosure for regulatory compliance via Umbra">
-      <div className="max-w-4xl">
+      <div className="w-full">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <DecryptForm />
           <div className="space-y-4">

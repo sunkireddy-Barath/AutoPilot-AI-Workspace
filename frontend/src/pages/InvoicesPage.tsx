@@ -221,7 +221,7 @@ export default function InvoicesPage() {
 
   return (
     <AppLayout pageTitle="Invoices & Billing" pageSubtitle="Private invoice management with confidential payments">
-      <div className="space-y-5 max-w-4xl">
+      <div className="space-y-5 w-full">
         <div className="grid grid-cols-4 gap-4">
           {[
             { label: 'Total', value: invoices.length, color: '#7c3aed' },

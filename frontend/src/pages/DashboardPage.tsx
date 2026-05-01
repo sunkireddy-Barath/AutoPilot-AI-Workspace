@@ -182,7 +182,7 @@ export default function DashboardPage() {
 
   return (
     <AppLayout pageTitle="Dashboard" pageSubtitle="Private Business Finance Overview">
-      <div className="space-y-6 max-w-7xl">
+      <div className="space-y-6 w-full">
         {/* Umbra Banner */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}

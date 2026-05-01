@@ -22,7 +22,7 @@ export default function WalletPage() {
 
   return (
     <AppLayout pageTitle="Private Wallet" pageSubtitle="Encrypted balances and transaction history">
-      <div className="space-y-5 max-w-4xl">
+      <div className="space-y-5 w-full">
         {/* Hero balance card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
