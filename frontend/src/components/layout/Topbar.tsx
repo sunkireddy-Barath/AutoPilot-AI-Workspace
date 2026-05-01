@@ -15,8 +15,8 @@ export function Topbar({ title, subtitle }: TopbarProps) {
   const [searchFocused, setSearchFocused] = useState(false)
 
   return (
-    <header className="flex items-center justify-between px-6 py-3 rounded-[20px] shadow-lg border border-white/10"
-      style={{ background: 'rgba(15, 15, 25, 0.6)', backdropFilter: 'blur(20px)' }}>
+    <header className="flex items-center justify-between px-6 py-4 border-b border-white/5"
+      style={{ background: 'rgba(8, 8, 15, 0.8)', backdropFilter: 'blur(12px)' }}>
       {/* Left: Page title */}
       <div>
         <h1 className="text-lg font-bold text-white">{title}</h1>

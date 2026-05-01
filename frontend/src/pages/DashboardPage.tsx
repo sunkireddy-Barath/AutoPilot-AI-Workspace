@@ -73,48 +73,36 @@ function MetricCard({ card, delay }: { card: typeof METRIC_CARDS[0], delay: numb
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay, duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
-      whileHover={{ y: -4, scale: 1.02 }}
-      className="glass-card-hover p-6 relative group"
-      style={{
-        background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%)',
-      }}
+      transition={{ delay, duration: 0.4 }}
+      className="glass-card-hover p-5 relative overflow-hidden"
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-[24px]" />
-      
-      <div className="flex items-start justify-between mb-5">
-        <div className="w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 duration-500"
-          style={{ 
-            background: `${card.color}15`, 
-            border: `1px solid ${card.color}30`,
-            boxShadow: `0 0 20px ${card.color}10`
-          }}>
-          <card.icon className="w-6 h-6" style={{ color: card.color }} />
+      <div className="absolute top-0 right-0 w-32 h-32 rounded-full opacity-5"
+        style={{ background: card.color, transform: 'translate(30%, -30%)' }} />
+      <div className="flex items-start justify-between mb-4">
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+          style={{ background: `${card.color}20`, border: `1px solid ${card.color}30` }}>
+          <card.icon className="w-5 h-5" style={{ color: card.color }} />
         </div>
-        <div className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-bold ${
-          card.up ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'
-        }`}>
+        <div className={`flex items-center gap-1 text-xs font-medium ${card.up ? 'text-emerald-400' : 'text-amber-400'}`}>
           {card.up ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
           {card.change}
         </div>
       </div>
-      
+
       {card.isEncrypted ? (
-        <div className="flex items-center gap-3 mb-2">
-          <div className="text-2xl font-bold text-white/30 tracking-widest">••••••</div>
-          <div className="px-2 py-0.5 rounded-lg bg-violet-500/20 border border-violet-500/30 text-[9px] text-violet-300 font-black flex items-center gap-1.5 uppercase tracking-tighter">
-            <Lock className="w-3 h-3" />
-            Confidential
+        <div className="flex items-center gap-2 mb-1">
+          <div className="text-xl font-bold text-white/40 tracking-wider">••••••</div>
+          <div className="px-1.5 py-0.5 rounded-md bg-violet-500/10 border border-violet-500/20 text-[10px] text-violet-400 font-bold flex items-center gap-1 uppercase">
+            <Lock className="w-2.5 h-2.5" />
+            Encrypted
           </div>
         </div>
       ) : (
-        <div className="text-3xl font-bold text-white mb-2 tracking-tight group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-white/60 transition-all">
-          {card.value}
-        </div>
+        <div className="text-2xl font-bold text-white mb-1">{card.value}</div>
       )}
-      
-      <div className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">{card.label}</div>
-      <div className="text-[11px] text-zinc-600 mt-1 font-medium">{card.sub}</div>
+
+      <div className="text-xs text-zinc-500">{card.label}</div>
+      <div className="text-[10px] text-zinc-600 mt-0.5">{card.sub}</div>
     </motion.div>
   )
 }
@@ -134,7 +122,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 }
 
 export default function DashboardPage() {
-  const { 
+  const {
     transactions, employees, invoices, paymentLinks,
     fetchEmployees, fetchInvoices, fetchPaymentLinks, fetchTransactions
   } = useAppStore()
@@ -262,7 +250,7 @@ export default function DashboardPage() {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
                 <XAxis dataKey="month" tick={{ fill: '#71717a', fontSize: 11 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: '#71717a', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `$${(v/1000).toFixed(0)}k`} />
+                <YAxis tick={{ fill: '#71717a', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} />
                 <Tooltip content={<CustomTooltip />} />
                 <Area type="monotone" dataKey="outflow" name="Outflow" stroke="#7c3aed" strokeWidth={2} fill="url(#gradOut)" />
                 <Area type="monotone" dataKey="inflow" name="Inflow" stroke="#6366f1" strokeWidth={2} fill="url(#gradIn)" />
