@@ -29,12 +29,14 @@ def create_app():
     from .api.invoices import invoices_bp
     from .api.compliance import compliance_bp
     from .api.payment_links import payment_links_bp
+    from .api.wallet import wallet_bp
     
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(payroll_bp, url_prefix='/api/payroll')
     app.register_blueprint(invoices_bp, url_prefix='/api/invoices')
     app.register_blueprint(compliance_bp, url_prefix='/api/compliance')
     app.register_blueprint(payment_links_bp, url_prefix='/api/payment-links')
+    app.register_blueprint(wallet_bp, url_prefix='/api/wallet')
     
     @app.route('/health')
     def health():

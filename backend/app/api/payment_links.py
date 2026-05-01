@@ -41,6 +41,24 @@ def create_link():
     db.session.add(link)
     db.session.commit()
     
+    # Sync to Supabase
+    try:
+        from supabase import create_client
+        url = os.environ.get("SUPABASE_URL")
+        key = os.environ.get("SUPABASE_KEY")
+        if url and key:
+            sb = create_client(url, key)
+            sb.table("payment_links").insert({
+                "id": link.id,
+                "creator_id": link.creator_id,
+                "title": link.title,
+                "amount": link.amount,
+                "currency": link.currency,
+                "status": link.status
+            }).execute()
+    except Exception as e:
+        print(f"Supabase payment link sync failed: {e}")
+    
     return jsonify({
         'message': 'Payment link generated',
         'id': link.id,

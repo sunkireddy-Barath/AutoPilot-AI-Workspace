@@ -46,6 +46,26 @@ def create_invoice():
     db.session.add(invoice)
     db.session.commit()
     
+    # Sync to Supabase
+    try:
+        from supabase import create_client
+        url = os.environ.get("SUPABASE_URL")
+        key = os.environ.get("SUPABASE_KEY")
+        if url and key:
+            sb = create_client(url, key)
+            sb.table("invoices").insert({
+                "id": invoice.id,
+                "creator_id": invoice.creator_id,
+                "invoice_number": invoice.invoice_number,
+                "client_name": invoice.client_name,
+                "client_email": invoice.client_email,
+                "amount": invoice.amount,
+                "status": invoice.status,
+                "payment_link": invoice.payment_link
+            }).execute()
+    except Exception as e:
+        print(f"Supabase invoice sync failed: {e}")
+    
     return jsonify({'message': 'Invoice created', 'id': invoice.id, 'payment_link': invoice.payment_link}), 201
 
 @invoices_bp.route('/<id>/pay', methods=['POST'])

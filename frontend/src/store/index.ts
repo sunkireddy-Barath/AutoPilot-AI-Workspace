@@ -30,10 +30,12 @@ interface AppState {
   invoices: Invoice[]
   paymentLinks: PaymentLink[]
   transactions: Transaction[]
+  balances: any[]
   fetchEmployees: () => Promise<void>
   fetchInvoices: () => Promise<void>
   fetchPaymentLinks: () => Promise<void>
   fetchTransactions: () => Promise<void>
+  fetchBalances: () => Promise<void>
 
   // Payroll
   addEmployee: (emp: Omit<Employee, 'id' | 'employerId'>) => Promise<void>
@@ -140,6 +142,18 @@ export const useAppStore = create<AppState>()(
       invoices: [],
       paymentLinks: [],
       transactions: MOCK_TRANSACTIONS,
+      balances: [],
+
+      fetchBalances: async () => {
+        const token = localStorage.getItem('stealthpay_token')
+        const res = await fetch('/api/wallet/balances', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        if (res.ok) {
+          const data = await res.json()
+          set({ balances: data })
+        }
+      },
 
       fetchEmployees: async () => {
         const token = localStorage.getItem('stealthpay_token')

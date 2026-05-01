@@ -7,10 +7,15 @@ import { formatAmount, truncateAddress, formatRelativeTime } from '../lib/utils'
 import { MOCK_WALLET_BALANCES } from '../lib/mockData'
 
 export default function WalletPage() {
-  const { transactions, balancesMasked, toggleBalanceMask, user } = useAppStore()
+  const { transactions, balancesMasked, toggleBalanceMask, user, balances, fetchBalances } = useAppStore()
   const [copiedAddress, setCopiedAddress] = useState(false)
 
-  const totalUSD = MOCK_WALLET_BALANCES.reduce((a, b) => a + (b.usdValue ?? 0), 0)
+  useState(() => {
+    fetchBalances()
+  }, [])
+
+  const displayBalances = balances.length > 0 ? balances : MOCK_WALLET_BALANCES
+  const totalUSD = displayBalances.reduce((a, b) => a + (b.usdValue ?? 0), 0)
 
   const copyAddress = () => {
     if (user?.walletAddress) {
@@ -85,7 +90,7 @@ export default function WalletPage() {
           <div className="glass-card p-6 flex flex-col h-[320px]">
             <h3 className="text-sm font-bold text-white mb-4 uppercase tracking-wider">Token Balances</h3>
             <div className="space-y-2 overflow-y-auto flex-1 pr-2 custom-scrollbar">
-              {MOCK_WALLET_BALANCES.map((bal, i) => (
+              {displayBalances.map((bal, i) => (
                 <motion.div
                   key={bal.symbol}
                   initial={{ opacity: 0, x: -10 }}

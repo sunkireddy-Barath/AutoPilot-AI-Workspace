@@ -40,6 +40,26 @@ def add_employee():
     db.session.add(employee)
     db.session.commit()
     
+    # Sync to Supabase
+    try:
+        from supabase import create_client
+        url = os.environ.get("SUPABASE_URL")
+        key = os.environ.get("SUPABASE_KEY")
+        if url and key:
+            sb = create_client(url, key)
+            sb.table("employees").insert({
+                "id": employee.id,
+                "employer_id": employee.employer_id,
+                "name": employee.name,
+                "email": employee.email,
+                "wallet_address": employee.wallet_address,
+                "salary": employee.salary,
+                "department": employee.department,
+                "status": employee.status
+            }).execute()
+    except Exception as e:
+        print(f"Supabase employee sync failed: {e}")
+    
     return jsonify({'message': 'Employee added', 'id': employee.id}), 201
 
 @payroll_bp.route('/employees/<id>', methods=['DELETE'])
