@@ -7,25 +7,35 @@ import {
 import { AppLayout } from '../components/layout/AppLayout'
 import { useAppStore } from '../store'
 import { truncateAddress, formatAmount } from '../lib/utils'
-import type { Employee } from '../types'
+
+interface Employee {
+  id: string
+  name: string
+  email: string
+  wallet_address: string
+  salary: number
+  currency: string
+  department: string
+  status: string
+  lastPaid?: string
+}
 
 function AddEmployeeModal({ onClose }: { onClose: () => void }) {
   const { addEmployee, addToast } = useAppStore()
   const [form, setForm] = useState({
-    name: '', email: '', walletAddress: '',
+    name: '', email: '', wallet_address: '',
     salary: '', currency: 'USDC', department: '', status: 'active' as const,
   })
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!form.name || !form.walletAddress || !form.salary) {
+    if (!form.name || !form.wallet_address || !form.salary) {
       addToast({ type: 'error', title: 'Missing Fields', message: 'Please fill in all required fields' })
       return
     }
     setLoading(true)
-    await new Promise(r => setTimeout(r, 800))
-    addEmployee({ ...form, salary: Number(form.salary) })
+    await addEmployee({ ...form, salary: Number(form.salary) })
     setLoading(false)
     onClose()
   }
@@ -93,8 +103,8 @@ function AddEmployeeModal({ onClose }: { onClose: () => void }) {
             <input
               className="input-field font-mono text-xs"
               placeholder="7xKXtg2CW87d97TXJSDpbD5..."
-              value={form.walletAddress}
-              onChange={e => setForm(f => ({ ...f, walletAddress: e.target.value }))}
+              value={form.wallet_address}
+              onChange={e => setForm(f => ({ ...f, wallet_address: e.target.value }))}
             />
           </div>
 
@@ -225,7 +235,7 @@ function RunPayrollModal({ employees, onClose }: { employees: Employee[], onClos
                   />
                   <div className="flex-1">
                     <div className="text-sm font-medium text-white">{emp.name}</div>
-                    <div className="text-xs text-zinc-500">{emp.department} • {truncateAddress(emp.walletAddress)}</div>
+                    <div className="text-xs text-zinc-500">{emp.department} • {truncateAddress(emp.wallet_address)}</div>
                   </div>
                   <div className="text-sm font-semibold text-violet-300">{formatAmount(emp.salary)}</div>
                 </label>
@@ -256,8 +266,6 @@ function RunPayrollModal({ employees, onClose }: { employees: Employee[], onClos
     </motion.div>
   )
 }
-
-
 
 export default function PayrollPage() {
   const { employees, removeEmployee, addToast, fetchEmployees } = useAppStore()
@@ -380,7 +388,7 @@ export default function PayrollPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-zinc-400">{emp.department}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-xs font-mono font-medium text-zinc-500 bg-black/20 px-2 py-1 rounded-md border border-white/5">{truncateAddress(emp.walletAddress)}</span>
+                        <span className="text-xs font-mono font-medium text-zinc-500 bg-black/20 px-2 py-1 rounded-md border border-white/5">{truncateAddress(emp.wallet_address)}</span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-2 bg-violet-500/10 border border-violet-500/20 px-3 py-1.5 rounded-lg w-fit">
@@ -400,7 +408,7 @@ export default function PayrollPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
                         <button
-                          onClick={() => { removeEmployee(emp.id); addToast({ type: 'info', title: 'Employee Removed' }) }}
+                          onClick={() => removeEmployee(emp.id)}
                           className="opacity-0 group-hover:opacity-100 p-2 rounded-xl hover:bg-red-500/10 transition-all border border-transparent hover:border-red-500/20"
                         >
                           <Trash2 className="w-4 h-4 text-red-400" />

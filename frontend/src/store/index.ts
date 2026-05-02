@@ -1,71 +1,118 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { User, Employee, Invoice, PaymentLink, Transaction, Toast } from '../types'
-import { MOCK_EMPLOYEES, MOCK_INVOICES, MOCK_PAYMENT_LINKS, MOCK_TRANSACTIONS } from '../lib/mockData'
-import { randomHex, encryptedAmount } from '../lib/utils'
 import { UmbraService } from '../lib/umbra'
 
+interface User {
+  id: string
+  email: string
+  walletAddress: string
+  companyName: string
+  umbra_spending_key?: string
+  umbra_viewing_key?: string
+  createdAt: string
+}
+
+interface Employee {
+  id: string
+  name: string
+  email: string
+  wallet_address: string
+  salary: number
+  currency: string
+  department: string
+  status: string
+  lastPaid?: string
+}
+
+interface Transaction {
+  id: string
+  txHash: string
+  sender: string
+  receiver: string
+  amount?: number
+  encryptedAmount?: string
+  currency: string
+  type: 'payroll' | 'invoice' | 'payment_link'
+  status: 'confirmed' | 'pending' | 'failed'
+  timestamp: string
+  memo?: string
+  viewingKey?: string
+}
+
+interface Invoice {
+  id: string
+  invoice_number: string
+  client_name: string
+  client_email: string
+  amount: number
+  currency: string
+  description: string
+  status: 'pending' | 'paid' | 'overdue' | 'draft'
+  due_date: string
+  payment_link?: string
+}
+
+interface PaymentLink {
+  id: string
+  title: string
+  amount: number
+  currency: string
+  status: 'active' | 'claimed' | 'expired'
+  url: string
+  createdAt: string
+  claimedBy?: string
+}
+
+interface Balance {
+  token: string
+  symbol: string
+  amount: number
+  price: number
+  usdValue: number
+  percentChange24h: number
+}
+
 interface AppState {
-  // Auth
   user: User | null
   isAuthenticated: boolean
   setUser: (user: User | null) => void
-  login: (email: string, password: string) => Promise<boolean>
-  signup: (email: string, password: string, company: string, wallet: string) => Promise<boolean>
   logout: () => void
-
-  // UI
+  
   sidebarCollapsed: boolean
   toggleSidebar: () => void
+  
   balancesMasked: boolean
   toggleBalanceMask: () => void
-
-  // Toasts
-  toasts: Toast[]
-  addToast: (toast: Omit<Toast, 'id'>) => void
+  
+  toasts: { id: string; type: 'success' | 'error' | 'info' | 'warning'; title: string; message?: string; duration?: number }[]
+  addToast: (toast: Omit<AppState['toasts'][0], 'id'>) => void
   removeToast: (id: string) => void
-
-  // Data
+  
   employees: Employee[]
-  invoices: Invoice[]
-  paymentLinks: PaymentLink[]
-  transactions: Transaction[]
-  balances: any[]
   fetchEmployees: () => Promise<void>
-  fetchInvoices: () => Promise<void>
-  fetchPaymentLinks: () => Promise<void>
-  fetchTransactions: () => Promise<void>
-  fetchBalances: () => Promise<void>
-
-  // Payroll
-  addEmployee: (emp: Omit<Employee, 'id' | 'employerId'>) => Promise<void>
-  removeEmployee: (id: string) => void
-  runPayroll: (employeeIds: string[]) => Promise<void>
-
-  // Invoices
-  addInvoice: (inv: Omit<Invoice, 'id' | 'creatorId' | 'invoiceNumber' | 'paymentLink' | 'createdAt'>) => Promise<void>
-  updateInvoiceStatus: (id: string, status: Invoice['status']) => void
-
-  // Compliance
-  decryptTransaction: (txHash: string, viewingKey: string) => Promise<Response>
-
-  // Payment links
-  createPaymentLink: (link: Omit<PaymentLink, 'id' | 'link' | 'createdAt'>) => Promise<void>
-  claimPaymentLink: (id: string) => Promise<void>
-
-  // Processing states
+  addEmployee: (emp: Partial<Employee>) => Promise<void>
+  removeEmployee: (id: string) => Promise<void>
+  
   isProcessingPayroll: boolean
-  isCreatingInvoice: boolean
-  isGeneratingLink: boolean
+  runPayroll: (employeeIds: string[]) => Promise<void>
+  
+  invoices: Invoice[]
+  fetchInvoices: () => Promise<void>
+  createInvoice: (inv: Partial<Invoice>) => Promise<void>
+  updateInvoiceStatus: (id: string, status: Invoice['status']) => Promise<void>
+  
+  paymentLinks: PaymentLink[]
+  fetchPaymentLinks: () => Promise<void>
+  createPaymentLink: (link: Partial<PaymentLink>) => Promise<void>
+  
+  transactions: Transaction[]
+  fetchTransactions: () => Promise<void>
+  
+  balances: Balance[]
+  fetchBalances: () => Promise<void>
 }
 
-const DEMO_USER: User = {
-  id: 'usr-001',
-  email: 'demo@stealthpay.io',
-  walletAddress: '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU',
-  companyName: 'Acme Corp',
-  createdAt: '2024-01-01T00:00:00Z',
-}
+const randomHex = (len: number) => Array.from({ length: len }, () => Math.floor(Math.random() * 16).toString(16)).join('')
 
 export const useAppStore = create<AppState>()(
   persist(
@@ -73,51 +120,6 @@ export const useAppStore = create<AppState>()(
       user: null,
       isAuthenticated: false,
       setUser: (user) => set({ user, isAuthenticated: !!user }),
-
-      login: async (email: string, password: string) => {
-        try {
-          const res = await fetch('/api/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password }),
-          })
-          const data = await res.json()
-          if (res.ok) {
-            set({ user: data.user, isAuthenticated: true })
-            localStorage.setItem('stealthpay_token', data.access_token)
-            return true
-          }
-          return false
-        } catch (err) {
-          console.error('Login error:', err)
-          return false
-        }
-      },
-
-      signup: async (email: string, password: string, company: string, wallet: string) => {
-        try {
-          const res = await fetch('/api/auth/signup', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-              email, 
-              password, 
-              company_name: company, 
-              wallet_address: wallet 
-            }),
-          })
-          const data = await res.json()
-          if (res.ok) {
-            set({ user: data.user, isAuthenticated: true })
-            localStorage.setItem('stealthpay_token', data.access_token)
-            return true
-          }
-          return false
-        } catch (err) {
-          console.error('Signup error:', err)
-          return false
-        }
-      },
 
       logout: () => {
         set({ user: null, isAuthenticated: false })
@@ -141,29 +143,62 @@ export const useAppStore = create<AppState>()(
       employees: [],
       invoices: [],
       paymentLinks: [],
-      transactions: MOCK_TRANSACTIONS,
+      transactions: [],
       balances: [],
 
       fetchBalances: async () => {
         const token = localStorage.getItem('stealthpay_token')
-        const res = await fetch('/api/wallet/balances', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        })
-        if (res.ok) {
-          const data = await res.json()
-          set({ balances: data })
-        }
+        if (!token) return
+        try {
+          const res = await fetch('/api/wallet/balances', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          })
+          if (res.ok) {
+            const data = await res.json()
+            set({ balances: data })
+          }
+        } catch (e) { console.error(e) }
       },
 
       fetchEmployees: async () => {
         const token = localStorage.getItem('stealthpay_token')
-        const res = await fetch('/api/payroll/employees', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        })
-        if (res.ok) {
-          const data = await res.json()
-          set({ employees: data })
-        }
+        if (!token) return
+        try {
+          const res = await fetch('/api/payroll/employees', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          })
+          if (res.ok) {
+            const data = await res.json()
+            set({ employees: data })
+          }
+        } catch (e) { console.error(e) }
+      },
+
+      fetchTransactions: async () => {
+        const token = localStorage.getItem('stealthpay_token')
+        if (!token) return
+        try {
+          const res = await fetch('/api/transactions', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          })
+          if (res.ok) {
+            const data = await res.json()
+            const mapped = data.map((tx: any) => ({
+              id: tx.id,
+              txHash: tx.tx_hash,
+              sender: tx.sender,
+              receiver: tx.receiver,
+              encryptedAmount: tx.encrypted_amount,
+              currency: 'USDC',
+              type: tx.type,
+              status: tx.status,
+              timestamp: tx.created_at,
+              memo: tx.memo,
+              viewingKey: tx.viewing_key
+            }))
+            set({ transactions: mapped })
+          }
+        } catch (e) { console.error(e) }
       },
 
       addEmployee: async (emp) => {
@@ -198,17 +233,14 @@ export const useAppStore = create<AppState>()(
       runPayroll: async (employeeIds) => {
         set({ isProcessingPayroll: true })
         const token = localStorage.getItem('stealthpay_token')
-        const now = new Date().toISOString()
         
         try {
-          const newTransactions: Transaction[] = []
-          
           for (const eid of employeeIds) {
             const emp = get().employees.find(e => e.id === eid)
             if (!emp) continue
 
             // 1. Prepare Confidential Transfer via Umbra
-            const umbraData = await UmbraService.confidentialTransfer(null, emp.walletAddress, emp.salary, emp.currency)
+            const umbraData = await UmbraService.confidentialTransfer(null, emp.wallet_address, emp.salary, 'USDC')
             
             // 2. Submit to Backend
             const res = await fetch('/api/payroll/run', {
@@ -223,54 +255,30 @@ export const useAppStore = create<AppState>()(
               }),
             })
             
-            if (res.ok) {
-              const data = await res.json()
-              const tx = data.transactions[0]
-              newTransactions.push({
-                id: `tx-${randomHex(6)}`,
-                txHash: tx.tx_hash,
-                sender: get().user?.walletAddress ?? 'System',
-                receiver: 'Encrypted',
-                encryptedAmount: umbraData.encryptedAmount,
-                currency: emp.currency,
-                type: 'payroll',
-                status: 'confirmed',
-                timestamp: now,
-                memo: `Payroll Transfer (via Umbra)`,
-                viewingKey: tx.viewing_key
-              })
-            }
+            if (!res.ok) throw new Error('Backend sync failed')
           }
           
-          set(s => ({
-            transactions: [...newTransactions, ...s.transactions],
-            isProcessingPayroll: false,
-          }))
-          get().fetchEmployees()
           get().addToast({ 
             type: 'success', 
-            title: 'Payroll Sent', 
-            message: `${newTransactions.length} confidential transfers complete via Umbra Protocol` 
+            title: 'Payroll Complete', 
+            message: `Successfully processed ${employeeIds.length} private transfers.` 
           })
-        } catch (err) {
+          
+          await get().fetchEmployees()
+          await get().fetchTransactions()
+          await get().fetchBalances()
+          
+        } catch (err: any) {
+          get().addToast({ type: 'error', title: 'Payroll Failed', message: err.message })
+        } finally {
           set({ isProcessingPayroll: false })
-          get().addToast({ type: 'error', title: 'Payroll Failed' })
-        }
-      },
-      fetchTransactions: async () => {
-        const token = localStorage.getItem('stealthpay_token')
-        const res = await fetch('/api/compliance/transactions', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        })
-        if (res.ok) {
-          const data = await res.json()
-          set({ transactions: data })
         }
       },
 
       fetchInvoices: async () => {
         const token = localStorage.getItem('stealthpay_token')
-        const res = await fetch('/api/invoices/', {
+        if (!token) return
+        const res = await fetch('/api/invoices', {
           headers: { 'Authorization': `Bearer ${token}` }
         })
         if (res.ok) {
@@ -279,16 +287,22 @@ export const useAppStore = create<AppState>()(
         }
       },
 
-      isCreatingInvoice: false,
-      addInvoice: async (inv) => {
+      createInvoice: async (inv) => {
         const token = localStorage.getItem('stealthpay_token')
-        const res = await fetch('/api/invoices/', {
+        const res = await fetch('/api/invoices', {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
           },
-          body: JSON.stringify(inv),
+          body: JSON.stringify({
+            client_name: inv.client_name,
+            client_email: inv.client_email,
+            amount: inv.amount,
+            currency: inv.currency,
+            description: inv.description,
+            due_date: inv.due_date
+          }),
         })
         if (res.ok) {
           get().fetchInvoices()
@@ -298,7 +312,7 @@ export const useAppStore = create<AppState>()(
 
       updateInvoiceStatus: async (id, status) => {
         const token = localStorage.getItem('stealthpay_token')
-        const res = await fetch(`/api/invoices/${id}/status`, {
+        const res = await fetch(`/api/invoices/${id}`, {
           method: 'PATCH',
           headers: { 
             'Content-Type': 'application/json',
@@ -308,26 +322,14 @@ export const useAppStore = create<AppState>()(
         })
         if (res.ok) {
           get().fetchInvoices()
-          get().addToast({ type: 'info', title: 'Invoice Updated', message: `Status changed to ${status}` })
+          get().addToast({ type: 'info', title: 'Invoice Updated' })
         }
-      },
-
-      decryptTransaction: async (txHash: string, viewingKey: string) => {
-        const token = localStorage.getItem('stealthpay_token')
-        const res = await fetch('/api/compliance/decrypt', {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ tx_hash: txHash, viewing_key: viewingKey }),
-        })
-        return res
       },
 
       fetchPaymentLinks: async () => {
         const token = localStorage.getItem('stealthpay_token')
-        const res = await fetch('/api/payment-links/', {
+        if (!token) return
+        const res = await fetch('/api/payment-links', {
           headers: { 'Authorization': `Bearer ${token}` }
         })
         if (res.ok) {
@@ -336,11 +338,9 @@ export const useAppStore = create<AppState>()(
         }
       },
 
-      isGeneratingLink: false,
       createPaymentLink: async (link) => {
-        set({ isGeneratingLink: true })
         const token = localStorage.getItem('stealthpay_token')
-        const res = await fetch('/api/payment-links/', {
+        const res = await fetch('/api/payment-links', {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
@@ -348,37 +348,12 @@ export const useAppStore = create<AppState>()(
           },
           body: JSON.stringify(link),
         })
-        set({ isGeneratingLink: false })
         if (res.ok) {
           get().fetchPaymentLinks()
-          get().addToast({ type: 'success', title: 'Payment Link Created', message: 'Secure private payment link generated' })
-        }
-      },
-
-      claimPaymentLink: async (id) => {
-        const token = localStorage.getItem('stealthpay_token')
-        const res = await fetch(`/api/payment-links/${id}/claim`, {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ wallet_address: get().user?.walletAddress }),
-        })
-        if (res.ok) {
-          get().fetchPaymentLinks()
-          get().addToast({ type: 'success', title: 'Payment Link Claimed', message: 'Private payment received via Umbra' })
+          get().addToast({ type: 'success', title: 'Payment Link Created' })
         }
       },
     }),
-    {
-      name: 'stealthpay-store',
-      partialize: (state) => ({
-        user: state.user,
-        isAuthenticated: state.isAuthenticated,
-        sidebarCollapsed: state.sidebarCollapsed,
-        balancesMasked: state.balancesMasked,
-      }),
-    }
+    { name: 'stealthpay-storage' }
   )
 )

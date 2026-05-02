@@ -1,12 +1,10 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from ..models.models import db, Employee, User
-from ..services.transaction_service import TransactionService
-from ..services.blockchain_service import BlockchainService
+from ..models.models import db, Employee, User, Transaction
 import uuid
+from datetime import datetime
 
 payroll_bp = Blueprint('payroll', __name__)
-blockchain = BlockchainService()
 
 @payroll_bp.route('/employees', methods=['GET'])
 @jwt_required()
@@ -39,27 +37,6 @@ def add_employee():
     )
     db.session.add(employee)
     db.session.commit()
-    
-    # Sync to Supabase
-    try:
-        from supabase import create_client
-        url = os.environ.get("SUPABASE_URL")
-        key = os.environ.get("SUPABASE_KEY")
-        if url and key:
-            sb = create_client(url, key)
-            sb.table("employees").insert({
-                "id": employee.id,
-                "employer_id": employee.employer_id,
-                "name": employee.name,
-                "email": employee.email,
-                "wallet_address": employee.wallet_address,
-                "salary": employee.salary,
-                "department": employee.department,
-                "status": employee.status
-            }).execute()
-    except Exception as e:
-        print(f"Supabase employee sync failed: {e}")
-    
     return jsonify({'message': 'Employee added', 'id': employee.id}), 201
 
 @payroll_bp.route('/employees/<id>', methods=['DELETE'])
@@ -77,6 +54,7 @@ def run_payroll():
     user_id = get_jwt_identity()
     data = request.get_json()
     employee_ids = data.get('employee_ids', [])
+    umbra_metadata = data.get('umbra_metadata', {})
     
     user = User.query.get(user_id)
     employees = Employee.query.filter(Employee.id.in_(employee_ids), Employee.employer_id == user_id).all()
@@ -87,36 +65,29 @@ def run_payroll():
     transactions_meta = []
     try:
         for emp in employees:
-            # 1. Simulate On-Chain Transaction Verification
-            sim = blockchain.simulate_transfer(
-                user.wallet_address or '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU', 
-                emp.wallet_address, 
-                emp.salary / 100 # Assuming simple SOL/USDC conversion for simulation
+            # Create a real Transaction record based on Umbra metadata from frontend
+            tx = Transaction(
+                id=str(uuid.uuid4()),
+                tx_hash=umbra_metadata.get('txHash', f"sim_{uuid.uuid4().hex}"),
+                sender=user.wallet_address,
+                receiver=umbra_metadata.get('stealthAddress', f"umbra_{uuid.uuid4().hex}"),
+                encrypted_amount=umbra_metadata.get('encryptedAmount'),
+                viewing_key=umbra_metadata.get('viewingKey'),
+                type='payroll',
+                memo=f"Payroll for {emp.name}",
+                status='confirmed',
+                created_at=datetime.utcnow()
             )
-            
-            if not sim['success']:
-                print(f"Blockchain simulation failed for {emp.name}: {sim.get('error')}")
-
-            # 2. Create the private transaction using the service
-            tx = TransactionService.create_private_transaction(
-                user_id=user_id,
-                receiver_address=emp.wallet_address,
-                amount=emp.salary,
-                currency='USDC',
-                tx_type='payroll',
-                memo=f"Payroll for {emp.name}"
-            )
-            
+            db.session.add(tx)
             transactions_meta.append({
                 'employee_name': emp.name,
                 'tx_hash': tx.tx_hash,
-                'viewing_key': tx.viewing_key,
-                'blockchain_sim': sim
+                'viewing_key': tx.viewing_key
             })
             
         db.session.commit()
         return jsonify({
-            'message': f'Payroll run for {len(transactions_meta)} employees complete',
+            'message': 'Payroll complete',
             'transactions': transactions_meta
         }), 200
     except Exception as e:

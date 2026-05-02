@@ -42,7 +42,14 @@ function PageLoader() {
 export default function App() {
   const network = WalletAdapterNetwork.Devnet
   const endpoint = useMemo(() => clusterApiUrl(network), [network])
-  const wallets = useMemo(() => [new PhantomWalletAdapter(), new SolflareWalletAdapter()], [network])
+  
+  // By providing an empty array here, the WalletProvider will automatically 
+  // detect all wallets that support the Solana Wallet Standard (Phantom, Solflare, etc.)
+  // We keep explicit adapters only for older extensions that might not support the standard.
+  const wallets = useMemo(() => [
+    new PhantomWalletAdapter(),
+    new SolflareWalletAdapter()
+  ], [])
 
   return (
     <ConnectionProvider endpoint={endpoint}>

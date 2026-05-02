@@ -1,6 +1,7 @@
 from ..models.models import db, Transaction, User
 from .umbra_service import UmbraService
 import uuid
+import os
 
 class TransactionService:
     @staticmethod

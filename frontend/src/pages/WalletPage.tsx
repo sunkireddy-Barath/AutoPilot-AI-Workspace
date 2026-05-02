@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Eye, EyeOff, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownLeft, Lock, Copy, Check } from 'lucide-react'
 import { AppLayout } from '../components/layout/AppLayout'
@@ -10,7 +10,7 @@ export default function WalletPage() {
   const { transactions, balancesMasked, toggleBalanceMask, user, balances, fetchBalances } = useAppStore()
   const [copiedAddress, setCopiedAddress] = useState(false)
 
-  useState(() => {
+  useEffect(() => {
     fetchBalances()
   }, [])
 

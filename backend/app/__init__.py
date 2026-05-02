@@ -30,6 +30,7 @@ def create_app():
     from .api.compliance import compliance_bp
     from .api.payment_links import payment_links_bp
     from .api.wallet import wallet_bp
+    from .api.transactions import transactions_bp
     
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(payroll_bp, url_prefix='/api/payroll')
@@ -37,6 +38,7 @@ def create_app():
     app.register_blueprint(compliance_bp, url_prefix='/api/compliance')
     app.register_blueprint(payment_links_bp, url_prefix='/api/payment-links')
     app.register_blueprint(wallet_bp, url_prefix='/api/wallet')
+    app.register_blueprint(transactions_bp, url_prefix='/api/transactions')
     
     @app.route('/health')
     def health():

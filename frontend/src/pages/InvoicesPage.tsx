@@ -4,7 +4,19 @@ import { FileText, Plus, Lock, Copy, Check, X, Loader2, ChevronRight } from 'luc
 import { AppLayout } from '../components/layout/AppLayout'
 import { useAppStore } from '../store'
 import { formatAmount } from '../lib/utils'
-import type { Invoice } from '../types'
+
+interface Invoice {
+  id: string
+  invoice_number: string
+  client_name: string
+  client_email: string
+  amount: number
+  currency: string
+  description: string
+  status: 'pending' | 'paid' | 'overdue' | 'draft'
+  due_date: string
+  payment_link: string
+}
 
 const STATUS_STYLES: Record<Invoice['status'], string> = {
   paid: 'badge-success',
@@ -14,23 +26,22 @@ const STATUS_STYLES: Record<Invoice['status'], string> = {
 }
 
 function CreateInvoiceModal({ onClose }: { onClose: () => void }) {
-  const { addInvoice, addToast } = useAppStore()
+  const { createInvoice, addToast } = useAppStore()
   const [form, setForm] = useState({
-    clientName: '', clientEmail: '', amount: '',
+    client_name: '', client_email: '', amount: '',
     currency: 'USDC', description: '', status: 'pending' as Invoice['status'],
-    dueDate: new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10),
+    due_date: new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10),
   })
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!form.clientName || !form.amount || !form.description) {
+    if (!form.client_name || !form.amount || !form.description) {
       addToast({ type: 'error', title: 'Missing Fields' })
       return
     }
     setLoading(true)
-    await new Promise(r => setTimeout(r, 1000))
-    addInvoice({ ...form, amount: Number(form.amount) })
+    await createInvoice({ ...form, amount: Number(form.amount) } as any)
     setLoading(false)
     onClose()
   }
@@ -61,13 +72,13 @@ function CreateInvoiceModal({ onClose }: { onClose: () => void }) {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-xs text-zinc-400 mb-1 block">Client Name *</label>
-              <input className="input-field" placeholder="TechVentures Inc." value={form.clientName}
-                onChange={e => setForm(f => ({ ...f, clientName: e.target.value }))} />
+              <input className="input-field" placeholder="TechVentures Inc." value={form.client_name}
+                onChange={e => setForm(f => ({ ...f, client_name: e.target.value }))} />
             </div>
             <div>
               <label className="text-xs text-zinc-400 mb-1 block">Client Email</label>
-              <input type="email" className="input-field" placeholder="billing@client.com" value={form.clientEmail}
-                onChange={e => setForm(f => ({ ...f, clientEmail: e.target.value }))} />
+              <input type="email" className="input-field" placeholder="billing@client.com" value={form.client_email}
+                onChange={e => setForm(f => ({ ...f, client_email: e.target.value }))} />
             </div>
           </div>
           <div>
@@ -91,8 +102,8 @@ function CreateInvoiceModal({ onClose }: { onClose: () => void }) {
           </div>
           <div>
             <label className="text-xs text-zinc-400 mb-1 block">Due Date</label>
-            <input type="date" className="input-field" value={form.dueDate}
-              onChange={e => setForm(f => ({ ...f, dueDate: e.target.value }))} />
+            <input type="date" className="input-field" value={form.due_date}
+              onChange={e => setForm(f => ({ ...f, due_date: e.target.value }))} />
           </div>
           <div className="flex gap-3 pt-1">
             <button type="button" onClick={onClose} className="btn-ghost flex-1 justify-center">Cancel</button>
@@ -123,14 +134,14 @@ function InvoiceRow({ inv, onClick }: { inv: Invoice, onClick: () => void }) {
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-white">{inv.clientName}</span>
-          <span className="text-xs text-zinc-500 font-mono">{inv.invoiceNumber}</span>
+          <span className="text-sm font-semibold text-white">{inv.client_name}</span>
+          <span className="text-xs text-zinc-500 font-mono">{inv.invoice_number}</span>
         </div>
         <div className="text-xs text-zinc-500 truncate">{inv.description}</div>
       </div>
       <div className="text-right flex-shrink-0">
         <div className="text-sm font-bold text-white">{formatAmount(inv.amount)}</div>
-        <div className="text-xs text-zinc-500">Due {new Date(inv.dueDate).toLocaleDateString()}</div>
+        <div className="text-xs text-zinc-500">Due {new Date(inv.due_date).toLocaleDateString()}</div>
       </div>
       <span className={STATUS_STYLES[inv.status]}>{inv.status}</span>
       <ChevronRight className="w-4 h-4 text-zinc-600 flex-shrink-0" />
@@ -142,9 +153,11 @@ function InvoiceDrawer({ invoice, onClose }: { invoice: Invoice, onClose: () => 
   const [copied, setCopied] = useState(false)
   const { updateInvoiceStatus } = useAppStore()
   const copy = () => {
-    navigator.clipboard.writeText(invoice.paymentLink).catch(() => {})
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+    if (invoice.payment_link) {
+      navigator.clipboard.writeText(invoice.payment_link).catch(() => {})
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
   }
   return (
     <motion.div
@@ -161,8 +174,8 @@ function InvoiceDrawer({ invoice, onClose }: { invoice: Invoice, onClose: () => 
       >
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-xs text-zinc-500">{invoice.invoiceNumber}</div>
-            <h2 className="text-lg font-bold text-white">{invoice.clientName}</h2>
+            <div className="text-xs text-zinc-500">{invoice.invoice_number}</div>
+            <h2 className="text-lg font-bold text-white">{invoice.client_name}</h2>
           </div>
           <button onClick={onClose} className="p-2 rounded-xl hover:bg-white/5">
             <X className="w-4 h-4 text-zinc-400" />
@@ -176,7 +189,7 @@ function InvoiceDrawer({ invoice, onClose }: { invoice: Invoice, onClose: () => 
         <div className="space-y-3">
           {[
             { label: 'Description', value: invoice.description },
-            { label: 'Due Date', value: new Date(invoice.dueDate).toLocaleDateString() },
+            { label: 'Due Date', value: new Date(invoice.due_date).toLocaleDateString() },
           ].map(item => (
             <div key={item.label} className="flex justify-between">
               <span className="text-xs text-zinc-500">{item.label}</span>
@@ -189,7 +202,7 @@ function InvoiceDrawer({ invoice, onClose }: { invoice: Invoice, onClose: () => 
           <div className="flex items-center gap-2 p-3 rounded-xl"
             style={{ background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.2)' }}>
             <Lock className="w-3.5 h-3.5 text-violet-400 flex-shrink-0" />
-            <span className="text-xs font-mono text-violet-300 flex-1 truncate">{invoice.paymentLink}</span>
+            <span className="text-xs font-mono text-violet-300 flex-1 truncate">{invoice.payment_link}</span>
             <button onClick={copy} className="p-1.5 rounded-lg hover:bg-violet-500/20 transition-colors">
               {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-violet-400" />}
             </button>
@@ -217,7 +230,7 @@ export default function InvoicesPage() {
     fetchInvoices()
   }, [])
 
-  const filtered = filter === 'all' ? invoices : invoices.filter(inv => inv.status === filter)
+  const filtered = filter === 'all' ? invoices : (invoices || []).filter(inv => inv.status === filter)
 
   return (
     <AppLayout pageTitle="Invoices & Billing" pageSubtitle="Private invoice management with confidential payments">
@@ -234,10 +247,10 @@ export default function InvoicesPage() {
             <div className="text-sm font-bold text-white uppercase tracking-wider mb-6">Overview</div>
             <div className="space-y-4">
               {[
-                { label: 'Total Invoices', value: invoices.length, color: '#7c3aed' },
-                { label: 'Pending', value: invoices.filter(i => i.status === 'pending').length, color: '#f59e0b' },
-                { label: 'Paid', value: invoices.filter(i => i.status === 'paid').length, color: '#10b981' },
-                { label: 'Overdue', value: invoices.filter(i => i.status === 'overdue').length, color: '#ef4444' },
+                { label: 'Total Invoices', value: (invoices || []).length, color: '#7c3aed' },
+                { label: 'Pending', value: (invoices || []).filter(i => i.status === 'pending').length, color: '#f59e0b' },
+                { label: 'Paid', value: (invoices || []).filter(i => i.status === 'paid').length, color: '#10b981' },
+                { label: 'Overdue', value: (invoices || []).filter(i => i.status === 'overdue').length, color: '#ef4444' },
               ].map((s, i) => (
                 <div key={s.label} className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/5">
                   <div className="flex items-center gap-3">
@@ -275,11 +288,11 @@ export default function InvoicesPage() {
               </div>
             </div>
             <div className="space-y-2 overflow-y-auto pr-2 custom-scrollbar flex-1">
-              <AnimatePresence>
-                {filtered.map(inv => (
+              <AnimatePresence mode="popLayout">
+                {(filtered || []).map(inv => (
                   <InvoiceRow key={inv.id} inv={inv} onClick={() => setSelected(inv)} />
                 ))}
-                {filtered.length === 0 && (
+                {(filtered || []).length === 0 && (
                   <div className="text-center py-12 text-zinc-500 text-sm font-medium">No invoices found.</div>
                 )}
               </AnimatePresence>
@@ -289,7 +302,12 @@ export default function InvoicesPage() {
       </div>
       <AnimatePresence>
         {showCreate && <CreateInvoiceModal onClose={() => setShowCreate(false)} />}
-        {selected && <InvoiceDrawer invoice={selected} onClose={() => setSelected(null)} />}
+        {selected && (
+          <InvoiceDrawer 
+            invoice={selected} 
+            onClose={() => setSelected(null)} 
+          />
+        )}
       </AnimatePresence>
     </AppLayout>
   )
