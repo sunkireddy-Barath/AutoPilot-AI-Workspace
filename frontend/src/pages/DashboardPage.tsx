@@ -68,7 +68,8 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 export default function DashboardPage() {
   const {
     transactions, employees, invoices, paymentLinks,
-    fetchEmployees, fetchInvoices, fetchPaymentLinks, fetchTransactions
+    fetchEmployees, fetchInvoices, fetchPaymentLinks, fetchTransactions,
+    searchQuery
   } = useAppStore()
 
   useEffect(() => {
@@ -78,9 +79,15 @@ export default function DashboardPage() {
     fetchTransactions()
   }, [])
 
+  const filteredTransactions = (transactions || []).filter(tx => 
+    tx.txHash.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (tx.memo && tx.memo.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    tx.type.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
   const activeEmployees = (employees || []).filter(e => e.status === 'active').length
   const pendingInvoices = (invoices || []).filter(i => i.status === 'pending').length
-  const transactionsList = transactions || []
+  const transactionsList = filteredTransactions
   
   // Dynamic Chart Data derived from transactions
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']

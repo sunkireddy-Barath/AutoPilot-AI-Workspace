@@ -70,8 +70,8 @@ export default function AuthPage() {
         <div className="space-y-6">
           <div className="flex flex-col items-center gap-4">
             <div className="relative w-full group">
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-violet-600 to-indigo-600 rounded-xl blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
-              <WalletMultiButton className="!w-full !bg-zinc-900/90 hover:!bg-black !border !border-white/10 !rounded-xl !h-14 !px-6 !text-sm !font-bold !transition-all !relative shadow-xl" />
+              <div className="absolute -inset-0.5 bg-violet-600/20 rounded-xl blur opacity-0 group-hover:opacity-40 transition duration-500"></div>
+              <WalletMultiButton className="!w-full !bg-black hover:!bg-zinc-900 !border !border-white/10 !rounded-xl !h-14 !px-6 !text-sm !font-bold !transition-all !relative shadow-2xl" />
             </div>
             
             <AnimatePresence>

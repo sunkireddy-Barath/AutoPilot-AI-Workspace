@@ -268,13 +268,20 @@ function RunPayrollModal({ employees, onClose }: { employees: Employee[], onClos
 }
 
 export default function PayrollPage() {
-  const { employees, removeEmployee, addToast, fetchEmployees } = useAppStore()
+  const { employees, removeEmployee, addToast, fetchEmployees, searchQuery } = useAppStore()
   const [showAdd, setShowAdd] = useState(false)
   const [showRunPayroll, setShowRunPayroll] = useState(false)
 
   useEffect(() => {
     fetchEmployees()
   }, [])
+
+  const filteredEmployees = (employees || []).filter(emp => 
+    emp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    emp.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    emp.department.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    emp.wallet_address.toLowerCase().includes(searchQuery.toLowerCase())
+  )
 
   const activeCount = employees.filter(e => e.status === 'active').length
   const totalPayroll = employees.filter(e => e.status === 'active').reduce((a, b) => a + b.salary, 0)
@@ -365,7 +372,7 @@ export default function PayrollPage() {
               </thead>
               <tbody className="divide-y divide-white/5">
                 <AnimatePresence>
-                  {employees.map((emp, i) => (
+                  {filteredEmployees.map((emp, i) => (
                     <motion.tr
                       key={emp.id}
                       initial={{ opacity: 0, y: 10 }}

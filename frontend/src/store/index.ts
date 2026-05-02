@@ -114,6 +114,13 @@ interface AppState {
   fetchBalances: () => Promise<void>
   
   authenticateWallet: (address: string) => Promise<void>
+  
+  searchQuery: string
+  setSearchQuery: (query: string) => void
+  
+  notifications: { id: string; title: string; message: string; time: string; read: boolean }[]
+  addNotification: (notif: { title: string; message: string }) => void
+  markNotificationsRead: () => void
 }
 
 const randomHex = (len: number) => Array.from({ length: len }, () => Math.floor(Math.random() * 16).toString(16)).join('')
@@ -405,7 +412,21 @@ export const useAppStore = create<AppState>()(
         } catch (e) {
           console.error('Auto-auth failed:', e)
         }
-      }
+      },
+      
+      searchQuery: '',
+      setSearchQuery: (query) => set({ searchQuery: query }),
+      
+      notifications: [
+        { id: '1', title: 'System Online', message: 'Umbra Devnet connection established.', time: '2m ago', read: false },
+        { id: '2', title: 'Security Protocol', message: 'Encryption keys generated successfully.', time: '1h ago', read: true }
+      ],
+      addNotification: (notif) => set(s => ({ 
+        notifications: [{ ...notif, id: randomHex(8), time: 'Just now', read: false }, ...s.notifications] 
+      })),
+      markNotificationsRead: () => set(s => ({
+        notifications: s.notifications.map(n => ({ ...n, read: true }))
+      }))
     }),
     { name: 'stealthpay-storage' }
   )

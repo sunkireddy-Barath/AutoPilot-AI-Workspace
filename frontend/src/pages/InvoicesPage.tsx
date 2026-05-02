@@ -221,7 +221,7 @@ function InvoiceDrawer({ invoice, onClose }: { invoice: Invoice, onClose: () => 
 }
 
 export default function InvoicesPage() {
-  const { invoices, fetchInvoices } = useAppStore()
+  const { invoices, fetchInvoices, searchQuery } = useAppStore()
   const [showCreate, setShowCreate] = useState(false)
   const [selected, setSelected] = useState<Invoice | null>(null)
   const [filter, setFilter] = useState<Invoice['status'] | 'all'>('all')
@@ -230,7 +230,14 @@ export default function InvoicesPage() {
     fetchInvoices()
   }, [])
 
-  const filtered = filter === 'all' ? invoices : (invoices || []).filter(inv => inv.status === filter)
+  const filtered = (invoices || []).filter(inv => {
+    const matchesFilter = filter === 'all' || inv.status === filter
+    const matchesSearch = 
+      inv.client_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      inv.invoice_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      inv.description.toLowerCase().includes(searchQuery.toLowerCase())
+    return matchesFilter && matchesSearch
+  })
 
   return (
     <AppLayout pageTitle="Invoices & Billing" pageSubtitle="Private invoice management with confidential payments">

@@ -11,8 +11,15 @@ interface TopbarProps {
 }
 
 export function Topbar({ title, subtitle }: TopbarProps) {
-  const { user, balancesMasked, toggleBalanceMask } = useAppStore()
+  const { 
+    user, balancesMasked, toggleBalanceMask, 
+    searchQuery, setSearchQuery, 
+    notifications, markNotificationsRead 
+  } = useAppStore()
   const [searchFocused, setSearchFocused] = useState(false)
+  const [showNotifs, setShowNotifs] = useState(false)
+
+  const unreadCount = notifications.filter(n => !n.read).length
 
   return (
     <header className="sticky top-0 z-[100] flex items-center justify-between px-6 py-4 border-b border-white/5"
@@ -32,7 +39,9 @@ export function Topbar({ title, subtitle }: TopbarProps) {
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
         <input
           type="text"
-          placeholder="Search transactions..."
+          placeholder="Search..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
           onFocus={() => setSearchFocused(true)}
           onBlur={() => setSearchFocused(false)}
           className="input-field pl-9 text-xs h-9 w-full bg-white/5 border-white/10"
@@ -63,13 +72,48 @@ export function Topbar({ title, subtitle }: TopbarProps) {
         </motion.button>
 
         {/* Notifications */}
-        <motion.button
-          whileTap={{ scale: 0.95 }}
-          className="relative p-2 rounded-xl transition-colors bg-white/5 border border-white/10"
-        >
-          <Bell className="w-4 h-4 text-zinc-400" />
-          <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-violet-500 shadow-[0_0_8px_rgba(124,58,237,0.5)]" />
-        </motion.button>
+        <div className="relative">
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={() => {
+              setShowNotifs(!showNotifs)
+              if (!showNotifs) markNotificationsRead()
+            }}
+            className="relative p-2 rounded-xl transition-colors bg-white/5 border border-white/10"
+          >
+            <Bell className="w-4 h-4 text-zinc-400" />
+            {unreadCount > 0 && (
+              <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-violet-500 shadow-[0_0_8px_rgba(124,58,237,0.5)]" />
+            )}
+          </motion.button>
+
+          <AnimatePresence>
+            {showNotifs && (
+              <motion.div
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                className="absolute right-0 mt-2 w-80 glass-card p-4 shadow-2xl border border-white/10 z-[200]"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xs font-bold text-white uppercase tracking-wider">Activity Feed</h3>
+                  <span className="text-[10px] text-zinc-500">{notifications.length} total</span>
+                </div>
+                <div className="space-y-3 max-h-64 overflow-y-auto pr-1 custom-scrollbar">
+                  {notifications.map(n => (
+                    <div key={n.id} className="p-3 rounded-lg bg-white/[0.02] border border-white/5 hover:bg-white/5 transition-colors">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[11px] font-bold text-white">{n.title}</span>
+                        <span className="text-[9px] text-zinc-600">{n.time}</span>
+                      </div>
+                      <p className="text-[10px] text-zinc-500 leading-relaxed">{n.message}</p>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
         {/* Wallet Section */}
         <div className="relative z-[110]">
