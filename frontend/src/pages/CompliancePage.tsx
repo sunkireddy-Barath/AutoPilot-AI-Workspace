@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ShieldCheck, Key, Hash, Search, CheckCircle, AlertCircle, Loader2, Lock, Eye } from 'lucide-react'
 import { AppLayout } from '../components/layout/AppLayout'
 import { useAppStore } from '../store'
-import { formatAmount, truncateAddress, randomHex } from '../lib/utils'
+import { formatAmount, truncateAddress, randomHex, formatRelativeTime } from '../lib/utils'
 
 interface DecryptedTransaction {
   tx_hash: string
@@ -52,11 +52,8 @@ function DecryptForm() {
     }
   }
 
-  const fillDemo = () => {
-    // Fill with a real-looking VK from a recent transaction if available
-    setTxHash(`0x${randomHex(64)}`)
-    setViewingKey(`vk_${randomHex(32)}`)
-  }
+
+
 
   return (
     <div className="space-y-5">
@@ -111,9 +108,6 @@ function DecryptForm() {
           )}
 
           <div className="flex gap-3">
-            <button type="button" onClick={fillDemo} className="btn-ghost text-xs flex-1 justify-center">
-              <Eye className="w-3.5 h-3.5" /> Fill Demo Data
-            </button>
             <motion.button type="submit" whileTap={{ scale: 0.97 }} disabled={loading}
               className="btn-primary flex-1 justify-center">
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
@@ -206,11 +200,17 @@ function HowItWorksPanel() {
 }
 
 export default function CompliancePage() {
-  const auditLogs = [
-    { id: 1, action: 'View Key Verified', target: 'TX...8a2f', time: '2 mins ago', status: 'success' },
-    { id: 2, action: 'Audit Log Export', target: 'Q1 2026', time: '1 hour ago', status: 'info' },
-    { id: 3, action: 'Privacy Shield Check', target: 'Umbra Node', time: '4 hours ago', status: 'success' },
-  ]
+  const { transactions } = useAppStore()
+  const transactionsList = transactions || []
+  
+  const auditLogs = transactionsList.slice(0, 5).map(tx => ({
+    id: tx.id,
+    action: 'Encryption Verified',
+    target: truncateAddress(tx.txHash, 6),
+    time: formatRelativeTime(tx.timestamp),
+    status: 'success'
+  }))
+
 
   return (
     <AppLayout pageTitle="Compliance & Security" pageSubtitle="Selective disclosure and regulatory tools via Umbra Protocol">

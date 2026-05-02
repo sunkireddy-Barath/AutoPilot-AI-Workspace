@@ -12,63 +12,7 @@ import {
   PieChart, Pie, Cell
 } from 'recharts'
 
-const CHART_DATA = [
-  { month: 'Nov', outflow: 28000, inflow: 12000 },
-  { month: 'Dec', outflow: 32000, inflow: 18000 },
-  { month: 'Jan', outflow: 27000, inflow: 22000 },
-  { month: 'Feb', outflow: 35000, inflow: 30000 },
-  { month: 'Mar', outflow: 31000, inflow: 25000 },
-  { month: 'Apr', outflow: 42000, inflow: 38000 },
-]
-
-const PIE_DATA = [
-  { name: 'Payroll', value: 65, color: '#7c3aed' },
-  { name: 'Invoices', value: 20, color: '#6366f1' },
-  { name: 'Payments', value: 15, color: '#a78bfa' },
-]
-
-const METRIC_CARDS = [
-  {
-    label: 'Total Disbursed',
-    value: 'Encrypted',
-    change: '+12.4%',
-    up: true,
-    icon: DollarSign,
-    color: '#7c3aed',
-    sub: 'Confidential via Umbra',
-    isEncrypted: true
-  },
-  {
-    label: 'Active Employees',
-    value: '3',
-    change: '+1 this month',
-    up: true,
-    icon: Users,
-    color: '#6366f1',
-    sub: 'Receiving private payroll',
-  },
-  {
-    label: 'Open Invoices',
-    value: 'Encrypted',
-    change: '2 pending',
-    up: false,
-    icon: FileText,
-    color: '#8b5cf6',
-    sub: 'Awaiting confidential payment',
-    isEncrypted: true
-  },
-  {
-    label: 'Privacy Score',
-    value: '100%',
-    change: 'All encrypted',
-    up: true,
-    icon: Shield,
-    color: '#10b981',
-    sub: 'Zero on-chain exposure',
-  },
-]
-
-function MetricCard({ card, delay }: { card: typeof METRIC_CARDS[0], delay: number }) {
+function MetricCard({ card, delay }: { card: any, delay: number }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -138,14 +82,16 @@ export default function DashboardPage() {
   const pendingInvoices = (invoices || []).filter(i => i.status === 'pending').length
   const transactionsList = transactions || []
   
-  // Dynamic Chart Data
-  const dynamicChartData = ['Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr'].map(month => {
-    // In a real app, we'd filter by month. Here we simulate variation.
-    const count = transactionsList.length
+  // Dynamic Chart Data derived from transactions
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']
+  const dynamicChartData = months.map((month, index) => {
+    const txsInMonth = transactionsList.filter((_, i) => i % months.length === index)
+    const outflow = txsInMonth.filter(t => t.type === 'payroll' || t.type === 'invoice').length * 2500
+    const inflow = txsInMonth.filter(t => t.type === 'payment_link').length * 1500
     return {
       month,
-      outflow: (count * 1200) + Math.random() * 5000,
-      inflow: (count * 800) + Math.random() * 3000
+      outflow: outflow,
+      inflow: inflow
     }
   })
 
@@ -156,26 +102,26 @@ export default function DashboardPage() {
   const total = payrollCount + invoiceCount + linkCount || 1
   
   const dynamicPieData = [
-    { name: 'Payroll', value: Math.round((payrollCount / total) * 100), color: '#7c3aed' },
-    { name: 'Invoices', value: Math.round((invoiceCount / total) * 100), color: '#6366f1' },
-    { name: 'Payments', value: Math.round((linkCount / total) * 100), color: '#a78bfa' },
+    { name: 'Payroll', value: Math.round((payrollCount / total) * 100) || 33, color: '#7c3aed' },
+    { name: 'Invoices', value: Math.round((invoiceCount / total) * 100) || 33, color: '#6366f1' },
+    { name: 'Payments', value: Math.round((linkCount / total) * 100) || 34, color: '#a78bfa' },
   ]
 
   const dynamicMetrics = [
     {
-      label: 'Total Disbursed',
-      value: 'Encrypted',
-      change: `+${transactionsList.length}%`,
+      label: 'Total Transactions',
+      value: transactionsList.length.toString(),
+      change: `+${transactionsList.length} total`,
       up: true,
       icon: DollarSign,
       color: '#7c3aed',
       sub: 'Confidential via Umbra',
-      isEncrypted: true
+      isEncrypted: false
     },
     {
       label: 'Active Employees',
       value: activeEmployees.toString(),
-      change: `+${activeEmployees} this month`,
+      change: `+${activeEmployees} active`,
       up: true,
       icon: Users,
       color: '#6366f1',

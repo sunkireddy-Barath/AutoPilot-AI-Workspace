@@ -3,6 +3,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from ..models.models import db, Invoice, User
 import uuid
 from datetime import datetime
+from ..utils.supabase_sync import SupabaseSync
 
 invoices_bp = Blueprint('invoices', __name__)
 
@@ -47,6 +48,21 @@ def create_invoice():
     )
     db.session.add(invoice)
     db.session.commit()
+    
+    # SYNC TO SUPABASE
+    SupabaseSync.sync_record("invoices", {
+        "id": invoice.id,
+        "creator_id": invoice.creator_id,
+        "invoice_number": invoice.invoice_number,
+        "client_name": invoice.client_name,
+        "client_email": invoice.client_email,
+        "amount": invoice.amount,
+        "currency": invoice.currency,
+        "description": invoice.description,
+        "status": invoice.status,
+        "payment_link": invoice.payment_link
+    })
+    
     return jsonify({'message': 'Invoice created', 'id': invoice.id, 'invoice_number': invoice_number}), 201
 
 @invoices_bp.route('/<id>', methods=['PATCH', 'PUT'])
@@ -74,4 +90,11 @@ def update_invoice_status(id):
             )
         
     db.session.commit()
+    
+    # SYNC TO SUPABASE
+    SupabaseSync.sync_record("invoices", {
+        "id": invoice.id,
+        "status": invoice.status
+    })
+    
     return jsonify({'message': 'Invoice updated'}), 200

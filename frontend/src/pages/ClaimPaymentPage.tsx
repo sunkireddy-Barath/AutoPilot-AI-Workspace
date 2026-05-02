@@ -156,7 +156,7 @@ export default function ClaimPaymentPage() {
                     <Wallet className="w-4 h-4 text-emerald-400" />
                     <div className="flex-1 min-w-0">
                       <div className="text-[10px] text-zinc-500 font-bold uppercase">Recipient Wallet</div>
-                      <div className="text-xs text-white font-mono truncate">{publicKey.toBase58()}</div>
+                      <div className="text-xs text-white font-mono truncate">{publicKey?.toBase58()}</div>
                     </div>
                   </div>
                   <motion.button

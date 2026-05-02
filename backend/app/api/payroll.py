@@ -3,6 +3,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from ..models.models import db, Employee, User, Transaction
 import uuid
 from datetime import datetime
+from ..utils.supabase_sync import SupabaseSync
 
 payroll_bp = Blueprint('payroll', __name__)
 
@@ -38,6 +39,19 @@ def add_employee():
     )
     db.session.add(employee)
     db.session.commit()
+    
+    # SYNC TO SUPABASE
+    SupabaseSync.sync_record("employees", {
+        "id": employee.id,
+        "employer_id": employee.employer_id,
+        "name": employee.name,
+        "email": employee.email,
+        "wallet_address": employee.wallet_address,
+        "salary": employee.salary,
+        "department": employee.department,
+        "status": employee.status
+    })
+    
     return jsonify({'message': 'Employee added', 'id': employee.id}), 201
 
 @payroll_bp.route('/employees/<id>', methods=['DELETE'])
@@ -81,6 +95,20 @@ def run_payroll():
             )
             emp.last_paid = datetime.utcnow()
             db.session.add(tx)
+            
+            # SYNC TO SUPABASE
+            SupabaseSync.sync_record("transactions", {
+                "id": tx.id,
+                "tx_hash": tx.tx_hash,
+                "sender": tx.sender,
+                "receiver": tx.receiver,
+                "encrypted_amount": tx.encrypted_amount,
+                "viewing_key": tx.viewing_key,
+                "type": tx.type,
+                "memo": tx.memo,
+                "status": tx.status
+            })
+            
             transactions_meta.append({
                 'employee_name': emp.name,
                 'tx_hash': tx.tx_hash,

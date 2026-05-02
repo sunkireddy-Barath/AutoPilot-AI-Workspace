@@ -14,7 +14,7 @@ class UmbraService:
         msg = recipient_wallet.encode()
         key = (user.umbra_spending_key or "default_key").encode()
         h = hmac.new(key, msg, hashlib.sha256).hexdigest()
-        return f"umbra_{h[:40]}"
+        return f"umbra_{h[:38]}"
 
     @staticmethod
     def generate_viewing_key(tx_hash: str, sender_wallet: str):

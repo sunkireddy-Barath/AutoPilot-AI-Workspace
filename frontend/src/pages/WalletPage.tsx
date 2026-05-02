@@ -4,7 +4,7 @@ import { Eye, EyeOff, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownLeft, Loc
 import { AppLayout } from '../components/layout/AppLayout'
 import { useAppStore } from '../store'
 import { formatAmount, truncateAddress, formatRelativeTime } from '../lib/utils'
-import { MOCK_WALLET_BALANCES } from '../lib/mockData'
+
 
 export default function WalletPage() {
   const { transactions, balancesMasked, toggleBalanceMask, user, balances, fetchBalances } = useAppStore()
@@ -14,7 +14,7 @@ export default function WalletPage() {
     fetchBalances()
   }, [])
 
-  const displayBalances = balances.length > 0 ? balances : MOCK_WALLET_BALANCES
+  const displayBalances = balances || []
   const totalUSD = displayBalances.reduce((a, b) => a + (b.usdValue ?? 0), 0)
 
   const copyAddress = () => {

@@ -13,7 +13,7 @@ class TransactionService:
         # 1. Generate Umbra Stealth Metadata
         stealth_address = UmbraService.generate_stealth_address(user, receiver_address)
         tx_hash = f"0x{uuid.uuid4().hex}{uuid.uuid4().hex}"
-        viewing_key = UmbraService.generate_viewing_key(user, tx_hash)
+        viewing_key = UmbraService.generate_viewing_key(tx_hash, user.wallet_address or 'System')
         encrypted_amt = UmbraService.encrypt_metadata(amount, currency)
         
         # 2. Create the Transaction record in local DB
@@ -31,24 +31,17 @@ class TransactionService:
         db.session.add(tx)
         
         # 3. SYNC TO SUPABASE (Cloud Storage)
-        try:
-            from supabase import create_client
-            url = os.environ.get("SUPABASE_URL")
-            key = os.environ.get("SUPABASE_KEY")
-            if url and key:
-                sb = create_client(url, key)
-                sb.table("transactions").insert({
-                    "tx_hash": tx.tx_hash,
-                    "sender": tx.sender,
-                    "receiver": tx.receiver,
-                    "encrypted_amount": tx.encrypted_amount,
-                    "viewing_key": tx.viewing_key,
-                    "type": tx.type,
-                    "memo": tx.memo,
-                    "status": tx.status
-                }).execute()
-        except Exception as e:
-            print(f"Supabase sync failed: {e}")
+        from ..utils.supabase_sync import SupabaseSync
+        SupabaseSync.sync_record("transactions", {
+            "tx_hash": tx.tx_hash,
+            "sender": tx.sender,
+            "receiver": tx.receiver,
+            "encrypted_amount": tx.encrypted_amount,
+            "viewing_key": tx.viewing_key,
+            "type": tx.type,
+            "memo": tx.memo,
+            "status": tx.status
+        })
 
         return tx
 

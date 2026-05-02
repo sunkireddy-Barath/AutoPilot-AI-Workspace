@@ -1,6 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import uuid
+from sqlalchemy import event
 
 db = SQLAlchemy()
 
@@ -71,3 +72,36 @@ class PaymentLink(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     claimed_at = db.Column(db.DateTime, nullable=True)
     claimed_by = db.Column(db.String(44), nullable=True) # Wallet address
+
+def sync_to_supabase(mapper, connection, target):
+    try:
+        from ..utils.supabase_sync import SupabaseSync
+        table_name = target.__tablename__
+        print(f"DEBUG: SYNCING {table_name}")
+        data = {}
+        # Columns to exclude because they might not exist in Supabase yet
+        exclude = ['last_paid', 'created_at']
+        for column in target.__table__.columns:
+            if column.name in exclude:
+                continue
+            val = getattr(target, column.name)
+            if isinstance(val, datetime):
+                val = val.isoformat()
+            data[column.name] = val
+        SupabaseSync.sync_record(table_name, data)
+    except Exception as e:
+        print(f"SQLAlchemy event sync failed: {e}")
+
+
+# Register listeners
+event.listen(User, 'after_insert', sync_to_supabase)
+event.listen(User, 'after_update', sync_to_supabase)
+event.listen(Employee, 'after_insert', sync_to_supabase)
+event.listen(Employee, 'after_update', sync_to_supabase)
+event.listen(Invoice, 'after_insert', sync_to_supabase)
+event.listen(Invoice, 'after_update', sync_to_supabase)
+event.listen(Transaction, 'after_insert', sync_to_supabase)
+event.listen(Transaction, 'after_update', sync_to_supabase)
+event.listen(PaymentLink, 'after_insert', sync_to_supabase)
+event.listen(PaymentLink, 'after_update', sync_to_supabase)
+

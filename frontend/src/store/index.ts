@@ -61,6 +61,7 @@ interface PaymentLink {
   link: string
   createdAt: string
   claimedBy?: string
+  expiresAt?: string
 }
 
 interface Balance {

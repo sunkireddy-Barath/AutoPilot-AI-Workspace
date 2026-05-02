@@ -4,6 +4,8 @@ from ..models.models import db, PaymentLink, User
 from ..services.transaction_service import TransactionService
 import uuid
 from datetime import datetime
+import os
+from ..utils.supabase_sync import SupabaseSync
 
 payment_links_bp = Blueprint('payment_links', __name__)
 
@@ -54,22 +56,14 @@ def create_link():
     db.session.commit()
     
     # Sync to Supabase
-    try:
-        from supabase import create_client
-        url = os.environ.get("SUPABASE_URL")
-        key = os.environ.get("SUPABASE_KEY")
-        if url and key:
-            sb = create_client(url, key)
-            sb.table("payment_links").insert({
-                "id": link.id,
-                "creator_id": link.creator_id,
-                "title": link.title,
-                "amount": link.amount,
-                "currency": link.currency,
-                "status": link.status
-            }).execute()
-    except Exception as e:
-        print(f"Supabase payment link sync failed: {e}")
+    SupabaseSync.sync_record("payment_links", {
+        "id": link.id,
+        "creator_id": link.creator_id,
+        "title": link.title,
+        "amount": link.amount,
+        "currency": link.currency,
+        "status": link.status
+    })
     
     return jsonify({
         'message': 'Payment link generated',
@@ -105,6 +99,14 @@ def claim_link(id):
         link.claimed_by = claimed_by
         
         db.session.commit()
+        
+        # Sync to Supabase
+        SupabaseSync.sync_record("payment_links", {
+            "id": link.id,
+            "status": link.status,
+            "claimed_at": link.claimed_at.isoformat() if link.claimed_at else None,
+            "claimed_by": link.claimed_by
+        })
         
         return jsonify({
             'message': 'Payment successful via Umbra',
