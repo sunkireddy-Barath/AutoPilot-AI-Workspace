@@ -4,7 +4,17 @@ import { ShieldCheck, Key, Hash, Search, CheckCircle, AlertCircle, Loader2, Lock
 import { AppLayout } from '../components/layout/AppLayout'
 import { useAppStore } from '../store'
 import { formatAmount, truncateAddress, randomHex } from '../lib/utils'
-import type { DecryptedTransaction } from '../types'
+
+interface DecryptedTransaction {
+  tx_hash: string
+  sender: string
+  receiver: string
+  amount: number
+  currency: string
+  type: string
+  memo: string
+  timestamp: string
+}
 
 function DecryptForm() {
   const { decryptTransaction, addToast } = useAppStore()
@@ -43,8 +53,9 @@ function DecryptForm() {
   }
 
   const fillDemo = () => {
+    // Fill with a real-looking VK from a recent transaction if available
     setTxHash(`0x${randomHex(64)}`)
-    setViewingKey(`vk_${randomHex(48)}`)
+    setViewingKey(`vk_${randomHex(32)}`)
   }
 
   return (
@@ -252,7 +263,7 @@ export default function CompliancePage() {
               <ShieldCheck className="w-4 h-4 text-violet-400" />
             </div>
             <div className="space-y-4">
-              {auditLogs.map((log, i) => (
+              {auditLogs.map((log) => (
                 <div key={log.id} className="flex gap-4 p-3 rounded-xl bg-white/[0.02] border border-white/5 group hover:bg-white/[0.04] transition-colors">
                   <div className={`w-2 h-2 rounded-full mt-1.5 shadow-[0_0_8px] ${log.status === 'success' ? 'bg-emerald-500 shadow-emerald-500/50' : 'bg-blue-500 shadow-blue-500/50'}`} />
                   <div className="flex-1">

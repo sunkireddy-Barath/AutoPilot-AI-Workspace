@@ -28,6 +28,7 @@ class Employee(db.Model):
     salary = db.Column(db.Float, nullable=False)
     department = db.Column(db.String(100), nullable=True)
     status = db.Column(db.String(20), default='active') # active, inactive
+    last_paid = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Invoice(db.Model):

@@ -57,7 +57,21 @@ def update_invoice_status(id):
     invoice = Invoice.query.filter_by(id=id, creator_id=user_id).first_or_404()
     
     if 'status' in data:
-        invoice.status = data['status']
+        old_status = invoice.status
+        new_status = data['status']
+        invoice.status = new_status
+        
+        # If marked as paid, record a confidential transaction
+        if old_status != 'paid' and new_status == 'paid':
+            from ..services.transaction_service import TransactionService
+            TransactionService.create_private_transaction(
+                user_id=user_id,
+                receiver_address=user_id, # Simplified for demo
+                amount=invoice.amount,
+                currency=invoice.currency,
+                tx_type='invoice',
+                memo=f"Payment for Invoice {invoice.invoice_number}"
+            )
         
     db.session.commit()
     return jsonify({'message': 'Invoice updated'}), 200

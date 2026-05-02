@@ -4,7 +4,17 @@ import { Link2, Plus, Copy, Check, X, Loader2, ExternalLink, Lock } from 'lucide
 import { AppLayout } from '../components/layout/AppLayout'
 import { useAppStore } from '../store'
 import { formatAmount, formatRelativeTime } from '../lib/utils'
-import type { PaymentLink } from '../types'
+
+interface PaymentLink {
+  id: string
+  title: string
+  amount: number
+  currency: string
+  status: 'active' | 'claimed' | 'expired'
+  link: string
+  createdAt: string
+  claimedBy?: string
+}
 
 const STATUS_BADGE: Record<PaymentLink['status'], string> = {
   active: 'badge-success',
@@ -14,14 +24,13 @@ const STATUS_BADGE: Record<PaymentLink['status'], string> = {
 
 function CreateLinkModal({ onClose }: { onClose: () => void }) {
   const { createPaymentLink } = useAppStore()
-  const [form, setForm] = useState({ title: '', amount: '', currency: 'USDC', status: 'active' as const, expiresAt: '' })
+  const [form, setForm] = useState({ title: '', amount: '', currency: 'USDC', expiresAt: '' })
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    await new Promise(r => setTimeout(r, 900))
-    createPaymentLink({ ...form, amount: Number(form.amount) })
+    await createPaymentLink({ ...form, amount: Number(form.amount) })
     setLoading(false)
     onClose()
   }
@@ -155,8 +164,8 @@ export default function PaymentsPage() {
     fetchPaymentLinks()
   }, [])
 
-  const active = paymentLinks.filter(p => p.status === 'active').length
-  const claimed = paymentLinks.filter(p => p.status === 'claimed').length
+  const active = (paymentLinks || []).filter(p => p.status === 'active').length
+  const claimed = (paymentLinks || []).filter(p => p.status === 'claimed').length
 
   return (
     <AppLayout pageTitle="Payment Links" pageSubtitle="Generate shareable private payment links">
@@ -166,7 +175,7 @@ export default function PaymentsPage() {
           {[
             { label: 'Active Links', value: active, color: '#10b981', icon: Link2 },
             { label: 'Claimed', value: claimed, color: '#7c3aed', icon: Check },
-            { label: 'Total Generated', value: paymentLinks.length, color: '#6366f1', icon: Copy },
+            { label: 'Total Generated', value: (paymentLinks || []).length, color: '#6366f1', icon: Copy },
           ].map((s, i) => (
             <motion.div key={s.label} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.06 }} className="glass-card p-6 flex flex-col justify-center relative overflow-hidden group">
@@ -212,7 +221,10 @@ export default function PaymentsPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           <AnimatePresence>
-            {paymentLinks.map(link => <LinkCard key={link.id} link={link} />)}
+            {(paymentLinks || []).map(link => <LinkCard key={link.id} link={link} />)}
+            {(paymentLinks || []).length === 0 && (
+              <div className="col-span-full py-12 text-center text-zinc-500 text-sm font-medium">No payment links generated yet.</div>
+            )}
           </AnimatePresence>
         </div>
       </div>

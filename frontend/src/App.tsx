@@ -18,6 +18,7 @@ const InvoicesPage = lazy(() => import('./pages/InvoicesPage'))
 const PaymentsPage = lazy(() => import('./pages/PaymentsPage'))
 const WalletPage = lazy(() => import('./pages/WalletPage'))
 const CompliancePage = lazy(() => import('./pages/CompliancePage'))
+const ClaimPaymentPage = lazy(() => import('./pages/ClaimPaymentPage'))
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -78,6 +79,7 @@ export default function App() {
                   <Route path="/compliance" element={
                     <ProtectedRoute><CompliancePage /></ProtectedRoute>
                   } />
+                  <Route path="/pay/:id" element={<ClaimPaymentPage />} />
                   <Route path="/" element={<Navigate to="/auth" replace />} />
                   <Route path="*" element={<Navigate to="/auth" replace />} />
                 </Routes>

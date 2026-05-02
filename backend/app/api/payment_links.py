@@ -24,6 +24,18 @@ def get_links():
         'claimed_by': l.claimed_by,
         'link': f"https://stealthpay.io/pay/{l.id}"
     } for l in links]), 200
+    
+@payment_links_bp.route('/<id>/info', methods=['GET'])
+def get_link_info(id):
+    link = PaymentLink.query.get_or_404(id)
+    return jsonify({
+        'id': link.id,
+        'title': link.title,
+        'amount': link.amount,
+        'currency': link.currency,
+        'status': link.status,
+        'created_at': link.created_at.isoformat()
+    }), 200
 
 @payment_links_bp.route('/', methods=['POST'])
 @jwt_required()

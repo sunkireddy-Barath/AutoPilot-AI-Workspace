@@ -9,36 +9,15 @@ import { useAppStore } from '../store'
 export default function AuthPage() {
   const navigate = useNavigate()
   const { connected, publicKey } = useWallet()
-  const { setUser, addToast } = useAppStore()
+  const { authenticateWallet, addToast } = useAppStore()
   const [loading, setLoading] = useState(false)
 
   // Handle wallet-based authentication with the backend
   useEffect(() => {
-    const performWalletAuth = async () => {
-      if (connected && publicKey) {
-        try {
-          const address = publicKey.toBase58()
-          const res = await fetch('/api/auth/wallet-login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ address }),
-          })
-          
-          if (res.ok) {
-            const data = await res.json()
-            localStorage.setItem('stealthpay_token', data.access_token)
-            setUser(data.user)
-          } else {
-            addToast({ type: 'error', title: 'Auth Failed', message: 'Could not synchronize wallet with backend' })
-          }
-        } catch (err) {
-          console.error('Wallet auth error:', err)
-        }
-      }
+    if (connected && publicKey) {
+      authenticateWallet(publicKey.toBase58())
     }
-    
-    performWalletAuth()
-  }, [connected, publicKey, setUser, addToast])
+  }, [connected, publicKey, authenticateWallet])
 
   const handleEnter = () => {
     if (!connected) {

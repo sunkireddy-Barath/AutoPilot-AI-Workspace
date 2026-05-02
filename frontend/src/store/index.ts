@@ -30,7 +30,7 @@ interface Transaction {
   sender: string
   receiver: string
   amount?: number
-  encryptedAmount?: string
+  encryptedAmount: string
   currency: string
   type: 'payroll' | 'invoice' | 'payment_link'
   status: 'confirmed' | 'pending' | 'failed'
@@ -49,7 +49,7 @@ interface Invoice {
   description: string
   status: 'pending' | 'paid' | 'overdue' | 'draft'
   due_date: string
-  payment_link?: string
+  payment_link: string
 }
 
 interface PaymentLink {
@@ -58,7 +58,7 @@ interface PaymentLink {
   amount: number
   currency: string
   status: 'active' | 'claimed' | 'expired'
-  url: string
+  link: string
   createdAt: string
   claimedBy?: string
 }
@@ -107,9 +107,12 @@ interface AppState {
   
   transactions: Transaction[]
   fetchTransactions: () => Promise<void>
+  decryptTransaction: (txHash: string, viewingKey: string) => Promise<any>
   
   balances: Balance[]
   fetchBalances: () => Promise<void>
+  
+  authenticateWallet: (address: string) => Promise<void>
 }
 
 const randomHex = (len: number) => Array.from({ length: len }, () => Math.floor(Math.random() * 16).toString(16)).join('')
@@ -188,7 +191,7 @@ export const useAppStore = create<AppState>()(
               txHash: tx.tx_hash,
               sender: tx.sender,
               receiver: tx.receiver,
-              encryptedAmount: tx.encrypted_amount,
+              encryptedAmount: tx.encrypted_amount || 'ENCRYPTED_DATA_MOCK',
               currency: 'USDC',
               type: tx.type,
               status: tx.status,
@@ -201,6 +204,19 @@ export const useAppStore = create<AppState>()(
         } catch (e) { console.error(e) }
       },
 
+      decryptTransaction: async (txHash, viewingKey) => {
+        const token = localStorage.getItem('stealthpay_token')
+        const res = await fetch('/api/compliance/decrypt', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ tx_hash: txHash, viewing_key: viewingKey }),
+        })
+        return res
+      },
+
       addEmployee: async (emp) => {
         const token = localStorage.getItem('stealthpay_token')
         const res = await fetch('/api/payroll/employees', {
@@ -209,7 +225,13 @@ export const useAppStore = create<AppState>()(
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
           },
-          body: JSON.stringify(emp),
+          body: JSON.stringify({
+            name: emp.name,
+            email: emp.email,
+            wallet_address: emp.wallet_address,
+            salary: emp.salary,
+            department: emp.department
+          }),
         })
         if (res.ok) {
           get().fetchEmployees()
@@ -239,10 +261,8 @@ export const useAppStore = create<AppState>()(
             const emp = get().employees.find(e => e.id === eid)
             if (!emp) continue
 
-            // 1. Prepare Confidential Transfer via Umbra
             const umbraData = await UmbraService.confidentialTransfer(null, emp.wallet_address, emp.salary, 'USDC')
             
-            // 2. Submit to Backend
             const res = await fetch('/api/payroll/run', {
               method: 'POST',
               headers: { 
@@ -329,30 +349,62 @@ export const useAppStore = create<AppState>()(
       fetchPaymentLinks: async () => {
         const token = localStorage.getItem('stealthpay_token')
         if (!token) return
-        const res = await fetch('/api/payment-links', {
+        const res = await fetch('/api/payment-links/', {
           headers: { 'Authorization': `Bearer ${token}` }
         })
         if (res.ok) {
           const data = await res.json()
-          set({ paymentLinks: data })
+          const mapped = data.map((l: any) => ({
+            id: l.id,
+            title: l.title,
+            amount: l.amount,
+            currency: l.currency,
+            status: l.status,
+            link: l.link,
+            createdAt: l.created_at,
+            claimedBy: l.claimed_by
+          }))
+          set({ paymentLinks: mapped })
         }
       },
 
       createPaymentLink: async (link) => {
         const token = localStorage.getItem('stealthpay_token')
-        const res = await fetch('/api/payment-links', {
+        const res = await fetch('/api/payment-links/', {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
           },
-          body: JSON.stringify(link),
+          body: JSON.stringify({
+            title: link.title,
+            amount: link.amount,
+            currency: link.currency,
+            expires_at: link.expiresAt
+          }),
         })
         if (res.ok) {
           get().fetchPaymentLinks()
           get().addToast({ type: 'success', title: 'Payment Link Created' })
         }
       },
+
+      authenticateWallet: async (address: string) => {
+        try {
+          const res = await fetch('/api/auth/wallet-login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ address }),
+          })
+          if (res.ok) {
+            const data = await res.json()
+            localStorage.setItem('stealthpay_token', data.access_token)
+            set({ user: data.user, isAuthenticated: true })
+          }
+        } catch (e) {
+          console.error('Auto-auth failed:', e)
+        }
+      }
     }),
     { name: 'stealthpay-storage' }
   )

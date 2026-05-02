@@ -18,7 +18,8 @@ def get_employees():
         'wallet_address': e.wallet_address,
         'salary': e.salary,
         'department': e.department,
-        'status': e.status
+        'status': e.status,
+        'lastPaid': e.last_paid.isoformat() if e.last_paid else None
     } for e in employees]), 200
 
 @payroll_bp.route('/employees', methods=['POST'])
@@ -78,6 +79,7 @@ def run_payroll():
                 status='confirmed',
                 created_at=datetime.utcnow()
             )
+            emp.last_paid = datetime.utcnow()
             db.session.add(tx)
             transactions_meta.append({
                 'employee_name': emp.name,
