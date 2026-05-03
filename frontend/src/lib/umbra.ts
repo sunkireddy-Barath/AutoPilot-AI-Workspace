@@ -15,7 +15,7 @@ export class UmbraService {
   /**
    * Initializes the Umbra Client using the connected Solana wallet.
    */
-  static async getClient(wallet: any, rpcUrl: string = 'https://api.mainnet-beta.solana.com'): Promise<any> {
+  static async getClient(wallet: any, rpcUrl: string = 'https://api.devnet.solana.com'): Promise<any> {
     if (this.client) return this.client;
 
     if (!wallet.publicKey || !wallet.signMessage || !wallet.signTransaction) {
@@ -40,7 +40,7 @@ export class UmbraService {
     // Initialize real Umbra Client (simulated for dev environment)
     this.client = await getUmbraClient({
       signer: signer as any,
-      network: 'mainnet' as any,
+      network: 'devnet' as any,
       rpcUrl: rpcUrl,
       rpcSubscriptionsUrl: rpcUrl.replace('https', 'wss'),
     });

@@ -52,9 +52,9 @@ export function Topbar({ title, subtitle }: TopbarProps) {
       <div className="flex items-center gap-3">
         {/* Network indicator */}
         <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
-          style={{ background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(124,58,237,0.2)' }}>
-          <Wifi className="w-3 h-3 text-violet-400" />
-          <span className="text-violet-400">Mainnet</span>
+          style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)' }}>
+          <Wifi className="w-3 h-3 text-emerald-400" />
+          <span className="text-emerald-400">Devnet</span>
         </div>
 
         {/* Privacy toggle */}

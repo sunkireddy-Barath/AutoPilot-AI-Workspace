@@ -46,6 +46,35 @@ graph TD
 
 ---
 
+## 🔐 Privacy & Security Model
+
+StealthPay operates on a "Zero-Knowledge Visibility" principle for external observers while maintaining a "Verified Identity" principle for internal operations.
+
+### Transaction Lifecycle Flow
+
+```mermaid
+sequenceDiagram
+    participant U as Business Admin
+    participant W as Solana Wallet
+    participant S as StealthPay Engine
+    participant P as Umbra Protocol
+    participant BC as Solana Blockchain
+    participant R as Employee/Recipient
+
+    U->>S: Initiates Payroll Payment
+    S->>P: Fetch Recipient Public Keys
+    P->>S: Return Public Keys (Spend/View)
+    S->>P: Derive One-Time Stealth Address (S)
+    P->>S: Return Stealth Address (S)
+    S->>W: Request Signature for Transfer to (S)
+    W->>BC: Broadcast Confidential Transaction
+    BC-->>S: Confirmation & TxHash
+    S->>U: Generate Viewing Key (VK)
+    S->>R: Notification: Payment Received (Private)
+```
+
+---
+
 ## 🌟 Core Concepts
 
 ### 1. Privacy-as-a-Service (PaaS)
@@ -62,44 +91,53 @@ StealthPay balances privacy with regulatory requirements. Every transaction gene
 
 ---
 
+## 📊 Feature Comparison
+
+| Feature | Standard Wallet | StealthPay OS |
+| :--- | :---: | :---: |
+| **Transaction Visibility** | Public (Explorer) | Encrypted (Stealth) |
+| **Identity Linkage** | Wallet Address | Multi-Factor (Google + Wallet) |
+| **Payroll Privacy** | None (All salaries public) | Absolute (Private Transfers) |
+| **Invoicing** | Manual Tracking | Automated & Encrypted |
+| **Auditability** | Full Public Exposure | Selective via Viewing Keys |
+| **Compliance** | Hard to track | Native Decryption Terminal |
+
+---
+
 ## 🛠️ Implementation Structure
 
-### **Frontend (`/frontend`)**
-- **`src/lib/umbra.ts`**: The core privacy engine. Handles stealth address derivation and encryption using the Umbra SDK.
-- **`src/store/index.ts`**: Global state management (Zustand) with persistence for sessions and decrypted ledger views.
-- **`src/pages/AuthPage.tsx`**: Implements the 2-step premium authentication flow.
-- **`src/components/layout/Sidebar.tsx`**: Dynamic navigation with Google identity synchronization.
-
-### **Backend (`/backend`)**
-- **`app.py`**: Flask server handling API requests, wallet authentication, and secure database operations.
-- **`database/`**: SQL schemas for managing employees, invoices, and payment metadata.
+### **Directory Map**
+- `frontend/src/lib/umbra.ts`: Core privacy logic for stealth address generation.
+- `frontend/src/store/index.ts`: Centralized state management for all modules.
+- `frontend/src/pages/AuthPage.tsx`: High-security 2-step verification entry.
+- `frontend/src/pages/CompliancePage.tsx`: Selective disclosure and decryption terminal.
+- `backend/app.py`: Scalable API gateway for database synchronization.
 
 ---
 
-## 🚀 How It Works: The Full Lifecycle
+## 🚀 Future Roadmap
 
-1.  **Authentication**: User connects Phantom/Solflare and signs in with Google. The system links the `WalletAddress` to a `GoogleUID`.
-2.  **Stealth Setup**: When a business prepares payroll, StealthPay calls the Umbra SDK to derive stealth addresses for each employee based on their public keys.
-3.  **Confidential Transfer**: Funds are sent to these one-time addresses. On-chain observers see tokens moving, but cannot identify the source or destination as belonging to the business.
-4.  **Claiming**: Recipients use their private keys to "scan" the ledger for transactions destined for their derived stealth addresses and claim them into their main wallet.
-5.  **Compliance Audit**: If an auditor requires proof of payment, the user provides the **Viewing Key** for that specific transaction, which the Auditor can use in the **Compliance Terminal** to verify the details.
+- [ ] **AI-Powered Compliance Audit**: Automatic flagging of suspicious private transfers.
+- [ ] **Multi-Chain Privacy**: Extending stealth payments to Ethereum and Polygon.
+- [ ] **Fiat On/Off Ramp**: Private integration with Circle (USDC) for direct bank transfers.
+- [ ] **Hardware Wallet Support**: Ledger/Trezor integration for corporate treasury.
 
 ---
 
-## 📡 Mainnet Configuration
+## 📡 Current Network Status
 
-The application is currently configured for **Solana Mainnet-Beta**.
+The application is currently configured for **Solana Devnet**.
 
-- **Network**: `mainnet-beta`
-- **RPC Endpoint**: `https://api.mainnet-beta.solana.com`
-- **Encryption Standard**: AES-256 + Umbra v4 Stealth Derivation
-- **Protocol**: Umbra Privacy Protocol
+- **Network**: `devnet`
+- **RPC Endpoint**: `https://api.devnet.solana.com`
+- **Privacy Standard**: Umbra v4 Stealth Protocol
+- **MFA Status**: Enabled (Mandatory)
 
 ---
 
 ## 🛠️ Tech Stack
 
-- **UI**: React 18, Tailwind CSS, Framer Motion (Animations), Lucide Icons.
+- **UI**: React 18, Tailwind CSS, Framer Motion, Lucide Icons.
 - **Web3**: @solana/web3.js, @umbra-privacy/sdk.
 - **Auth**: Firebase (Google OAuth), Solana Wallet Standard.
 - **State**: Zustand (with Persist middleware).
