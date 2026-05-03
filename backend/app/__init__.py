@@ -11,7 +11,10 @@ def create_app():
     app = Flask(__name__)
     
     # Configuration
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///stealthpay.db')
+    db_url = os.getenv('DATABASE_URL', 'sqlite:///stealthpay.db')
+    if db_url.startswith("postgres://"):
+        db_url = db_url.replace("postgres://", "postgresql://", 1)
+    app.config['SQLALCHEMY_DATABASE_URI'] = db_url
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'stealth-secret-key-123')
     
@@ -40,7 +43,7 @@ def create_app():
     app.register_blueprint(wallet_bp, url_prefix='/api/wallet')
     app.register_blueprint(transactions_bp, url_prefix='/api/transactions')
     
-    @app.route('/health')
+    @app.route('/api/health')
     def health():
         return {'status': 'healthy', 'service': 'stealthpay-backend'}
     
