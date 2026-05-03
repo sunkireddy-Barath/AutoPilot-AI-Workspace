@@ -41,7 +41,7 @@ function PageLoader() {
 }
 
 export default function App() {
-  const network = WalletAdapterNetwork.Devnet
+  const network = WalletAdapterNetwork.Mainnet
   const endpoint = useMemo(() => clusterApiUrl(network), [network])
   
   // By providing an empty array here, the WalletProvider will automatically 

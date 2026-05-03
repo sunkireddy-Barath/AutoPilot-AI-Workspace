@@ -448,7 +448,7 @@ export const useAppStore = create<AppState>()(
       setSearchQuery: (query) => set({ searchQuery: query }),
       
       notifications: [
-        { id: '1', title: 'System Online', message: 'Umbra Devnet connection established.', time: '2m ago', read: false },
+        { id: '1', title: 'System Online', message: 'Umbra Mainnet connection established.', time: '2m ago', read: false },
         { id: '2', title: 'Security Protocol', message: 'Encryption keys generated successfully.', time: '1h ago', read: true }
       ],
       addNotification: (notif) => set(s => ({ 
