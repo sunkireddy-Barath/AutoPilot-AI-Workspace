@@ -80,6 +80,7 @@ interface AppState {
   firebaseUser: any | null
   setFirebaseUser: (user: any | null) => void
   
+  user: User | null
   isAuthenticated: boolean
   setUser: (user: User | null) => void
   logout: () => void

@@ -40,7 +40,7 @@ export class UmbraService {
     // Initialize real Umbra Client (simulated for dev environment)
     this.client = await getUmbraClient({
       signer: signer as any,
-      network: 'mainnet-beta',
+      network: 'mainnet' as any,
       rpcUrl: rpcUrl,
       rpcSubscriptionsUrl: rpcUrl.replace('https', 'wss'),
     });
