@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { motion } from 'framer-motion'
-import { Bell, Search, Eye, EyeOff, Wifi } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Bell, Search, Eye, EyeOff, Wifi, Zap, Shield } from 'lucide-react'
 import { useAppStore } from '../../store'
 
 import { WalletConnectButton } from '../ui/WalletConnectButton'
@@ -19,15 +19,15 @@ export function Topbar({ title, subtitle }: TopbarProps) {
   const [searchFocused, setSearchFocused] = useState(false)
   const [showNotifs, setShowNotifs] = useState(false)
 
-  const unreadCount = notifications.filter(n => !n.read).length
+  const unreadCount = (notifications || []).filter(n => n && !n.read).length
 
   return (
     <header className="sticky top-0 z-[100] flex items-center justify-between px-6 py-4 border-b border-white/5"
       style={{ background: 'rgba(8, 8, 15, 0.8)', backdropFilter: 'blur(12px)' }}>
       {/* Left: Page title */}
       <div className="flex-shrink-0">
-        <h1 className="text-lg font-bold text-white leading-tight">{title}</h1>
-        {subtitle && <p className="text-xs text-zinc-500 mt-0.5">{subtitle}</p>}
+        <h1 className="text-lg font-bold text-white leading-tight">{title || 'StealthPay'}</h1>
+        {subtitle && typeof subtitle === 'string' && <p className="text-xs text-zinc-500 mt-0.5">{subtitle}</p>}
       </div>
 
       {/* Center: Search */}
@@ -89,28 +89,101 @@ export function Topbar({ title, subtitle }: TopbarProps) {
 
           <AnimatePresence>
             {showNotifs && (
-              <motion.div
-                initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                className="absolute right-0 mt-2 w-80 glass-card p-4 shadow-2xl border border-white/10 z-[200]"
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xs font-bold text-white uppercase tracking-wider">Activity Feed</h3>
-                  <span className="text-[10px] text-zinc-500">{notifications.length} total</span>
-                </div>
-                <div className="space-y-3 max-h-64 overflow-y-auto pr-1 custom-scrollbar">
-                  {notifications.map(n => (
-                    <div key={n.id} className="p-3 rounded-lg bg-white/[0.02] border border-white/5 hover:bg-white/5 transition-colors">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-[11px] font-bold text-white">{n.title}</span>
-                        <span className="text-[9px] text-zinc-600">{n.time}</span>
-                      </div>
-                      <p className="text-[10px] text-zinc-500 leading-relaxed">{n.message}</p>
+              <>
+                {/* Backdrop to close when clicking outside */}
+                <div 
+                  className="fixed inset-0 z-[190] cursor-default" 
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setShowNotifs(false)
+                  }}
+                />
+                
+                <motion.div
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                  className="absolute right-0 mt-3 w-80 glass-card p-0 shadow-[0_30px_100px_rgba(0,0,0,0.6)] border border-white/10 z-[200] overflow-hidden"
+                  style={{ background: 'rgba(10, 10, 18, 0.98)', backdropFilter: 'blur(32px)', borderRadius: '24px' }}
+                >
+                  {/* Header */}
+                  <div className="flex items-center justify-between px-6 py-5 border-b border-white/5 bg-white/[0.02]">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-[11px] font-black text-white uppercase tracking-[0.2em]">Activity Feed</h3>
+                      {unreadCount > 0 && (
+                        <span className="px-1.5 py-0.5 rounded-md bg-violet-500/20 text-violet-400 text-[9px] font-bold">
+                          {unreadCount} NEW
+                        </span>
+                      )}
                     </div>
-                  ))}
-                </div>
-              </motion.div>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        markNotificationsRead()
+                      }}
+                      className="text-[9px] font-bold text-zinc-500 hover:text-white uppercase tracking-widest transition-colors"
+                    >
+                      Clear all
+                    </button>
+                  </div>
+
+                  {/* Content */}
+                  <div className="max-h-[380px] overflow-y-auto custom-scrollbar">
+                    {notifications.length > 0 ? (
+                      <div className="divide-y divide-white/5">
+                        {notifications.map(n => (
+                          <motion.div 
+                            key={n.id} 
+                            whileHover={{ backgroundColor: 'rgba(255,255,255,0.03)' }}
+                            className="p-5 flex gap-4 relative group cursor-pointer transition-colors"
+                          >
+                            {!n.read && (
+                              <div className="absolute left-0 top-0 bottom-0 w-1 bg-violet-500 shadow-[2px_0_10px_rgba(124,58,237,0.3)]" />
+                            )}
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 
+                              ${n.title.toLowerCase().includes('security') ? 'bg-emerald-500/10 text-emerald-400' : 
+                                n.title.toLowerCase().includes('online') ? 'bg-blue-500/10 text-blue-400' : 
+                                'bg-violet-500/10 text-violet-400'}`}
+                            >
+                              {n.title.toLowerCase().includes('security') ? <Shield className="w-5 h-5" /> : 
+                               n.title.toLowerCase().includes('online') ? <Wifi className="w-5 h-5" /> : 
+                               <Zap className="w-5 h-5" />}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-xs font-bold text-white group-hover:text-violet-400 transition-colors truncate pr-2">
+                                  {n.title}
+                                </span>
+                                <span className="text-[9px] text-zinc-600 font-bold whitespace-nowrap">{n.time}</span>
+                              </div>
+                              <p className="text-[11px] text-zinc-400 leading-relaxed line-clamp-2">
+                                {n.message}
+                              </p>
+                            </div>
+                          </motion.div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="py-20 px-10 text-center">
+                        <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center mx-auto mb-4 border border-white/5">
+                          <Bell className="w-8 h-8 text-zinc-700" />
+                        </div>
+                        <h4 className="text-sm font-bold text-white mb-1">All caught up!</h4>
+                        <p className="text-xs text-zinc-500">No new notifications at the moment.</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Footer */}
+                  {notifications.length > 0 && (
+                    <div className="p-4 border-t border-white/5 bg-white/[0.01]">
+                      <button className="w-full py-2.5 rounded-xl text-[10px] font-black text-zinc-500 hover:text-white hover:bg-white/5 uppercase tracking-[0.2em] transition-all">
+                        Archive History
+                      </button>
+                    </div>
+                  )}
+                </motion.div>
+              </>
             )}
           </AnimatePresence>
         </div>

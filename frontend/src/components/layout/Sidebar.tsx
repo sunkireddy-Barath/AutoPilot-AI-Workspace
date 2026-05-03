@@ -22,7 +22,7 @@ const NAV_ITEMS = [
 ]
 
 export function Sidebar() {
-  const { user, logout } = useAppStore()
+  const { user, firebaseUser, logout } = useAppStore()
   const location = useLocation()
 
   return (
@@ -76,14 +76,37 @@ export function Sidebar() {
           <span className="text-[10px] font-medium tracking-tight leading-none">Logout</span>
         </motion.button>
 
-        {user && (
+        {(user || firebaseUser) && (
           <div className="hidden sm:flex items-center gap-3 ml-2 pl-4 border-l border-white/10">
             <div className="flex flex-col items-end">
-              <div className="text-[10px] font-bold text-white uppercase tracking-tighter">{user.companyName || 'Merchant'}</div>
-              <div className="text-[8px] text-zinc-500 font-medium">Merchant</div>
+              <div className="text-[10px] font-bold text-white uppercase tracking-tighter truncate max-w-[120px]">
+                {firebaseUser?.displayName || user?.companyName || 'Merchant'}
+              </div>
+              <div className="text-[8px] text-zinc-500 font-medium truncate max-w-[120px]">
+                {firebaseUser?.email || 'Merchant Account'}
+              </div>
             </div>
-            <div className="w-8 h-8 rounded-full bg-violet-600 flex items-center justify-center text-[10px] font-black text-white border border-white/10">
-              {(user.companyName || 'M').charAt(0)}
+            <div className="w-8 h-8 rounded-full bg-violet-600 flex items-center justify-center text-[10px] font-black text-white border border-white/10 overflow-hidden relative">
+              {firebaseUser?.photoURL ? (
+                <img 
+                  src={firebaseUser.photoURL} 
+                  alt="Profile" 
+                  referrerPolicy="no-referrer"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    const target = e.currentTarget;
+                    target.style.display = 'none';
+                    const parent = target.parentElement;
+                    if (parent) {
+                      const initial = document.createElement('span');
+                      initial.innerText = (firebaseUser?.displayName || user?.companyName || 'M').charAt(0);
+                      parent.appendChild(initial);
+                    }
+                  }}
+                />
+              ) : (
+                <span>{(firebaseUser?.displayName || user?.companyName || 'M').charAt(0)}</span>
+              )}
             </div>
           </div>
         )}

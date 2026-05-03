@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { UmbraService } from '../lib/umbra'
+import { auth as firebaseAuth } from '../lib/firebase'
 
 interface User {
   id: string
@@ -74,7 +75,11 @@ interface Balance {
 }
 
 interface AppState {
-  user: User | null
+  isWalletConnected: boolean
+  isFirebaseAuthenticated: boolean
+  firebaseUser: any | null
+  setFirebaseUser: (user: any | null) => void
+  
   isAuthenticated: boolean
   setUser: (user: User | null) => void
   logout: () => void
@@ -129,12 +134,33 @@ export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
       user: null,
+      isWalletConnected: false,
+      isFirebaseAuthenticated: false,
+      firebaseUser: null,
       isAuthenticated: false,
-      setUser: (user) => set({ user, isAuthenticated: !!user }),
+
+      setFirebaseUser: (fuser) => set(s => ({ 
+        firebaseUser: fuser, 
+        isFirebaseAuthenticated: !!fuser,
+        isAuthenticated: s.isWalletConnected && !!fuser 
+      })),
+
+      setUser: (user) => set(s => ({ 
+        user, 
+        isWalletConnected: !!user,
+        isAuthenticated: !!user && s.isFirebaseAuthenticated 
+      })),
 
       logout: () => {
-        set({ user: null, isAuthenticated: false })
+        set({ 
+          user: null, 
+          isWalletConnected: false, 
+          isFirebaseAuthenticated: false, 
+          firebaseUser: null,
+          isAuthenticated: false 
+        })
         localStorage.removeItem('stealthpay_token')
+        firebaseAuth.signOut().catch(console.error)
       },
 
       sidebarCollapsed: false,
@@ -407,7 +433,11 @@ export const useAppStore = create<AppState>()(
           if (res.ok) {
             const data = await res.json()
             localStorage.setItem('stealthpay_token', data.access_token)
-            set({ user: data.user, isAuthenticated: true })
+            set(s => ({ 
+              user: data.user, 
+              isWalletConnected: true,
+              isAuthenticated: true && s.isFirebaseAuthenticated
+            }))
           }
         } catch (e) {
           console.error('Auto-auth failed:', e)
