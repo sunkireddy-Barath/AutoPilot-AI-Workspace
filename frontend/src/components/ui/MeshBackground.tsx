@@ -39,7 +39,7 @@ export default function MeshBackground() {
       <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:radial-gradient(white,transparent_80%)] opacity-[0.03]" />
       
       {/* Noise Texture Layer */}
-      <div className="absolute inset-0 opacity-[0.02] mix-blend-overlay pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
+      <div className="noise-overlay" />
     </div>
   )
 }

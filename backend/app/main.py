@@ -17,6 +17,7 @@ from app.api.conversations import router as conversations_router
 from app.api.agents import router as agents_router
 from app.api.chat import router as chat_router
 from app.api.files import router as files_router
+from app.api.search import router as search_router
 
 
 @asynccontextmanager
@@ -60,3 +61,4 @@ app.include_router(conversations_router, prefix="/api/v1/conversations")
 app.include_router(agents_router, prefix="/api/v1/agents")
 app.include_router(chat_router)  # chat + WebSocket (no prefix — /ws/{id} lives at root)
 app.include_router(files_router)
+app.include_router(search_router, prefix="/api/v1/search")

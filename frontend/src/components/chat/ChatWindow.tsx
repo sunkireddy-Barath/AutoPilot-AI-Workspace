@@ -12,11 +12,13 @@ import {
   RefreshCw,
   Rocket,
   Search,
-  Share2
+  Share2,
+  Download
 } from 'lucide-react'
 import { useStore, Message, AgentRole } from '@/lib/store'
 import { wsClient, WSEvent } from '@/lib/websocket'
 import { chatApi, conversationsApi } from '@/lib/api'
+import { exportProjectToMarkdown } from '@/lib/export'
 import ChatMessage from './ChatMessage'
 import ChatInput from './ChatInput'
 import ThinkingIndicator from './ThinkingIndicator'
@@ -40,13 +42,22 @@ export default function ChatWindow() {
     updateTask,
     addAgentActivity,
     setWorkflowGraph,
-    setAgentsRunning
+    setAgentsRunning,
+    tasks
   } = useStore()
 
   const [loading, setLoading] = useState(false)
   const [activeAgent, setActiveAgent] = useState<AgentRole | null>(null)
   const [historyOpen, setHistoryOpen] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
+
+  const handleExport = () => {
+    if (messages.length === 0) return
+    const firstMsg = messages.find(m => m.role === 'user')?.content || 'AutoPilot Project'
+    const projectName = firstMsg.slice(0, 30) + (firstMsg.length > 30 ? '...' : '')
+    exportProjectToMarkdown(projectName, messages, tasks)
+    toast.success('Project plan downloaded')
+  }
 
   // Auto-initialize session if none exists
   useEffect(() => {
@@ -177,6 +188,7 @@ export default function ChatWindow() {
 
             <div className="flex items-center gap-1 border-l border-white/10 pl-4 mr-2">
               <button onClick={() => setHistoryOpen(true)} className="p-2 text-slate-500 hover:text-white transition-all rounded-lg hover:bg-white/5" title="History"><History className="h-4 w-4" /></button>
+              <button onClick={handleExport} className="p-2 text-slate-500 hover:text-white transition-all rounded-lg hover:bg-white/5" title="Export Plan"><Download className="h-4 w-4" /></button>
               <button className="p-2 text-slate-500 hover:text-white transition-all rounded-lg hover:bg-white/5" title="Settings"><Settings2 className="h-4 w-4" /></button>
             </div>
 

@@ -107,6 +107,15 @@ export default function GlobalOrchestrator() {
       updateTask(data.id, data)
     })
 
+    // 6.5 Agent Collaboration (Internal handoffs)
+    const offCollaboration = wsClient.on('agent_collaboration', (e: WSEvent) => {
+      useStore.getState().addAgentCollaboration(e.data)
+      toast.success(`Handoff: ${e.data.source} → ${e.data.target}`, {
+        icon: '🔗',
+        style: { borderRadius: '12px', background: '#0f172a', color: '#fff' }
+      })
+    })
+
     // 7. Agent Messages (Chat persistence)
     const offAgentMsg = wsClient.on('agent_message', (e: WSEvent) => {
       const data = e.data as any
@@ -134,6 +143,7 @@ export default function GlobalOrchestrator() {
       offWorkflow()
       offTaskCreated()
       offTaskUpdated()
+      offCollaboration()
       offAgentMsg()
       // We don't disconnect here because this is global
     }

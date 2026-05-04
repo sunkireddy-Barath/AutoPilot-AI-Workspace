@@ -1,8 +1,9 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import { useRouter } from 'next/navigation'
 import { Calendar, User, Clock, CheckCircle2, Circle, AlertCircle } from 'lucide-react'
-import { Task, AgentRole } from '@/lib/store'
+import { useStore, Task, AgentRole } from '@/lib/store'
 import { cn } from '@/lib/utils'
 import { formatDistanceToNow } from 'date-fns'
 
@@ -29,6 +30,9 @@ export default function TaskItem({ task, index, projectTitle }: TaskItemProps) {
     blocked: AlertCircle
   }[task.status]
 
+  const { setActiveConversation } = useStore()
+  const router = useRouter()
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -38,6 +42,12 @@ export default function TaskItem({ task, index, projectTitle }: TaskItemProps) {
       transition={{ 
         delay: index * 0.05,
         backgroundColor: { duration: 0.2 } 
+      }}
+      onClick={() => {
+        if (task.conversation_id) {
+          setActiveConversation(task.conversation_id)
+          router.push('/chat')
+        }
       }}
       className="p-4 group flex items-start gap-4 border-b border-white/5 last:border-0 cursor-pointer transition-colors"
     >

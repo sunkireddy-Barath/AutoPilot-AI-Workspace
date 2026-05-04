@@ -50,8 +50,3 @@ npm run dev
 3. **Execution**: The **Developer** writes code skeletons, and **Marketing** does research via tools.
 4. **Refinement**: The **Analyst** calculates ROI and progress, looping back for improvements if needed.
 5. **Visualization**: Watch the whole process unfold in the **Workflow View** and **Activity Timeline**.
-
----
-
-## 📄 Submission Materials
-See `submission_package.md` in the root (if provided) or `backend/submission_package.md` for the full elevator pitch, demo script, and architecture guide.

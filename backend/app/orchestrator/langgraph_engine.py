@@ -32,7 +32,8 @@ from app.models.schemas import (
 )
 from app.tools.workspace_tools import (
     write_workspace_file, read_workspace_file, 
-    list_workspace_files, google_research_simulation
+    list_workspace_files, google_research_simulation,
+    get_weather_brief
 )
 
 
@@ -80,7 +81,7 @@ class MeDoOrchestrator:
             api_key=settings.openai_api_key,
             model=settings.openai_model,
             temperature=0.2,
-        ).bind_tools([write_workspace_file, google_research_simulation])
+        ).bind_tools([write_workspace_file, google_research_simulation, get_weather_brief])
 
         self.graph = self._build_graph()
 
@@ -133,6 +134,16 @@ class MeDoOrchestrator:
 
         workflow.add_edge("synthesize_node", END)
 
+        # Register collaboration event handlers for handoffs
+        async def emit_handoff(source: str, target: str, state: AgentState):
+            await global_bus.emit("agent_collaboration", {
+                "conversation_id": state["conversation_id"],
+                "source": source,
+                "target": target,
+                "message": f"Handing off {source.replace('_', ' ')} specifications to {target.replace('_', ' ')}.",
+                "timestamp": datetime.utcnow().isoformat()
+            })
+
         return workflow.compile()
 
     # ── Node Implementations ─────────────────────────────────────────────
@@ -148,6 +159,8 @@ class MeDoOrchestrator:
                     result = write_workspace_file.invoke(tool_args)
                 elif tool_name == "google_research_simulation":
                     result = google_research_simulation.invoke(tool_args)
+                elif tool_name == "get_weather_brief":
+                    result = get_weather_brief.invoke(tool_args)
                 
                 activity = self._create_activity(
                     AgentRole.ORCHESTRATOR, "Tool Call",
@@ -188,6 +201,13 @@ class MeDoOrchestrator:
              await global_bus.emit("task_created", {"conversation_id": state["conversation_id"], "task": task})
 
         state["messages"].append(AIMessage(content=response, additional_kwargs={"agent_role": "product_manager"}))
+        
+        await global_bus.emit("agent_collaboration", {
+            "conversation_id": state["conversation_id"],
+            "source": "product_manager", "target": "developer",
+            "message": "Strategic roadmap finalized. Handing off to Development Agent for architecture design.",
+            "timestamp": datetime.utcnow().isoformat()
+        })
         return state
 
     async def _dev_node(self, state: AgentState) -> AgentState:
@@ -213,6 +233,13 @@ class MeDoOrchestrator:
             await global_bus.emit("agent_activity", {"conversation_id": state["conversation_id"], "activity": activity})
             
         state["messages"].append(response)
+        
+        await global_bus.emit("agent_collaboration", {
+            "conversation_id": state["conversation_id"],
+            "source": "developer", "target": "marketing",
+            "message": "Technical specs ready. Handing off to Marketing Agent for growth strategy formulation.",
+            "timestamp": datetime.utcnow().isoformat()
+        })
         return state
 
     async def _marketing_node(self, state: AgentState) -> AgentState:
@@ -238,6 +265,13 @@ class MeDoOrchestrator:
             await global_bus.emit("agent_activity", {"conversation_id": state["conversation_id"], "activity": activity})
 
         state["messages"].append(response)
+        
+        await global_bus.emit("agent_collaboration", {
+            "conversation_id": state["conversation_id"],
+            "source": "marketing", "target": "operations",
+            "message": "Growth funnel mapped. Handing off to Operations Agent for deployment automation.",
+            "timestamp": datetime.utcnow().isoformat()
+        })
         return state
 
     async def _operations_node(self, state: AgentState) -> AgentState:
@@ -267,6 +301,13 @@ class MeDoOrchestrator:
              await global_bus.emit("task_created", {"conversation_id": state["conversation_id"], "task": task})
 
         state["messages"].append(AIMessage(content=response, additional_kwargs={"agent_role": "operations"}))
+        
+        await global_bus.emit("agent_collaboration", {
+            "conversation_id": state["conversation_id"],
+            "source": "operations", "target": "analyst",
+            "message": "Deployment pipeline configured. Handing off to Analyst Agent for final validation.",
+            "timestamp": datetime.utcnow().isoformat()
+        })
         return state
 
     async def _analyst_node(self, state: AgentState) -> AgentState:

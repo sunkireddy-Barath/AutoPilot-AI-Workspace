@@ -82,17 +82,17 @@ export default function ChatMessage({ message }: ChatMessageProps) {
         </div>
 
         {/* Structured Artifact Rendering (Roadmap, Architecture, etc) */}
-        {message.metadata?.artifact && (
+        {Boolean(message.metadata?.artifact) && (
           <ArtifactRenderer 
-            type={message.metadata.artifact.type as any} 
-            data={message.metadata.artifact.data} 
+            type={(message.metadata?.artifact as any).type} 
+            data={(message.metadata?.artifact as any).data} 
           />
         )}
 
         {Boolean(message.metadata?.task_count) && (
           <div className="mt-4 flex items-center gap-2">
             <div className="px-2 py-1 rounded-lg bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-medium flex items-center gap-1.5">
-              🚀 {String(message.metadata?.task_count)} Tasks Generated
+              🚀 {String(message.metadata?.task_count as any)} Tasks Generated
             </div>
           </div>
         )}

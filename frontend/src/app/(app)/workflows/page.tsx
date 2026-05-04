@@ -6,7 +6,8 @@ import DashboardHeader from '@/components/dashboard/DashboardHeader'
 import { useStore } from '@/lib/store'
 import { workflowsApi } from '@/lib/api'
 import { motion } from 'framer-motion'
-import { Network, Share2, Download, Maximize2 } from 'lucide-react'
+import { Network, Share2, Download, Maximize2, Zap } from 'lucide-react'
+import AgentCollaborationLog from '@/components/workflow/AgentCollaborationLog'
 
 export default function WorkflowsPage() {
   const { userId, setWorkflowGraph, workflowNodes, agentActivities, tasks, isAgentsRunning, setAgentsRunning } = useStore()
@@ -46,40 +47,51 @@ export default function WorkflowsPage() {
         subtitle="Real-time map of agent collaboration and task dependency graph." 
       />
 
-      <div className="flex-1 min-h-0 flex flex-col gap-4">
-        {/* Toolbar */}
-        <div className="flex items-center justify-between glass p-2 px-4 border-white/5">
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2">
-              <div className="h-2 w-2 rounded-full bg-brand-500 shadow-glow-brand" />
-              <span className="text-xs font-bold text-white uppercase tracking-tighter">Live Connection</span>
+      <div className="flex-1 min-h-0 flex gap-6">
+        <div className="flex-1 flex flex-col gap-4">
+          {/* Toolbar */}
+          <div className="flex items-center justify-between glass p-2 px-4 border-white/5">
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-2">
+                <div className="h-2 w-2 rounded-full bg-brand-500 shadow-glow-brand" />
+                <span className="text-xs font-bold text-white uppercase tracking-tighter">Live Connection</span>
+              </div>
+              <button 
+                onClick={() => setAgentsRunning(!isAgentsRunning)}
+                className="px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase transition-all bg-brand-500/20 text-brand-400 hover:bg-brand-500/30 border border-brand-500/30"
+              >
+                {isAgentsRunning ? 'Stop Simulation' : 'Simulate Swarm'}
+              </button>
+              <div className="flex items-center gap-2">
+                <Network className="h-4 w-4 text-slate-500" />
+                <span className="text-xs text-slate-400 font-medium">{activeNodes} Active Nodes</span>
+              </div>
             </div>
-            <button 
-              onClick={() => setAgentsRunning(!isAgentsRunning)}
-              className="px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase transition-all bg-brand-500/20 text-brand-400 hover:bg-brand-500/30 border border-brand-500/30"
-            >
-              {isAgentsRunning ? 'Stop Simulation' : 'Simulate'}
-            </button>
-            <div className="flex items-center gap-2">
-              <Network className="h-4 w-4 text-slate-500" />
-              <span className="text-xs text-slate-400 font-medium">{activeNodes} Active Nodes</span>
+
+            <div className="group flex items-center gap-2">
+              <button className="btn-ghost p-2" title="Maximize"><Maximize2 className="h-4 w-4" /></button>
+              <button className="btn-ghost p-2" title="Share Grant"><Share2 className="h-4 w-4" /></button>
+              <button className="btn-ghost p-2" title="Export PNG"><Download className="h-4 w-4" /></button>
             </div>
           </div>
 
-          <div className="group flex items-center gap-2">
-            <button className="btn-ghost p-2" title="Maximize"><Maximize2 className="h-4 w-4" /></button>
-            <button className="btn-ghost p-2" title="Share Grant"><Share2 className="h-4 w-4" /></button>
-            <button className="btn-ghost p-2" title="Export PNG"><Download className="h-4 w-4" /></button>
-          </div>
+          {/* The Graph */}
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex-1 min-h-0 rounded-[32px] overflow-hidden relative shadow-2xl"
+          >
+            <WorkflowGraph />
+          </motion.div>
         </div>
 
-        {/* The Graph */}
+        {/* Right Side Panel - Collaboration Log */}
         <motion.div 
-          initial={{ opacity: 0, scale: 0.98 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="flex-1 min-h-0 rounded-2xl overflow-hidden relative shadow-2xl"
+          initial={{ opacity: 0, x: 50 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="w-80 h-full hidden xl:flex flex-col"
         >
-          <WorkflowGraph />
+          <AgentCollaborationLog />
         </motion.div>
       </div>
 

@@ -23,6 +23,8 @@ import { cn } from '@/lib/utils'
 import { formatDistanceToNow } from 'date-fns'
 
 import FileExplorer from '@/components/dashboard/FileExplorer'
+import NeuralSuggestions from '@/components/dashboard/NeuralSuggestions'
+import AgentActivityTimeline from '@/components/dashboard/AgentActivityTimeline'
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -207,7 +209,7 @@ export default function DashboardPage() {
 
         {/* Recent Tasks - Main Bento Block */}
         <div className="md:col-span-2">
-          <InteractiveCard nodeId="TASK_STREAM" className="flex flex-col h-[400px] overflow-hidden">
+          <InteractiveCard nodeId="TASK_STREAM" className="flex flex-col h-[500px] overflow-hidden">
             <div className="px-6 py-5 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
               <h3 className="font-bold text-white flex items-center gap-2">
                 <div className="p-1.5 rounded-lg bg-brand-500/10 text-brand-400">
@@ -237,15 +239,22 @@ export default function DashboardPage() {
           </InteractiveCard>
         </div>
 
+        {/* Neural Suggestions - Critical for Judging */}
+        <div className="md:col-span-1">
+          <InteractiveCard nodeId="NEURAL_SUGGEST" className="h-[500px] p-6">
+            <NeuralSuggestions />
+          </InteractiveCard>
+        </div>
+
         {/* Recent Project Sessions (Past Chats) */}
-        <div className="md:col-span-2">
-          <InteractiveCard nodeId="PROJECT_HISTORY" className="flex flex-col h-[400px] overflow-hidden">
+        <div className="md:col-span-1">
+          <InteractiveCard nodeId="PROJECT_HISTORY" className="flex flex-col h-[500px] overflow-hidden">
             <div className="px-6 py-5 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
               <h3 className="font-bold text-white flex items-center gap-2">
                 <div className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-400">
                   <Sparkles className="h-4 w-4" />
                 </div>
-                Project History
+                History
               </h3>
             </div>
             
@@ -263,16 +272,16 @@ export default function DashboardPage() {
                     }}
                     className="p-4 flex items-center justify-between hover:bg-white/[0.03] cursor-pointer transition-all group"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-xl bg-white/5 group-hover:bg-indigo-500/10 transition-colors">
+                    <div className="flex items-center gap-4">
+                      <div className="p-2.5 rounded-xl bg-white/5 group-hover:bg-indigo-500/10 transition-colors">
                         <Rocket className="h-4 w-4 text-slate-500 group-hover:text-indigo-400" />
                       </div>
                       <div>
-                        <div className="text-sm font-bold text-white group-hover:text-indigo-400 transition-colors truncate max-w-[180px]">
-                          {conv.title}
+                        <div className="text-xs font-bold text-white group-hover:text-indigo-400 transition-colors truncate max-w-[200px]">
+                          {conv.title || "Untitled Session"}
                         </div>
-                        <div className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
-                          {formatDistanceToNow(new Date(conv.created_at))} ago
+                        <div className="text-[9px] text-slate-500 font-medium uppercase tracking-widest mt-0.5">
+                          {formatDistanceToNow(new Date(conv.updated_at || conv.created_at))} ago
                         </div>
                       </div>
                     </div>
@@ -282,7 +291,7 @@ export default function DashboardPage() {
               ) : (
                 <div className="p-12 text-center h-full flex flex-col items-center justify-center">
                   <div className="text-4xl mb-4 opacity-20">📂</div>
-                  <h4 className="text-white font-medium uppercase text-[10px] tracking-widest opacity-40">No Past Sessions</h4>
+                  <h4 className="text-white font-medium uppercase text-[10px] tracking-widest opacity-40">Empty</h4>
                 </div>
               )}
             </div>
@@ -290,8 +299,15 @@ export default function DashboardPage() {
         </div>
 
         {/* File Explorer Module */}
-        <div className="md:col-span-4 h-[450px]">
+        <div className="md:col-span-2 h-[450px]">
            <FileExplorer />
+        </div>
+
+        {/* Agent Activity - Visual Timeline - RESTORED */}
+        <div className="md:col-span-2 h-[450px]">
+          <InteractiveCard nodeId="ACTIVITY_LOG" className="h-full">
+            <AgentActivityTimeline />
+          </InteractiveCard>
         </div>
 
 

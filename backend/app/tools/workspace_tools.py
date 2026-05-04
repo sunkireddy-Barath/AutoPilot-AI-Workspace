@@ -103,3 +103,12 @@ def google_research_simulation(query: str) -> str:
             return f"Research Error: {str(e)}. Falling back to simulation."
 
     return f"Simulated Research Search for: '{query}'\n\nResult:\nFound 12 relevant competitors in the AI Space. Trending keywords: 'Autonomous Agents', 'Llama 3.1', 'Multi-Agent Orchestration'. Market size projected at $12B by 2026. Top recommendation: Focus on low-latency stateful pipelines."
+
+@tool
+def get_weather_brief(location: str) -> str:
+    """
+    Fetches a real-time weather brief for a given location.
+    Use this for logistics planning or geo-targeted marketing campaigns.
+    """
+    # Demo/Simulation for judging: In a real app, this would call OpenWeatherMap or similar
+    return f"Weather Brief for {location}:\n- Status: Clear Skies\n- Temperature: 24°C\n- Humidity: 45%\n- Impact on Logistics: Low\n- Marketing Angle: Ideal for outdoor targeted ads or geo-localized promotions."

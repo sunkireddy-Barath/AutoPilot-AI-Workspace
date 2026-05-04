@@ -92,3 +92,8 @@ export const filesApi = {
   list: () => request<any[]>('/api/v1/files'),
   getContent: (path: string) => request<{ content: string }>(`/api/v1/files/${path}`),
 }
+
+export const searchApi = {
+  global: (query: string, userId: string) => 
+    request<{ results: any[] }>(`/api/v1/search/global?query=${encodeURIComponent(query)}&user_id=${userId}`),
+}

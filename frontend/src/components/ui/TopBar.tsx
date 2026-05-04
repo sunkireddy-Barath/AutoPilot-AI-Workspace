@@ -1,28 +1,116 @@
 'use client'
 
-import { Search, Bell, Plus, User, Activity } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { Search, Bell, Plus, User, Activity, Rocket, CheckCircle2 } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { useStore } from '@/lib/store'
+import { searchApi } from '@/lib/api'
 import { cn } from '@/lib/utils'
+import { useState, useEffect, useRef } from 'react'
 
 export default function TopBar() {
   const router = useRouter()
-  const { notifications, markNotificationsRead, clearNotifications } = useStore()
+  const { userId, notifications, markNotificationsRead, clearNotifications, setActiveConversation } = useStore()
   const unreadCount = notifications.filter(n => !n.read).length
+  
+  const [query, setQuery] = useState('')
+  const [results, setResults] = useState<any[]>([])
+  const [isSearching, setIsSearching] = useState(false)
+  const [showResults, setShowResults] = useState(false)
+  const searchRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowResults(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(async () => {
+      if (query.length > 1 && userId) {
+        setIsSearching(true)
+        try {
+          const res = await searchApi.global(query, userId)
+          setResults(res.results)
+          setShowResults(true)
+        } catch (e) {
+          console.error(e)
+        } finally {
+          setIsSearching(false)
+        }
+      } else {
+        setResults([])
+        setShowResults(false)
+      }
+    }, 300)
+
+    return () => clearTimeout(delayDebounceFn)
+  }, [query, userId])
+
+  const handleResultClick = (result: any) => {
+    if (result.type === 'project') {
+      setActiveConversation(result.id)
+    } else if (result.type === 'task') {
+      setActiveConversation(result.conv_id)
+    }
+    router.push(result.route)
+    setShowResults(false)
+    setQuery('')
+  }
 
   return (
     <header className="fixed top-0 left-0 right-0 z-[60] h-16 border-b border-white/5 bg-black/20 backdrop-blur-2xl flex items-center justify-between px-8">
       {/* Search Bar - Center Focused */}
-      <div className="flex-1 max-w-2xl px-4">
+      <div className="flex-1 max-w-2xl px-4 relative" ref={searchRef}>
         <div className="relative group">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 group-focus-within:text-brand-400 transition-colors" />
           <input 
             type="text" 
-            placeholder="Search MeDo Intelligence..." 
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onFocus={() => query.length > 1 && setShowResults(true)}
+            placeholder="Search MeDo Intelligence (Projects, Tasks, Agents)..." 
             className="w-full bg-white/[0.03] border border-white/5 rounded-2xl pl-12 pr-6 py-2.5 text-sm text-white outline-none focus:bg-white/[0.06] focus:border-brand-500/20 transition-all"
           />
+          {isSearching && (
+            <div className="absolute right-4 top-1/2 -translate-y-1/2">
+              <div className="h-3 w-3 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+            </div>
+          )}
         </div>
+
+        <AnimatePresence>
+          {showResults && results.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              className="absolute top-full left-4 right-4 mt-2 glass-strong rounded-2xl border border-white/10 shadow-2xl overflow-hidden z-[100]"
+            >
+              <div className="p-2 divide-y divide-white/5">
+                {results.map((r, i) => (
+                  <button
+                    key={i}
+                    onClick={() => handleResultClick(r)}
+                    className="w-full flex items-center gap-3 p-3 hover:bg-white/5 transition-all text-left group"
+                  >
+                    <div className="p-2 rounded-lg bg-white/5 group-hover:bg-brand-500/10 transition-colors">
+                      {r.type === 'project' ? <Rocket className="h-3.5 w-3.5 text-brand-400" /> : <CheckCircle2 className="h-3.5 w-3.5 text-green-400" />}
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-white group-hover:text-brand-400 transition-colors">{r.title}</div>
+                      <div className="text-[10px] text-slate-500 font-medium uppercase tracking-widest">{r.type} • {r.subtitle}</div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Actions */}

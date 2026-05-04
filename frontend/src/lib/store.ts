@@ -152,6 +152,10 @@ interface AppState {
   addNotification: (n: Omit<Notification, 'id' | 'timestamp' | 'read'>) => void
   markNotificationsRead: () => void
   clearNotifications: () => void
+
+  // Agent Collaboration (Inter-agent messaging)
+  agentCollaborations: any[]
+  addAgentCollaboration: (collab: any) => void
 }
 
 // ── Store Implementation ───────────────────────────────────────────────
@@ -265,6 +269,12 @@ export const useStore = create<AppState>()(
           notifications: s.notifications.map(n => ({ ...n, read: true }))
         })),
         clearNotifications: () => set({ notifications: [] }),
+
+        // Agent Collaborations
+        agentCollaborations: [],
+        addAgentCollaboration: (collab) => set((s) => ({
+          agentCollaborations: [collab, ...s.agentCollaborations].slice(0, 50)
+        })),
       }),
       { name: 'autopilot-store' }
     ),

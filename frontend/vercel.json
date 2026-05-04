@@ -1,0 +1,14 @@
+{
+  "framework": "nextjs",
+  "regions": ["cle1"],
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://autopilot-backend.onrender.com/api/:path*"
+    },
+    {
+      "source": "/ws/:path*",
+      "destination": "https://autopilot-backend.onrender.com/ws/:path*"
+    }
+  ]
+}
