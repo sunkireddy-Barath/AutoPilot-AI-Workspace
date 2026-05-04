@@ -1,0 +1,10 @@
+{
+  "name": "stealthpay-monorepo",
+  "private": true,
+  "scripts": {
+    "install-all": "npm install --prefix frontend && pip install -r backend/requirements.txt",
+    "build-frontend": "npm run build --prefix frontend",
+    "start-frontend": "npm run dev --prefix frontend",
+    "start-backend": "python backend/run.py"
+  }
+}
