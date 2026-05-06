@@ -1,0 +1,70 @@
+
+> medo-orchestrator@1.0.0 build
+> next build
+
+  ▲ Next.js 14.2.3
+  - Environments: .env.local
+
+   Creating an optimized production build ...
+<w> [webpack.cache.PackFileCacheStrategy] Skipped not serializable cache item 'Compilation/modules|/home/barath/AutoPilot-AI-Workspace/frontend/node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[12].use[2]!/home/barath/AutoPilot-AI-Workspace/frontend/node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[12].use[3]!/home/barath/AutoPilot-AI-Workspace/frontend/src/app/globals.css': No serializer registered for PostCSSSyntaxError
+<w> while serializing webpack/lib/cache/PackFileCacheStrategy.PackContentItems -> webpack/lib/NormalModule -> webpack/lib/ModuleBuildError -> PostCSSSyntaxError
+Failed to compile.
+
+./src/app/globals.css:81:5
+Syntax error: /home/barath/AutoPilot-AI-Workspace/frontend/src/app/globals.css The `bg-brand` class does not exist. If `bg-brand` is a custom class, make sure it is defined within a `@layer` directive.
+
+  79 | 
+  80 |   .btn-primary {
+> 81 |     @apply bg-brand hover:bg-brand-light text-white font-bold px-6 py-2.5 rounded-xl
+     |     ^
+  82 |            transition-all duration-300 active:scale-95 shadow-glow-brand uppercase tracking-widest text-[10px];
+  83 |   }
+
+./src/app/globals.css
+Syntax error: /home/barath/AutoPilot-AI-Workspace/frontend/src/app/globals.css The `bg-brand` class does not exist. If `bg-brand` is a custom class, make sure it is defined within a `@layer` directive. (81:5)
+
+  79 | 
+  80 |   .btn-primary {
+> 81 |     @apply bg-brand hover:bg-brand-light text-white font-bold px-6 py-2.5 rounded-xl
+     |     ^
+  82 |            transition-all duration-300 active:scale-95 shadow-glow-brand uppercase tracking-widest text-[10px];
+  83 |   }
+
+    at tryRunOrWebpackError (/home/barath/AutoPilot-AI-Workspace/frontend/node_modules/next/dist/compiled/webpack/bundle5.js:28:312989)
+    at __webpack_require_module__ (/home/barath/AutoPilot-AI-Workspace/frontend/node_modules/next/dist/compiled/webpack/bundle5.js:28:131165)
+    at __nested_webpack_require_153728__ (/home/barath/AutoPilot-AI-Workspace/frontend/node_modules/next/dist/compiled/webpack/bundle5.js:28:130607)
+    at /home/barath/AutoPilot-AI-Workspace/frontend/node_modules/next/dist/compiled/webpack/bundle5.js:28:131454
+    at symbolIterator (/home/barath/AutoPilot-AI-Workspace/frontend/node_modules/next/dist/compiled/neo-async/async.js:1:14444)
+    at done (/home/barath/AutoPilot-AI-Workspace/frontend/node_modules/next/dist/compiled/neo-async/async.js:1:14824)
+    at Hook.eval [as callAsync] (eval at create (/home/barath/AutoPilot-AI-Workspace/frontend/node_modules/next/dist/compiled/webpack/bundle5.js:13:28858), <anonymous>:15:1)
+    at Hook.CALL_ASYNC_DELEGATE [as _callAsync] (/home/barath/AutoPilot-AI-Workspace/frontend/node_modules/next/dist/compiled/webpack/bundle5.js:13:26012)
+    at /home/barath/AutoPilot-AI-Workspace/frontend/node_modules/next/dist/compiled/webpack/bundle5.js:28:130328
+    at symbolIterator (/home/barath/AutoPilot-AI-Workspace/frontend/node_modules/next/dist/compiled/neo-async/async.js:1:14402)
+-- inner error --
+Syntax error: /home/barath/AutoPilot-AI-Workspace/frontend/src/app/globals.css The `bg-brand` class does not exist. If `bg-brand` is a custom class, make sure it is defined within a `@layer` directive. (81:5)
+
+  79 | 
+  80 |   .btn-primary {
+> 81 |     @apply bg-brand hover:bg-brand-light text-white font-bold px-6 py-2.5 rounded-xl
+     |     ^
+  82 |            transition-all duration-300 active:scale-95 shadow-glow-brand uppercase tracking-widest text-[10px];
+  83 |   }
+
+    at Object.<anonymous> (/home/barath/AutoPilot-AI-Workspace/frontend/node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[12].use[2]!/home/barath/AutoPilot-AI-Workspace/frontend/node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[12].use[3]!/home/barath/AutoPilot-AI-Workspace/frontend/src/app/globals.css:1:7)
+    at /home/barath/AutoPilot-AI-Workspace/frontend/node_modules/next/dist/compiled/webpack/bundle5.js:28:922493
+    at Hook.eval [as call] (eval at create (/home/barath/AutoPilot-AI-Workspace/frontend/node_modules/next/dist/compiled/webpack/bundle5.js:13:28636), <anonymous>:7:1)
+    at Hook.CALL_DELEGATE [as _call] (/home/barath/AutoPilot-AI-Workspace/frontend/node_modules/next/dist/compiled/webpack/bundle5.js:13:25906)
+    at /home/barath/AutoPilot-AI-Workspace/frontend/node_modules/next/dist/compiled/webpack/bundle5.js:28:131198
+    at tryRunOrWebpackError (/home/barath/AutoPilot-AI-Workspace/frontend/node_modules/next/dist/compiled/webpack/bundle5.js:28:312943)
+    at __webpack_require_module__ (/home/barath/AutoPilot-AI-Workspace/frontend/node_modules/next/dist/compiled/webpack/bundle5.js:28:131165)
+    at __nested_webpack_require_153728__ (/home/barath/AutoPilot-AI-Workspace/frontend/node_modules/next/dist/compiled/webpack/bundle5.js:28:130607)
+    at /home/barath/AutoPilot-AI-Workspace/frontend/node_modules/next/dist/compiled/webpack/bundle5.js:28:131454
+    at symbolIterator (/home/barath/AutoPilot-AI-Workspace/frontend/node_modules/next/dist/compiled/neo-async/async.js:1:14444)
+
+Generated code for /home/barath/AutoPilot-AI-Workspace/frontend/node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[12].use[2]!/home/barath/AutoPilot-AI-Workspace/frontend/node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[12].use[3]!/home/barath/AutoPilot-AI-Workspace/frontend/src/app/globals.css
+
+Import trace for requested module:
+./src/app/globals.css
+
+
+> Build failed because of webpack errors
