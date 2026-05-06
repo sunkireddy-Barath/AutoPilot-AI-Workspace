@@ -37,18 +37,18 @@ export default function ChatMessage({ message }: ChatMessageProps) {
       initial={{ opacity: 0, y: 10, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       className={cn(
-        "flex w-full gap-4 p-6 transition-all duration-200",
-        isUser ? "bg-white/[0.02]" : "bg-transparent"
+        "flex w-full gap-4 p-4.5 transition-all duration-200",
+        isUser ? "bg-white/[0.015]" : "bg-transparent"
       )}
     >
       <div className="flex-shrink-0">
         {isUser ? (
-          <div className="h-10 w-10 rounded-xl bg-surface-600 flex items-center justify-center border border-white/5">
-            <User className="h-5 w-5 text-slate-400" />
+          <div className="h-8 w-8 rounded-lg bg-surface-600 flex items-center justify-center border border-white/5">
+            <User className="h-4 w-4 text-slate-400" />
           </div>
         ) : (
           <div className={cn(
-            "h-10 w-10 rounded-xl flex items-center justify-center text-xl border border-white/10 shadow-lg",
+            "h-8 w-8 rounded-lg flex items-center justify-center text-base border border-white/10 shadow-lg",
             message.agent_role ? agentColors[message.agent_role as AgentRole] : "bg-surface-800"
           )}>
             {message.agent_role ? agentAvatars[message.agent_role as AgentRole] : '🤖'}

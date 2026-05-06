@@ -27,6 +27,7 @@ from app.models.schemas import (
 from app.orchestrator.langgraph_engine import MeDoOrchestrator
 from app.db.supabase_client import supabase_admin
 from app.utils.events import global_bus
+from app.utils.auth_utils import to_uuid
 
 router = APIRouter(tags=["chat"])
 
@@ -165,11 +166,12 @@ async def chat(request: ChatRequest):
     user_id = request.user_id
 
     # 0. Ensure conversation exists (Upsert)
+    mapped_user_id = to_uuid(user_id)
     if supabase_admin:
         try:
             supabase_admin.table("conversations").upsert({
                 "id": conversation_id,
-                "user_id": user_id,
+                "user_id": mapped_user_id,
                 "title": request.message[:50] + "...",
                 "updated_at": datetime.utcnow().isoformat()
             }).execute()
@@ -197,7 +199,7 @@ async def chat(request: ChatRequest):
         try:
             supabase_admin.table("workflows").insert({
                 "id": workflow_id,
-                "user_id": user_id,
+                "user_id": mapped_user_id,
                 "conversation_id": conversation_id,
                 "title": f"Blueprint: {request.message[:40]}...",
                 "status": "running",
@@ -234,45 +236,55 @@ async def chat(request: ChatRequest):
         except Exception as e:
             print(f"Error loading history: {e}")
 
-    # 4. Run the multi-agent LangGraph pipeline
-    try:
-        final_state = await orchestrator.run(
-            user_goal=request.message,
-            conversation_id=conversation_id,
-            user_id=user_id,
-            history=history,
-            autonomous=request.autonomous_mode,
-            workflow_id=workflow_id,
-        )
-    except Exception as exc:
-        await manager.broadcast(conversation_id, WSEvent(
-            event=WSEventType.ERROR,
-            data={"error": str(exc)},
-            conversation_id=conversation_id,
-        ))
-        raise HTTPException(status_code=500, detail=f"Agent pipeline error: {exc}")
-
-    # 5. Finalize the workflow graph
-    if supabase_admin and workflow_id:
+    # 4. Run the multi-agent LangGraph pipeline in the background
+    # We return immediately so the frontend isn't blocked by the long-running pipeline.
+    # The frontend receives updates via WebSocket.
+    async def run_pipeline():
         try:
-            supabase_admin.table("workflows").update({
-                "nodes": final_state.get("workflow_nodes", []),
-                "edges": final_state.get("workflow_edges", []),
-                "status": "completed",
-                "updated_at": datetime.utcnow().isoformat(),
-            }).eq("id", workflow_id).execute()
-        except Exception as e:
-            print(f"❌ Supabase Persistence Error (Final Workflow): {e}")
+            state = await orchestrator.run(
+                user_goal=request.message,
+                conversation_id=conversation_id,
+                user_id=user_id,
+                history=history,
+                autonomous=request.autonomous_mode,
+                workflow_id=workflow_id,
+            )
+            # Finalize the workflow graph
+            if supabase_admin and workflow_id:
+                try:
+                    supabase_admin.table("workflows").update({
+                        "nodes": state.get("workflow_nodes", []),
+                        "edges": state.get("workflow_edges", []),
+                        "status": "completed",
+                        "updated_at": datetime.utcnow().isoformat(),
+                    }).eq("id", workflow_id).execute()
+                except Exception as e:
+                    print(f"❌ Supabase Persistence Error (Final Workflow): {e}")
+            
+            # Emit a 'stream_done' event via WebSocket
+            await manager.broadcast(conversation_id, WSEvent(
+                event=WSEventType.AGENT_ACTIVITY,
+                data={"status": "completed", "agent_role": "orchestrator", "detail": "All agents finished."},
+                conversation_id=conversation_id
+            ))
+
+        except Exception as exc:
+            print(f"❌ Pipeline Error: {exc}")
+            await manager.broadcast(conversation_id, WSEvent(
+                event=WSEventType.ERROR,
+                data={"error": str(exc)},
+                conversation_id=conversation_id,
+            ))
+
+    asyncio.create_task(run_pipeline())
 
     return {
         "status": "success",
         "conversation_id": conversation_id,
         "workflow_id": workflow_id,
-        "tasks": final_state.get("tasks", []),
-        "workflow_nodes": final_state.get("workflow_nodes", []),
-        "workflow_edges": final_state.get("workflow_edges", []),
-        "agent_activities": final_state.get("agent_activities", []),
+        "message": "Orchestrator initiated in background."
     }
+
 
 
 # ── WebSocket Endpoint ────────────────────────────────────────────────

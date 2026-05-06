@@ -10,16 +10,18 @@ from uuid import uuid4
 
 from app.models.schemas import ConversationCreate
 from app.db.supabase_client import supabase_admin
+from app.utils.auth_utils import to_uuid
 
 router = APIRouter(tags=["conversations"])
 
 
 @router.get("/", response_model=List[dict])
 async def get_conversations(user_id: str = Query(...)):
+    mapped_user_id = to_uuid(user_id)
     result = (
         supabase_admin.table("conversations")
         .select("*")
-        .eq("user_id", user_id)
+        .eq("user_id", mapped_user_id)
         .order("updated_at", desc=True)
         .execute()
     )
@@ -29,9 +31,10 @@ async def get_conversations(user_id: str = Query(...)):
 @router.post("/", response_model=dict, status_code=201)
 async def create_conversation(payload: ConversationCreate):
     now = datetime.utcnow().isoformat()
+    mapped_user_id = to_uuid(payload.user_id)
     data = {
         "id": str(uuid4()),
-        "user_id": payload.user_id,
+        "user_id": mapped_user_id,
         "title": payload.title,
         "created_at": now,
         "updated_at": now,

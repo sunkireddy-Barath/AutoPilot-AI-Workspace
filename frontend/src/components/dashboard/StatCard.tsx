@@ -20,7 +20,7 @@ import RollingNumber from '@/components/ui/RollingNumber'
 
 export default function StatCard({ label, value, icon: Icon, color, trend }: StatCardProps) {
   return (
-    <div className="p-6 flex flex-col gap-4 relative h-full">
+    <div className="p-5 flex flex-col gap-4 relative h-full">
       <div 
         className="absolute top-0 right-0 w-24 h-24 blur-[60px] opacity-20 pointer-events-none -translate-y-12 translate-x-12"
         style={{ backgroundColor: color }}

@@ -38,7 +38,7 @@ export default function ChatInput({ onSend, disabled, loading }: ChatInputProps)
   }, [input])
 
   return (
-    <div className="absolute bottom-32 left-1/2 -translate-x-1/2 w-full max-w-3xl px-6 z-20">
+    <div className="relative w-full max-w-3xl mx-auto z-20">
       <motion.div 
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -48,8 +48,8 @@ export default function ChatInput({ onSend, disabled, loading }: ChatInputProps)
         <div className="absolute -inset-1 bg-gradient-to-r from-brand-500/20 via-brand-400/10 to-brand-600/20 rounded-[24px] blur-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-700" />
         
         <div className={cn(
-          "relative flex flex-col gap-2 p-3 rounded-[24px] border border-white/10 transition-all duration-300 shadow-2xl overflow-hidden",
-          "bg-[#111118]/80 backdrop-blur-3xl focus-within:border-brand-500/40 focus-within:shadow-glow-brand/20",
+          "relative flex flex-col gap-1 p-2.5 rounded-[20px] border border-white/10 transition-all duration-300 shadow-2xl overflow-hidden",
+          "bg-[#08080c]/80 backdrop-blur-3xl focus-within:border-brand-500/40 focus-within:shadow-glow-brand/20",
           "hover:border-white/20"
         )}>
           {/* Subtle Inner Highlight */}
@@ -63,7 +63,7 @@ export default function ChatInput({ onSend, disabled, loading }: ChatInputProps)
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder={disabled ? "Session inactive..." : "Message AutoPilot..."}
+                placeholder={disabled ? "Session inactive..." : "e.g. Analyze or plan the e-commerce application..."}
                 className="w-full bg-transparent border-none outline-none text-slate-100 placeholder-slate-500 resize-none py-2 px-2 text-[15px] font-medium leading-relaxed min-h-[44px] custom-scrollbar"
                 disabled={disabled || loading}
               />

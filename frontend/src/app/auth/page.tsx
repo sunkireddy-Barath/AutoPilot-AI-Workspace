@@ -3,9 +3,14 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
-import { supabase, IS_DEMO_MODE } from '@/lib/supabase'
+import { 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  signInWithPopup 
+} from 'firebase/auth'
+import { auth, googleProvider } from '@/lib/firebase'
 import { useStore } from '@/lib/store'
-import { Zap } from 'lucide-react'
+import { Zap, Mail, Lock, Chrome } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 export default function AuthPage() {
@@ -16,35 +21,46 @@ export default function AuthPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
 
+  async function handleGoogleSignIn() {
+    setLoading(true)
+    const loginToast = toast.loading('Connecting to Google Workspace...')
+    try {
+      const result = await signInWithPopup(auth, googleProvider)
+      const user = result.user
+      if (user) {
+        setUserId(user.uid)
+        toast.success(`🚀 Welcome back, ${user.displayName || 'Operator'}!`, { id: loginToast })
+        router.replace('/dashboard')
+      }
+    } catch (err: any) {
+      console.error('Google Sign-In Error:', err)
+      toast.error(err.message || 'Google Sign-In failed', { id: loginToast })
+    } finally {
+      setLoading(false)
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     try {
-      if (IS_DEMO_MODE) {
-        // DEMO BYPASS: Simulate successful login
-        const demoUserId = `demo-user-${email.split('@')[0] || '123'}`
-        setUserId(demoUserId)
-        toast.success(mode === 'signup' ? '✨ Demo account created!' : '🚀 Demo login successful!')
-        setTimeout(() => router.replace('/dashboard'), 500)
-        return
-      }
-
       if (mode === 'signup') {
-        const { data, error } = await supabase.auth.signUp({ email, password })
-        if (error) throw error
-        if (data.user) {
-          toast.success('Account created! Check your email to confirm.')
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password)
+        if (userCredential.user) {
+          setUserId(userCredential.user.uid)
+          toast.success('✨ Account created successfully!')
+          router.replace('/dashboard')
         }
       } else {
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-        if (error) throw error
-        if (data.user) {
-          setUserId(data.user.id)
+        const userCredential = await signInWithEmailAndPassword(auth, email, password)
+        if (userCredential.user) {
+          setUserId(userCredential.user.uid)
+          toast.success('🚀 Welcome back!')
           router.replace('/dashboard')
         }
       }
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Authentication failed'
+    } catch (err: any) {
+      const msg = err.message || 'Authentication failed'
       toast.error(msg)
     } finally {
       setLoading(false)
@@ -97,31 +113,37 @@ export default function AuthPage() {
               <label className="block text-sm font-medium text-slate-300 mb-1.5">
                 Email
               </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="input-dark"
-                placeholder="you@example.com"
-                required
-                autoComplete="email"
-              />
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="input-dark pl-10"
+                  placeholder="you@example.com"
+                  required
+                  autoComplete="email"
+                />
+              </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-1.5">
                 Password
               </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="input-dark"
-                placeholder="••••••••"
-                required
-                minLength={6}
-                autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-              />
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="input-dark pl-10"
+                  placeholder="••••••••"
+                  required
+                  minLength={6}
+                  autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                />
+              </div>
             </div>
 
             <motion.button
@@ -132,10 +154,7 @@ export default function AuthPage() {
             >
               {loading ? (
                 <>
-                  <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                  </svg>
+                  <div className="animate-spin h-4 w-4 border-2 border-white/20 border-t-white rounded-full" />
                   {mode === 'login' ? 'Signing in…' : 'Creating account…'}
                 </>
               ) : (
@@ -143,6 +162,26 @@ export default function AuthPage() {
               )}
             </motion.button>
           </form>
+
+          <div className="relative my-8">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-white/10"></div>
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-[#0a0a0f] px-2 text-slate-500 font-bold tracking-widest">Or continue with</span>
+            </div>
+          </div>
+
+          <motion.button
+            onClick={handleGoogleSignIn}
+            disabled={loading}
+            type="button"
+            className="w-full h-11 glass hover:bg-white/5 border border-white/10 rounded-xl flex items-center justify-center gap-3 text-sm font-bold text-white transition-all active:scale-95"
+            whileTap={{ scale: 0.98 }}
+          >
+            <Chrome className="h-5 w-5 text-brand-400" />
+            Google Workspace
+          </motion.button>
 
           {mode === 'login' && (
             <p className="text-center text-xs text-slate-500 mt-4">

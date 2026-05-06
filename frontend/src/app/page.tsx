@@ -2,20 +2,22 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
+import { auth } from '@/lib/firebase'
+import { onAuthStateChanged } from 'firebase/auth'
 import LandingPage from '@/components/landing/LandingPage'
 import { motion } from 'framer-motion'
 
 export default function HomePage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
-  const [session, setSession] = useState<any>(null)
+  const [user, setUser] = useState<any>(null)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session)
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setUser(user)
       setLoading(false)
     })
+    return () => unsubscribe()
   }, [])
 
   if (loading) {

@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from typing import List, Dict, Any
 from app.db.supabase_client import supabase_admin
+from app.utils.auth_utils import to_uuid
 
 router = APIRouter(tags=["search"])
 
@@ -13,12 +14,13 @@ async def global_search(query: str, user_id: str):
         return {"results": []}
 
     results = []
+    mapped_user_id = to_uuid(user_id)
 
     try:
         # 1. Search Conversations (Projects)
         conv_res = supabase_admin.table("conversations")\
             .select("id, title, updated_at")\
-            .eq("user_id", user_id)\
+            .eq("user_id", mapped_user_id)\
             .ilike("title", f"%{query}%")\
             .limit(5)\
             .execute()
@@ -35,7 +37,7 @@ async def global_search(query: str, user_id: str):
         # 2. Search Tasks
         task_res = supabase_admin.table("tasks")\
             .select("id, title, status, conversation_id")\
-            .eq("user_id", user_id)\
+            .eq("user_id", mapped_user_id)\
             .ilike("title", f"%{query}%")\
             .limit(5)\
             .execute()

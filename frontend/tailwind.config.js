@@ -25,6 +25,8 @@ module.exports = {
           800: '#3730a3',
           900: '#312e81',
           950: '#1e1b4b',
+          DEFAULT: '#6366f1',
+          light: '#818cf8',
         },
         surface: {
           900: '#0a0a0f',

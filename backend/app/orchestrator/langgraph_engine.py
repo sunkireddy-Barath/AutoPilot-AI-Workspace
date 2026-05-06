@@ -14,6 +14,7 @@ from typing import TypedDict, List, Dict, Any, Optional, Annotated
 from datetime import datetime
 from uuid import uuid4
 from app.utils.events import global_bus
+from app.utils.auth_utils import to_uuid
 
 from langgraph.graph import StateGraph, END
 from langgraph.graph.message import add_messages
@@ -479,6 +480,9 @@ class MeDoOrchestrator:
         return nodes, edges
 
     async def run(self, user_goal, conversation_id, user_id, history=None, autonomous=False, workflow_id=None):
+        # Map user_id to UUID for database compatibility
+        mapped_user_id = to_uuid(user_id)
+        
         # --- MANUAL MODE: Only PM agent responds (no full pipeline) ---
         if not autonomous:
             await global_bus.emit("agent_activity", {
@@ -519,7 +523,7 @@ class MeDoOrchestrator:
 
         lc_messages = [HumanMessage(content=user_goal)]
         initial_state = {
-            "user_goal": user_goal, "conversation_id": conversation_id, "user_id": user_id,
+            "user_goal": user_goal, "conversation_id": conversation_id, "user_id": mapped_user_id,
             "workflow_id": workflow_id,
             "messages": lc_messages, "pm_response": "", "dev_response": "",
             "marketing_response": "", "analyst_response": "", "ops_response": "", "tasks": [],
@@ -797,10 +801,10 @@ class MeDoOrchestrator:
             # Extract topics for dynamic task titles
             topic = user_goal[:40].strip()
             fallback_tasks = [
-                {"id": str(uuid4()), "title": f"Map {topic} Requirements", "status": "completed", "assigned_agent": "product_manager", "user_id": user_id, "conversation_id": conversation_id, "workflow_id": workflow_id},
-                {"id": str(uuid4()), "title": f"Design {topic} Architecture", "status": "completed", "assigned_agent": "developer", "user_id": user_id, "conversation_id": conversation_id, "workflow_id": workflow_id},
-                {"id": str(uuid4()), "title": f"Execute {topic} GTM Strategy", "status": "completed", "assigned_agent": "marketing", "user_id": user_id, "conversation_id": conversation_id, "workflow_id": workflow_id},
-                {"id": str(uuid4()), "title": f"Analyze {topic} Performance", "status": "completed", "assigned_agent": "analyst", "user_id": user_id, "conversation_id": conversation_id, "workflow_id": workflow_id}
+                {"id": str(uuid4()), "title": f"Map {topic} Requirements", "status": "completed", "assigned_agent": "product_manager", "user_id": mapped_user_id, "conversation_id": conversation_id, "workflow_id": workflow_id},
+                {"id": str(uuid4()), "title": f"Design {topic} Architecture", "status": "completed", "assigned_agent": "developer", "user_id": mapped_user_id, "conversation_id": conversation_id, "workflow_id": workflow_id},
+                {"id": str(uuid4()), "title": f"Execute {topic} GTM Strategy", "status": "completed", "assigned_agent": "marketing", "user_id": mapped_user_id, "conversation_id": conversation_id, "workflow_id": workflow_id},
+                {"id": str(uuid4()), "title": f"Analyze {topic} Performance", "status": "completed", "assigned_agent": "analyst", "user_id": mapped_user_id, "conversation_id": conversation_id, "workflow_id": workflow_id}
             ]
             initial_state["tasks"].extend(fallback_tasks)
             

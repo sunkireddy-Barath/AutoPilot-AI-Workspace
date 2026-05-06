@@ -25,7 +25,8 @@ import {
 import { useState } from 'react'
 import toast from 'react-hot-toast'
 import { cn } from '@/lib/utils'
-import { supabase } from '@/lib/supabase'
+import { auth } from '@/lib/firebase'
+import { updatePassword } from 'firebase/auth'
 
 export default function SettingsPage() {
   const [email, setEmail] = useState('neural.pilot@autopilot.ai')
@@ -47,8 +48,10 @@ export default function SettingsPage() {
 
     setLoading(true)
     try {
-      const { error } = await supabase.auth.updateUser({ password: newPassword })
-      if (error) throw error
+      if (!auth.currentUser) throw new Error('No authenticated session found.')
+      
+      await updatePassword(auth.currentUser, newPassword)
+      
       toast.success('Security credentials updated successfully!', {
         icon: '🛡️',
         style: { borderRadius: '16px', background: '#0a0a14', color: '#fff', border: '1px solid rgba(239, 68, 68, 0.2)' }
@@ -56,7 +59,10 @@ export default function SettingsPage() {
       setNewPassword('')
       setConfirmPassword('')
     } catch (err: any) {
-      toast.error(err.message || 'Failed to update password')
+      const msg = err.code === 'auth/requires-recent-login' 
+        ? 'This operation is sensitive and requires recent authentication. Please log in again.'
+        : err.message || 'Failed to update password'
+      toast.error(msg)
     } finally {
       setLoading(false)
     }

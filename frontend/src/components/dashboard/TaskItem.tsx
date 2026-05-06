@@ -49,7 +49,7 @@ export default function TaskItem({ task, index, projectTitle }: TaskItemProps) {
           router.push('/chat')
         }
       }}
-      className="p-4 group flex items-start gap-4 border-b border-white/5 last:border-0 cursor-pointer transition-colors"
+      className="p-3.5 group flex items-start gap-4 border-b border-white/5 last:border-0 cursor-pointer transition-colors"
     >
       <div className={cn(
         "mt-1 p-1 rounded-full",
@@ -92,6 +92,7 @@ export default function TaskItem({ task, index, projectTitle }: TaskItemProps) {
             <span>
               {(() => {
                 try {
+                  if (!task.created_at) return 'just now'
                   const d = new Date(task.created_at)
                   if (isNaN(d.getTime())) return 'just now'
                   return `${formatDistanceToNow(d)} ago`

@@ -15,6 +15,7 @@
     "clsx": "^2.1.1",
     "dagre": "^0.8.5",
     "date-fns": "^3.6.0",
+    "firebase": "^12.12.1",
     "framer-motion": "^11.2.10",
     "lucide-react": "^0.395.0",
     "mermaid": "^11.14.0",

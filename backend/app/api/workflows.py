@@ -10,6 +10,7 @@ from uuid import uuid4
 
 from app.models.schemas import Workflow, WorkflowCreate, WorkflowStatus
 from app.db.supabase_client import supabase_admin
+from app.utils.auth_utils import to_uuid
 
 router = APIRouter(tags=["workflows"])
 
@@ -19,7 +20,8 @@ async def get_workflows(
     user_id: str = Query(...),
     status: Optional[str] = Query(None),
 ):
-    query = supabase_admin.table("workflows").select("*").eq("user_id", user_id)
+    mapped_user_id = to_uuid(user_id)
+    query = supabase_admin.table("workflows").select("*").eq("user_id", mapped_user_id)
     if status:
         query = query.eq("status", status)
     result = query.order("created_at", desc=True).execute()
@@ -29,11 +31,12 @@ async def get_workflows(
 @router.post("/", response_model=dict, status_code=201)
 async def create_workflow(payload: WorkflowCreate):
     now = datetime.utcnow().isoformat()
+    mapped_user_id = to_uuid(payload.user_id)
     nodes = [n.model_dump() for n in payload.nodes]
     edges = [e.model_dump() for e in payload.edges]
     data = {
         "id": str(uuid4()),
-        "user_id": payload.user_id,
+        "user_id": mapped_user_id,
         "conversation_id": payload.conversation_id,
         "title": payload.title,
         "description": payload.description,

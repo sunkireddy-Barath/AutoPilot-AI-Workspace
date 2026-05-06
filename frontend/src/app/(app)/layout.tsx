@@ -8,24 +8,39 @@ import { Toaster } from 'react-hot-toast'
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative min-h-screen bg-[#050508] overflow-hidden">
+    <div className="relative min-h-screen bg-surface-950 overflow-hidden">
       {/* Neural Background */}
       <MeshBackground />
       
       {/* Global Orchestrator (WebSocket Logic) */}
       <GlobalOrchestrator />
       
-      {/* Main Content Area */}
-      <main className="h-screen pt-16 overflow-y-auto relative z-10 custom-scrollbar pb-32">
-        {children}
+      {/* Main Content Area - Full Width & Height */}
+      <main className="h-screen relative z-10 overflow-hidden">
+        <div className="h-full flex flex-col">
+          {children}
+        </div>
       </main>
 
-      {/* Floating Sidebar / Command Center */}
+      {/* Global Floating Dock */}
       <Sidebar />
 
-      {/* Global Components */}
+      {/* Global Navigation Bar */}
       <TopBar />
-      <Toaster position="bottom-right" />
+      
+      {/* Toaster with Custom Styling */}
+      <Toaster 
+        position="bottom-right" 
+        toastOptions={{
+          style: {
+            background: 'rgba(10, 10, 15, 0.8)',
+            color: '#fff',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: '16px',
+          }
+        }}
+      />
     </div>
   )
 }

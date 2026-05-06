@@ -10,6 +10,7 @@ from uuid import uuid4
 
 from app.models.schemas import Task, TaskCreate, TaskUpdate, TaskStatus
 from app.db.supabase_client import supabase_admin
+from app.utils.auth_utils import to_uuid
 
 router = APIRouter(tags=["tasks"])
 
@@ -20,7 +21,8 @@ async def get_tasks(
     status: Optional[str] = Query(None, description="Filter by status"),
     conversation_id: Optional[str] = Query(None),
 ):
-    query = supabase_admin.table("tasks").select("*").eq("user_id", user_id)
+    mapped_user_id = to_uuid(user_id)
+    query = supabase_admin.table("tasks").select("*").eq("user_id", mapped_user_id)
 
     if status:
         query = query.eq("status", status)
@@ -34,9 +36,10 @@ async def get_tasks(
 @router.post("/", response_model=dict, status_code=201)
 async def create_task(payload: TaskCreate):
     now = datetime.utcnow().isoformat()
+    mapped_user_id = to_uuid(payload.user_id)
     data = {
         "id": str(uuid4()),
-        "user_id": payload.user_id,
+        "user_id": mapped_user_id,
         "conversation_id": payload.conversation_id,
         "workflow_id": payload.workflow_id,
         "title": payload.title,

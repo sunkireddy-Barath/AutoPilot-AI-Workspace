@@ -50,7 +50,7 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero */}
-      <section className="relative pt-48 pb-32 px-6">
+      <section className="relative pt-32 pb-24 px-6">
         <div className="max-w-5xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
@@ -64,7 +64,7 @@ export default function LandingPage() {
           <motion.h1 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-6xl md:text-8xl font-black text-white tracking-tighter mb-8"
+            className="text-5xl md:text-7xl font-black text-white tracking-tighter mb-6"
           >
             Your Goals. <br/>
             <span className="text-brand-500">AutoPilot</span> Execution.
@@ -102,11 +102,11 @@ export default function LandingPage() {
       </section>
 
       {/* Feature Grid */}
-      <section id="features" className="py-32 px-6 bg-white/[0.01]">
+      <section id="features" className="py-24 px-6 bg-white/[0.01]">
         <div className="max-w-7xl mx-auto">
-          <div className="mb-20 text-center">
-            <h2 className="text-xs font-black text-brand-500 uppercase tracking-[0.4em] mb-4">Core Intelligence</h2>
-            <h3 className="text-4xl font-black text-white tracking-tighter">Everything you need to automate reality.</h3>
+          <div className="mb-16 text-center">
+            <h2 className="text-[10px] font-black text-brand-500 uppercase tracking-[0.4em] mb-4">Core Intelligence</h2>
+            <h3 className="text-3xl md:text-5xl font-black text-white tracking-tighter">Everything you need to automate reality.</h3>
           </div>
 
           <motion.div 
@@ -156,8 +156,8 @@ export default function LandingPage() {
       </section>
 
       {/* CTA */}
-      <section className="py-32 px-6">
-        <div className="max-w-5xl mx-auto rounded-[48px] bg-brand-600 p-12 md:p-24 text-center relative overflow-hidden shadow-glow-brand/20">
+      <section className="py-24 px-6">
+        <div className="max-w-5xl mx-auto rounded-[32px] bg-brand-600 p-10 md:p-20 text-center relative overflow-hidden shadow-glow-brand/20">
           <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 blur-[100px] -mr-48 -mt-48" />
           <div className="relative z-10">
             <h2 className="text-4xl md:text-6xl font-black text-white tracking-tighter mb-8">Ready to initiate?</h2>

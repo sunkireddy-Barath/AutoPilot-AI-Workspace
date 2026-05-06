@@ -1,8 +1,9 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { 
   LayoutDashboard, 
   MessageSquare, 
@@ -11,11 +12,14 @@ import {
   BarChart3, 
   Settings, 
   LogOut,
-  Zap
+  Zap,
+  User
 } from 'lucide-react'
 import { useStore } from '@/lib/store'
-import { supabase, IS_DEMO_MODE } from '@/lib/supabase'
+import { auth } from '@/lib/firebase'
+import { signOut, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth'
 import { cn } from '@/lib/utils'
+import toast from 'react-hot-toast'
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -35,141 +39,168 @@ export default function Sidebar() {
     setAutonomousMode 
   } = useStore()
 
+  const [user, setUser] = useState<FirebaseUser | null>(auth.currentUser)
+  const [userName, setUserName] = useState<string>('Neural Operator')
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser)
+      if (currentUser) {
+        setUserId(currentUser.uid)
+        // Use display name if available, otherwise use email prefix
+        const name = currentUser.displayName || currentUser.email?.split('@')[0] || 'Neural Operator'
+        setUserName(name)
+      } else {
+        setUserId(null)
+        setUserName('Guest')
+      }
+    })
+    return () => unsubscribe()
+  }, [setUserId])
+
   const handleLogout = async () => {
-    if (IS_DEMO_MODE) {
+    try {
+      const logoutToast = toast.loading('Terminating neural session...')
+      await signOut(auth)
       setUserId(null)
+      toast.success('Session terminated', { id: logoutToast })
       window.location.href = '/auth'
-      return
+    } catch (error) {
+      console.error('Logout failed:', error)
+      toast.error('Failed to terminate session')
     }
-    await supabase.auth.signOut()
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      className={cn(
-        "fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] flex items-center glass-morphic shadow-glow-premium transition-all duration-500 rounded-full h-20 px-2",
-        sidebarOpen ? "max-w-[95vw]" : "w-auto"
-      )}
-    >
-      <div className="flex items-center px-4 border-r border-white/5 h-full mr-2">
-        <Link href="/dashboard" className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-brand-600 shadow-glow-brand animate-shimmer-zap">
-            <Zap className="h-5 w-5 text-white" />
-          </div>
-          {sidebarOpen && (
-            <motion.span 
-              initial={{ opacity: 0, width: 0 }}
-              animate={{ opacity: 1, width: 'auto' }}
-              className="text-sm font-black text-white tracking-widest uppercase overflow-hidden whitespace-nowrap"
-            >
+    /* 
+       ROOT WRAPPER: Guaranteed center using left/right 0 and justify-center.
+       This is more robust than translate-x-1/2 when dealing with complex internal flex/grid logic.
+    */
+    <div className="fixed bottom-6 left-0 right-0 z-[100] flex justify-center pointer-events-none px-4">
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ type: "spring", damping: 22, stiffness: 120 }}
+        className={cn(
+          "pointer-events-auto glass-morphic shadow-glow-premium rounded-[32px] h-20 border border-white/10 flex items-center transition-all duration-500",
+          "w-fit px-4"
+        )}
+      >
+        <div className="flex items-center h-full gap-4">
+          
+          {/* Brand - Vertical Stack */}
+          <Link href="/dashboard" className="flex flex-col items-center gap-1.5 group shrink-0">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-indigo-600 shadow-glow-brand group-hover:scale-110 transition-transform">
+              <Zap className="h-5 w-5 text-white fill-white/20" />
+            </div>
+            <span className="text-[8px] font-black text-white/40 tracking-widest uppercase group-hover:text-brand-400 transition-colors">
               AutoPilot
-            </motion.span>
-          )}
-        </Link>
-      </div>
+            </span>
+          </Link>
 
-      <nav className="flex items-center gap-1.5 h-full px-2">
-        {navigation.map((item) => {
-          const isActive = pathname === item.href
-          return (
-            <motion.div
-              key={item.name}
-              whileHover={{ scale: 1.05, y: -2 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Link
-                href={item.href}
+          <div className="w-px h-10 bg-white/10" />
+
+          {/* Vertical Stack Navigation */}
+          <nav className="flex items-center gap-2">
+            {navigation.map((item) => {
+              const isActive = pathname === item.href
+              return (
+                <motion.div
+                  key={item.name}
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Link
+                    href={item.href}
+                    className={cn(
+                      "group flex flex-col items-center justify-center min-w-[64px] h-16 transition-all duration-500 relative rounded-2xl gap-1.5",
+                      isActive 
+                        ? "bg-brand-500/10 text-brand-300 border border-brand-500/20 shadow-glow-brand/5" 
+                        : "text-slate-500 hover:text-white hover:bg-white/5 border border-transparent"
+                    )}
+                  >
+                    <item.icon className={cn(
+                      "h-5 w-5 transition-colors",
+                      isActive ? "text-brand-400" : "text-slate-400 group-hover:text-white"
+                    )} />
+                    
+                    <span className={cn(
+                      "text-[9px] font-bold tracking-tight text-center leading-none px-1",
+                      isActive ? "text-white" : "text-slate-500 group-hover:text-slate-300"
+                    )}>
+                      {item.name.replace('AI ', '')}
+                    </span>
+
+                    {isActive && (
+                      <motion.div
+                        layoutId="active-dot"
+                        className="absolute -bottom-1 h-1 w-4 rounded-full bg-brand-500 shadow-glow-brand"
+                      />
+                    )}
+                  </Link>
+                </motion.div>
+              )
+            })}
+          </nav>
+
+          <div className="w-px h-10 bg-white/10" />
+
+          {/* Status & Actions Icons */}
+          <div className="flex items-center gap-2 px-1 shrink-0">
+            {/* Minimal Sync Indicator */}
+            <div className="flex flex-col items-center gap-2 group/sync">
+              <div className="p-2 rounded-full hover:bg-white/5 transition-all relative">
+                <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
+              </div>
+              <span className="text-[8px] font-bold text-slate-500">SYNC</span>
+            </div>
+
+            <div className="flex flex-col items-center gap-2">
+              <button 
+                onClick={() => setAutonomousMode(!autonomousMode)}
                 className={cn(
-                  "group flex items-center rounded-2xl px-4 py-2.5 text-xs font-bold transition-all duration-300 relative",
-                  isActive 
-                    ? "bg-brand-600/20 text-brand-300 shadow-[inset_0_0_20px_rgba(99,102,241,0.1)] border border-brand-500/20" 
-                    : "text-slate-400 hover:bg-white/5 hover:text-white border border-transparent"
+                  "relative inline-flex h-5 w-9 items-center rounded-full transition-all duration-500",
+                  autonomousMode ? "bg-brand-600/80" : "bg-white/10"
                 )}
               >
-                <item.icon className={cn(
-                  "h-5 w-5 flex-shrink-0 transition-all duration-300",
-                  isActive ? "text-brand-400 scale-110" : "text-slate-400 group-hover:text-white group-hover:scale-110"
+                <span className={cn(
+                  "inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-all duration-500",
+                  autonomousMode ? "translate-x-5" : "translate-x-0.5"
                 )} />
-                {sidebarOpen && <span className="ml-3 truncate tracking-tight whitespace-nowrap">{item.name}</span>}
-                {isActive && (
-                  <motion.div
-                    layoutId="active-nav-dot"
-                    className="absolute -bottom-1 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-brand-500 shadow-glow-brand"
-                  />
-                )}
-              </Link>
-            </motion.div>
-          )
-        })}
-      </nav>
-
-      <div className="flex items-center gap-6 px-4 border-l border-white/5 h-full ml-2">
-        {/* Neural Sync Status */}
-        {sidebarOpen && (
-          <div className="hidden lg:flex flex-col gap-1 w-24">
-             <div className="flex items-center justify-between text-[7px] font-black uppercase tracking-widest text-slate-500">
-              <span className="flex items-center gap-1">
-                <span className="h-1 w-1 rounded-full bg-green-500 animate-pulse" />
-                Sync
-              </span>
-              <span className="text-green-500">Stable</span>
+              </button>
+              <span className="text-[8px] font-bold text-slate-500">AUTO</span>
             </div>
-            <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
-              <motion.div 
-                animate={{ 
-                  width: ['20%', '80%', '50%', '95%', '70%'],
-                  backgroundColor: ['#6366f133', '#6366f166', '#6366f133']
-                }}
-                transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-                className="h-full" 
-              />
+            
+            <button
+              onClick={handleLogout}
+              className="flex flex-col items-center justify-center gap-2 h-16 w-10 text-slate-500 hover:text-red-400 transition-all group"
+              title="Logout"
+            >
+              <div className="p-2 rounded-full group-hover:bg-red-500/10 transition-all">
+                <LogOut className="h-5 w-5" />
+              </div>
+              <span className="text-[8px] font-bold text-slate-500 group-hover:text-red-400">EXIT</span>
+            </button>
+          </div>
+
+          <div className="w-px h-10 bg-white/10" />
+
+          {/* User Profile Section */}
+          <div className="flex items-center gap-3 pl-2 group/profile cursor-pointer shrink-0">
+            <div className="flex flex-col items-end">
+              <span className="text-[9px] font-black text-white uppercase tracking-wider group-hover:text-brand-400 transition-colors whitespace-nowrap">
+                {userName}
+              </span>
+              <span className="text-[7px] font-bold text-slate-600 uppercase tracking-widest">
+                Level 4 Access
+              </span>
+            </div>
+            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 border border-white/10 flex items-center justify-center shadow-glow-indigo transition-transform group-hover:scale-110">
+              <User className="h-5 w-5 text-white" />
             </div>
           </div>
-        )}
-
-        {/* Autonomous Mode Toggle */}
-        <div className={cn(
-          "flex items-center gap-3 rounded-2xl px-3 py-2 bg-surface-900/40 border border-white/5",
-        )}>
-          {sidebarOpen && (
-            <div className="flex flex-col items-end">
-              <span className="text-[8px] font-black uppercase tracking-widest text-brand-400">Autonomous</span>
-              <span className="text-[10px] text-slate-300 font-bold whitespace-nowrap">Neural Engine</span>
-            </div>
-          )}
-          <button 
-            onClick={() => setAutonomousMode(!autonomousMode)}
-            className={cn(
-              "relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-500",
-              autonomousMode ? "bg-brand-600 shadow-glow-brand" : "bg-white/10"
-            )}
-          >
-            <span className={cn(
-              "inline-block h-4 w-4 transform rounded-full bg-white transition-all duration-500 shadow-lg",
-              autonomousMode ? "translate-x-6" : "translate-x-1"
-            )} />
-          </button>
         </div>
-
-        {sidebarOpen ? (
-          <button
-            onClick={handleLogout}
-            className="group flex items-center gap-2 rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:bg-red-500/10 hover:text-red-400 transition-all duration-300"
-          >
-            <LogOut className="h-4 w-4" />
-            <span>Logout</span>
-          </button>
-        ) : (
-          <button 
-            onClick={() => setSidebarOpen(true)}
-            className="flex items-center justify-center p-2 text-slate-500 hover:text-brand-400 transition-colors"
-          >
-            <Settings className="h-5 w-5" />
-          </button>
-        )}
-      </div>
-    </motion.div>
+      </motion.div>
+    </div>
   )
 }
