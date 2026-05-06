@@ -6,147 +6,135 @@ Neural AutoPilot (MeDo) is a high-fidelity, autonomous multi-agent platform desi
 
 ---
 
-## 🏛️ Holistic System Architecture
+## 🏛️ System Architecture: The Neural Core
 
-The MeDo architecture is designed for high-concurrency, low-latency, and absolute data integrity. It bridges the gap between complex AI reasoning and a premium, responsive user experience.
+The MeDo architecture is optimized for high-concurrency and real-time data integrity.
 
-### 1. High-Level Technical Stack & Interaction
-This diagram illustrates the flow from user intent to autonomous execution and real-time visualization.
+### 1. Holistic Framework Architecture
+*Clear, high-level map of the system's structural nodes.*
 
 ```mermaid
 graph TD
+    %% Node Definitions
     User((User))
     
-    subgraph "Frontend: Immersive Neural Interface (Next.js 14)"
-        UI["Glassmorphic UI (Tailwind + Framer)"]
-        State["Zustand Global State (Persistent)"]
-        WS_Client["WebSocket Listener (Real-time Stream)"]
-        Auth_UI["Firebase Auth Gateway"]
+    subgraph Frontend ["Frontend (Next.js 14)"]
+        UI["Glassmorphic UI"]
+        State["Zustand Store"]
+        WS_Client["WS Listener"]
     end
 
-    subgraph "Neural Core Backend (FastAPI + LangGraph)"
-        API["REST Orchestration Layer"]
-        WS_Server["WebSocket Dispatcher"]
-        Engine["LangGraph State Machine (Neural Core)"]
+    subgraph Backend ["Backend (FastAPI)"]
+        API["REST API Layer"]
+        Engine["LangGraph Engine"]
         
-        subgraph "The Agent Swarm (Neural Nodes)"
-            PM["Product Manager (Strategy & Tasks)"]
-            DEV["Lead Developer (Code & Architecture)"]
-            MKT["Marketing Expert (Growth & SEO)"]
-            ANA["Data Analyst (KPIs & Metrics)"]
-            ORC["Master Orchestrator (Swarm Control)"]
+        subgraph Swarm ["The Agent Swarm"]
+            PM["PM Agent"]
+            DEV["Dev Agent"]
+            MKT["Market Agent"]
+            ANA["Analyst Agent"]
         end
     end
 
-    subgraph "Persistent Data Layer (Supabase)"
-        Conv_DB[(Conversations Table)]
-        Msg_DB[(Messages Table)]
-        Task_DB[(Dynamic Pipeline Table)]
-        Act_DB[(Agent Activities Log)]
-        Work_DB[(Workflow Graph State)]
-        Realtime[(Supabase Realtime Bus)]
+    subgraph Storage ["Storage (Supabase)"]
+        DB["Postgres DB"]
+        Realtime["Realtime Bus"]
     end
 
-    subgraph "Intelligence Layer (OpenAI)"
-        GPT["GPT-4o (Reasoning & Code Generation)"]
+    subgraph AI ["AI Layer (OpenAI)"]
+        GPT["GPT-4o"]
     end
 
-    User --> Auth_UI
-    Auth_UI --> UI
+    %% Connections
+    User --> UI
     UI <--> State
     UI <--> WS_Client
     UI <--> API
     
-    WS_Client <--> WS_Server
     API <--> Engine
-    Engine <--> Agents
-    Agents <--> GPT
+    Engine <--> Swarm
+    Swarm <--> GPT
     
-    Engine <--> Conv_DB
-    Engine <--> Msg_DB
-    Engine <--> Task_DB
-    Engine <--> Act_DB
-    Engine <--> Work_DB
-    
-    Task_DB <--> Realtime
+    Engine <--> DB
+    DB <--> Realtime
     Realtime --> WS_Client
+
+    %% Styling
+    style Frontend fill:#0f172a,stroke:#334155,stroke-width:2px,color:#fff
+    style Backend fill:#0f172a,stroke:#334155,stroke-width:2px,color:#fff
+    style Storage fill:#0f172a,stroke:#334155,stroke-width:2px,color:#fff
+    style Swarm fill:#1e293b,stroke:#3b82f6,stroke-width:2px,color:#fff
+    style AI fill:#0f172a,stroke:#334155,stroke-width:2px,color:#fff
 ```
 
-### 2. The LangGraph "Neural Loop" Flow
-MeDo uses a directed acyclic graph (DAG) to ensure that no agent works in isolation. Every output is peer-reviewed by the swarm before being presented to the user.
+### 2. The Neural Loop (Execution Sequence)
+*Visualizing the step-by-step logic flow between agents.*
 
 ```mermaid
-sequenceDiagram
-    participant U as User
-    participant O as Orchestrator
-    participant PM as Product Manager
-    participant D as Developer
-    participant M as Marketing
-    participant A as Analyst
-    participant S as Supabase
+graph LR
+    %% Flow
+    Start["User Goal"] --> ORC["Orchestrator"]
+    ORC --> PM["Product Manager"]
+    
+    PM -- "Blueprint" --> DEV["Lead Developer"]
+    PM -- "Market Pulse" --> MKT["Marketing Expert"]
+    
+    DEV -- "Feedback" --> PM
+    MKT -- "Feedback" --> PM
+    
+    PM -- "Data Pack" --> ANA["Data Analyst"]
+    ANA -- "Optimizations" --> PM
+    
+    PM -- "Final Result" --> ORC
+    ORC -- "Live Stream" --> User["End User"]
 
-    U->>O: "Launch a Coffee Brand"
-    O->>PM: Initialize Planning
-    PM->>S: Create 10+ Tasks
-    S-->>U: (Real-time UI Update)
-    
-    par PM to Dev
-        PM->>D: Design Technical Stack
-    and PM to Marketing
-        PM->>M: Research Competitors
-    end
-    
-    D->>PM: Tech Specs Ready
-    M->>PM: Growth Strategy Ready
-    
-    PM->>A: Evaluate ROI & Risks
-    A-->>PM: Optimization Feedback
-    
-    PM->>O: Final Execution Package
-    O-->>U: Streaming "Neural Response"
+    %% Styling
+    style Start fill:#10b981,color:#fff
+    style User fill:#3b82f6,color:#fff
+    style PM fill:#8b5cf6,color:#fff
 ```
 
 ---
 
-## 🤖 The Swarm: Agent Responsibilities
+## 💎 The MeDo Advantage: Why This Matters
 
-| Agent | Core Responsibility | Key Tools & Outputs |
-| :--- | :--- | :--- |
-| **Master Orchestrator** | Coordinates the entire swarm | WebSocket Streaming, State Routing |
-| **Product Manager** | Strategy & Roadmap | Backlog creation, Milestone planning |
-| **Lead Developer** | Architecture & Code | Database schemas, Next.js scaffolding |
-| **Marketing Expert** | Growth & SEO | Competitor audits, Social media strategy |
-| **Data Analyst** | Business Intelligence | KPI models, ROI projections, Progress tracking |
+MeDo is specifically engineered to solve the "Execution Gap" in modern project management.
 
----
+| Feature | The MeDo Solution |
+| :--- | :--- |
+| **Speed** | Description to Roadmap in < 60 seconds |
+| **Accuracy** | Cross-agent peer review for every task |
+| **Visibility** | Real-time WebSocket stream of AI thinking |
+| **Persistence** | Full Supabase sync for every project session |
 
-## 💡 The MeDo Strategic Advantage: Why This Architecture Matters
-
-Neural AutoPilot (MeDo) is specifically engineered to solve the "Execution Gap" in modern project management.
-
-### 1. Zero-Latency Intent-to-Action
-Standard project management requires manual input at every stage. MeDo eliminates this. When you describe a goal, the **Product Manager** immediately generates a roadmap, which the **Lead Developer** instantly translates into technical tasks. This creates a "Zero-Latency" bridge between vision and reality.
-
-### 2. Cross-Domain Intelligence Swarm
-Most AI tools are generalists. MeDo is a **Specialist Swarm**. 
-- The **Developer** won't just give you code; they coordinate with the **Marketing Expert** to ensure the code is SEO-optimized and growth-ready.
-- The **Data Analyst** monitors the **Task Pipeline** to provide real-time probability of success and ROI projections.
-
-### 3. Autonomous "Self-Healing" Workflows
+### 🧠 Autonomous "Self-Healing" Workflows
 If a task in the **Active Pipeline** is blocked or requires more info, the agents don't just stop. The **Neural Core** triggers a "Self-Healing" loop where the PM agent attempts to resolve the blocker using information from the other agents, only alerting the user when a high-level decision is required.
 
 ---
 
-## ✨ Novelty: "Agents as Workers" vs "LLM as a Tool"
+## 🤖 Deep Dive: The Agent Swarm
 
-In Neural AutoPilot, the LLM is not just a text generator; it is the **Engine of a Worker Swarm**. 
-- **Deterministic Routing**: LangGraph ensures that the flow between agents is structured and predictable.
-- **Persistent Memory**: Unlike stateless chats, MeDo remembers the "Why" behind every task, ensuring long-term project consistency.
-- **Real-time Feedback Loop**: The system doesn't wait for a "final answer." It streams the thinking process, the task creation, and the logic updates as they happen.
+Each agent in the MeDo ecosystem is a specialized LLM instance with a dedicated personality and toolset:
+
+- **Master Orchestrator**: The conductor of the swarm. Handles state routing and real-time streaming updates.
+- **Product Manager**: The strategist. Breaks down goals into atomic tasks and manages the project roadmap.
+- **Lead Developer**: The builder. Designs architectures, generates database schemas, and writes implementation logic.
+- **Marketing Expert**: The growth engine. Conducts competitive analysis and drafts go-to-market strategies.
+- **Data Analyst**: The truth-teller. Monitors KPIs, ROI, and project progress with mathematical precision.
 
 ---
 
-## 📂 Deep Project Structure
+## 🛠️ Technical Stack & Novelty
+
+### The "Agents as Workers" Philosophy
+In MeDo, the LLM is not just a text generator; it is the **Engine of a Worker Swarm**. 
+- **LangGraph State Management**: Ensures deterministic, structured communication between agents.
+- **Supabase Integration**: Provides a rock-solid, real-time persistence layer for every project.
+- **Immersive UX**: Built with Next.js 14, Framer Motion, and Tailwind CSS for a premium feel.
+
+---
+
+## 📂 Project Structure
 
 ```text
 .
@@ -155,41 +143,27 @@ In Neural AutoPilot, the LLM is not just a text generator; it is the **Engine of
 │   │   ├── agents          # Domain-specific AI logic (PM, Developer, etc.)
 │   │   ├── api             # High-speed REST & WebSocket Dispatchers
 │   │   ├── db              # Supabase Client & Dynamic Schema management
-│   │   ├── models          # Pydantic State Contracts & Entity Definitions
 │   │   ├── orchestrator    # LangGraph Core (The Brain of MeDo)
-│   │   └── utils           # JWT Security, Auth & Real-time Event Bus
-│   └── main.py             # Uvicorn entry point
+│   │   └── utils           # Security & Real-time Event Bus
+│   └── main.py             # Server Entry Point
 ├── frontend                # Neural Interface (Next.js 14)
 │   ├── src
-│   │   ├── app             # App Router (Dashboard, Command Center, Auth)
-│   │   ├── components      # High-fidelity UI & Logic-driven components
-│   │   ├── lib             # State management (Zustand) & API connectors
-│   │   └── styles          # Design Tokens & Immersive Global CSS
-│   └── public              # Logos, Neural assets & optimized media
-└── schema.sql              # Database Source of Truth (Postgres)
+│   │   ├── app             # Dashboard, Command Center, Auth
+│   │   ├── components      # Glassmorphic UI Components
+│   │   ├── lib             # State (Zustand) & API Connectors
+│   │   └── styles          # Design Tokens & CSS
+│   └── public              # Neural Assets & Logos
+└── schema.sql              # Database Source of Truth
 ```
 
 ---
 
-## 🛠️ Installation & Rapid Deployment
+## 🚀 Quick Start & Deployment
 
-### 1. Database Setup
-Execute `backend/app/db/schema.sql` in your Supabase SQL Editor to initialize the persistence layer.
-
-### 2. Neural Core (Backend)
-```bash
-cd backend
-python -m venv venv && source venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --host 0.0.0.0 --port 8000
-```
-
-### 3. Neural Interface (Frontend)
-```bash
-cd frontend
-npm install && npm run dev
-```
+1. **DB**: Execute `schema.sql` in Supabase.
+2. **Backend**: `uvicorn app.main:app --host 0.0.0.0 --port 8000`
+3. **Frontend**: `npm run dev`
 
 ---
 
-**Built with ❤️ for the future of Intelligent Project Orchestration.**
+**Built with ❤️ for the future of Intelligent Workflows.**
