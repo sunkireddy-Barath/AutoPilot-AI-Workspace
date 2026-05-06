@@ -2,16 +2,53 @@
 
 **The Master Execution & Dashboard Orchestrator (MeDo) — Empowering Autonomous Intelligence.**
 
-Neural AutoPilot (MeDo) is a high-fidelity, autonomous multi-agent platform designed to transform abstract business goals into production-ready execution plans. By utilizing a custom-engineered **Neural Core**, MeDo coordinates a specialized swarm of AI agents to handle every phase of the project lifecycle—from initial strategy to final deployment.
+Neural AutoPilot (MeDo) is a high-fidelity, autonomous multi-agent platform designed to transform abstract business goals into production-ready execution plans. By utilizing a custom-engineered **Neural Core**, MeDo coordinates a specialized swarm of AI agents to handle every phase of the project lifecycle.
 
 ---
 
-## 🏛️ System Architecture: The Neural Core
+## 🏛️ System Architecture & Logic Flow
 
-The MeDo architecture is optimized for high-concurrency and real-time data integrity.
+The MeDo ecosystem is built on a reactive, multi-layered architecture designed for high-speed autonomous orchestration.
 
-### 1. Holistic Framework Architecture
-*Clear, high-level map of the system's structural nodes.*
+### 1. The Sequential "Neural Loop" (Execution Flow)
+*This diagram illustrates the step-by-step logic progression between the User and the Agent Swarm.*
+
+```mermaid
+sequenceDiagram
+    participant User as 👤 User
+    participant ORC as 🧠 Master Orchestrator
+    participant PM as 📋 Product Manager
+    participant DEV as 💻 Lead Developer
+    participant MKT as 📢 Marketing Expert
+    participant S as 🗄️ Supabase DB
+
+    User->>ORC: "Launch a Coffee Subscription App"
+    ORC->>PM: Initialize Neural Planning
+    
+    rect rgb(30, 41, 59)
+        Note right of PM: Agent analyzes goal & creates roadmap
+        PM->>S: Persist 10+ Dynamic Tasks
+        S-->>User: (Real-time Pipeline Update)
+    end
+
+    par PM to Dev & Marketing
+        PM->>DEV: Design Architecture & Schema
+        PM->>MKT: Conduct Market Research
+    end
+
+    DEV->>PM: Technical Spec Ready
+    MKT->>PM: Growth Strategy Ready
+
+    rect rgb(30, 41, 59)
+        Note over PM,DEV: Swarm Peer-Review & Refinement
+    end
+
+    PM->>ORC: Consolidated Project Package
+    ORC-->>User: Streaming Neural Response (WS)
+```
+
+### 2. Holistic Framework Architecture
+*The structural map of the MeDo technical stack and persistent data nodes.*
 
 ```mermaid
 graph TD
@@ -67,70 +104,28 @@ graph TD
     style AI fill:#0f172a,stroke:#334155,stroke-width:2px,color:#fff
 ```
 
-### 2. The Neural Loop (Execution Sequence)
-*Visualizing the step-by-step logic flow between agents.*
-
-```mermaid
-graph LR
-    %% Flow
-    Start["User Goal"] --> ORC["Orchestrator"]
-    ORC --> PM["Product Manager"]
-    
-    PM -- "Blueprint" --> DEV["Lead Developer"]
-    PM -- "Market Pulse" --> MKT["Marketing Expert"]
-    
-    DEV -- "Feedback" --> PM
-    MKT -- "Feedback" --> PM
-    
-    PM -- "Data Pack" --> ANA["Data Analyst"]
-    ANA -- "Optimizations" --> PM
-    
-    PM -- "Final Result" --> ORC
-    ORC -- "Live Stream" --> User["End User"]
-
-    %% Styling
-    style Start fill:#10b981,color:#fff
-    style User fill:#3b82f6,color:#fff
-    style PM fill:#8b5cf6,color:#fff
-```
-
 ---
 
-## 💎 The MeDo Advantage: Why This Matters
+## 💎 The MeDo Advantage: Why This Architecture Matters
 
 MeDo is specifically engineered to solve the "Execution Gap" in modern project management.
 
-| Feature | The MeDo Solution |
+| Strategic Pillar | The MeDo Solution |
 | :--- | :--- |
-| **Speed** | Description to Roadmap in < 60 seconds |
-| **Accuracy** | Cross-agent peer review for every task |
-| **Visibility** | Real-time WebSocket stream of AI thinking |
-| **Persistence** | Full Supabase sync for every project session |
-
-### 🧠 Autonomous "Self-Healing" Workflows
-If a task in the **Active Pipeline** is blocked or requires more info, the agents don't just stop. The **Neural Core** triggers a "Self-Healing" loop where the PM agent attempts to resolve the blocker using information from the other agents, only alerting the user when a high-level decision is required.
+| **Instant Onboarding** | Goal to Roadmap transition in under 60 seconds |
+| **Peer-Reviewed Logic** | Cross-agent verification ensures technical feasibility |
+| **Radical Transparency** | Real-time WebSocket stream of the AI's internal reasoning |
+| **Atomic Persistence** | Every message, task, and activity is stored in Supabase |
 
 ---
 
 ## 🤖 Deep Dive: The Agent Swarm
 
-Each agent in the MeDo ecosystem is a specialized LLM instance with a dedicated personality and toolset:
-
-- **Master Orchestrator**: The conductor of the swarm. Handles state routing and real-time streaming updates.
-- **Product Manager**: The strategist. Breaks down goals into atomic tasks and manages the project roadmap.
-- **Lead Developer**: The builder. Designs architectures, generates database schemas, and writes implementation logic.
-- **Marketing Expert**: The growth engine. Conducts competitive analysis and drafts go-to-market strategies.
-- **Data Analyst**: The truth-teller. Monitors KPIs, ROI, and project progress with mathematical precision.
-
----
-
-## 🛠️ Technical Stack & Novelty
-
-### The "Agents as Workers" Philosophy
-In MeDo, the LLM is not just a text generator; it is the **Engine of a Worker Swarm**. 
-- **LangGraph State Management**: Ensures deterministic, structured communication between agents.
-- **Supabase Integration**: Provides a rock-solid, real-time persistence layer for every project.
-- **Immersive UX**: Built with Next.js 14, Framer Motion, and Tailwind CSS for a premium feel.
+- **Master Orchestrator**: Conductor of the swarm. Manages state routing and real-time streaming.
+- **Product Manager**: Strategist. Breaks down goals into atomic tasks and manages the roadmap.
+- **Lead Developer**: Builder. Designs architectures, generates schemas, and writes implementation logic.
+- **Marketing Expert**: Growth engine. Conducts competitive analysis and go-to-market strategies.
+- **Data Analyst**: Truth-teller. Monitors KPIs, ROI, and project progress with precision.
 
 ---
 
@@ -158,7 +153,7 @@ In MeDo, the LLM is not just a text generator; it is the **Engine of a Worker Sw
 
 ---
 
-## 🚀 Quick Start & Deployment
+## 🚀 Quick Start
 
 1. **DB**: Execute `schema.sql` in Supabase.
 2. **Backend**: `uvicorn app.main:app --host 0.0.0.0 --port 8000`
