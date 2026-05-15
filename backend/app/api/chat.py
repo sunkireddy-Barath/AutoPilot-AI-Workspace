@@ -5,24 +5,21 @@ and the multi-agent LangGraph pipeline.
 REST endpoint: POST /api/v1/chat
 WebSocket:     ws://host/ws/{conversation_id}
 
-The WebSocket streams agent events in real-time:
-- agent_thinking: agent started processing
-- agent_message: full agent response
-- task_created: new task from agent
-- workflow_updated: new React Flow graph
-- stream_done: all agents finished
+The REST endpoint runs the full LangGraph pipeline synchronously and
+returns the complete AI response. WebSocket streams real-time agent
+events during processing (when a persistent server is available).
 """
 
 import json
 import asyncio
 from typing import Dict, Set
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from datetime import datetime
 from uuid import uuid4
 
 from app.models.schemas import (
-    ChatRequest, WSEvent, WSEventType, MessageRole,
-    AgentRole, TaskCreate, TaskPriority, TaskStatus
+    ChatRequest, WSEvent, WSEventType,
+    AgentRole, TaskPriority, TaskStatus
 )
 from app.orchestrator.langgraph_engine import MeDoOrchestrator
 from app.db.supabase_client import supabase_admin
@@ -31,8 +28,9 @@ from app.utils.auth_utils import to_uuid
 
 router = APIRouter(tags=["chat"])
 
-# ── Singleton orchestrator (shared across requests) ────────────────────
+# ── Singleton orchestrator ─────────────────────────────────────────────
 orchestrator = MeDoOrchestrator()
+
 
 # ── WebSocket connection manager ───────────────────────────────────────
 class ConnectionManager:
@@ -43,9 +41,7 @@ class ConnectionManager:
 
     async def connect(self, conversation_id: str, websocket: WebSocket):
         await websocket.accept()
-        if conversation_id not in self.active_connections:
-            self.active_connections[conversation_id] = set()
-        self.active_connections[conversation_id].add(websocket)
+        self.active_connections.setdefault(conversation_id, set()).add(websocket)
 
     def disconnect(self, conversation_id: str, websocket: WebSocket):
         if conversation_id in self.active_connections:
@@ -54,49 +50,50 @@ class ConnectionManager:
                 del self.active_connections[conversation_id]
 
     async def broadcast(self, conversation_id: str, event: WSEvent):
-        """Broadcast an event to all WebSocket connections for a conversation."""
-        if conversation_id not in self.active_connections:
+        connections = self.active_connections.get(conversation_id, set())
+        if not connections:
             return
         payload = event.model_dump_json()
-        disconnected = set()
-        for ws in self.active_connections[conversation_id]:
+        dead: Set[WebSocket] = set()
+        for ws in connections:
             try:
                 await ws.send_text(payload)
             except Exception:
-                disconnected.add(ws)
-        for ws in disconnected:
-            self.active_connections[conversation_id].discard(ws)
+                dead.add(ws)
+        for ws in dead:
+            connections.discard(ws)
 
 
 manager = ConnectionManager()
 
-# ── Event Bus Subscription ─────────────────────────────────────────────
+
+# ── Event Bus → WebSocket bridge ───────────────────────────────────────
 
 async def on_bus_event(event_type: str, data: dict):
     """
-    Called when the orchestrator emits an event.
-    Automatically wraps it in a WSEvent and broadcasts it.
+    Routes orchestrator events to connected WebSocket clients.
+    Also persists agent messages, tasks, and activities to Supabase.
     """
     conversation_id = data.get("conversation_id")
     if not conversation_id:
         return
 
-    ws_event_type = None
-    if event_type == "agent_activity":
-        ws_event_type = WSEventType.AGENT_ACTIVITY
-    elif event_type == "task_created":
-        ws_event_type = WSEventType.TASK_CREATED
-    elif event_type == "agent_thinking":
-        ws_event_type = WSEventType.AGENT_THINKING
-    elif event_type == "agent_message":
-        ws_event_type = WSEventType.AGENT_MESSAGE
-    elif event_type == "workflow_updated":
-        ws_event_type = WSEventType.WORKFLOW_UPDATED
-    
-    if ws_event_type:
-        # PERSIST: If it's an agent message, save it to the database so it stays in chat
+    _type_map = {
+        "agent_activity": WSEventType.AGENT_ACTIVITY,
+        "task_created":   WSEventType.TASK_CREATED,
+        "agent_thinking": WSEventType.AGENT_THINKING,
+        "agent_message":  WSEventType.AGENT_MESSAGE,
+        "workflow_updated": WSEventType.WORKFLOW_UPDATED,
+        "agent_collaboration": WSEventType.AGENT_ACTIVITY,
+    }
+    ws_event_type = _type_map.get(event_type)
+    if not ws_event_type:
+        return
+
+    # ── Persist to Supabase ──────────────────────────────────────────
+    if supabase_admin:
         if event_type == "agent_message":
-            msg_data = {
+            msg = {
                 "id": data.get("id") or str(uuid4()),
                 "conversation_id": conversation_id,
                 "role": "assistant",
@@ -105,50 +102,43 @@ async def on_bus_event(event_type: str, data: dict):
                 "metadata": data.get("metadata") or {},
                 "created_at": data.get("created_at") or datetime.utcnow().isoformat(),
             }
-            if supabase_admin:
-                try:
-                    supabase_admin.table("messages").insert(msg_data).execute()
-                except Exception as e:
-                    print(f"❌ Supabase Persistence Error (Agent Message): {e}")
-                    if hasattr(e, 'message'): print(f"Detail: {e.message}")
+            try:
+                supabase_admin.table("messages").insert(msg).execute()
+            except Exception as e:
+                print(f"[Supabase] agent_message persist error: {e}")
 
-        # PERSIST: Tasks
-        elif event_type == "task_created" and supabase_admin:
+        elif event_type == "task_created":
             task = data.get("task")
             if task:
                 try:
                     supabase_admin.table("tasks").insert(task).execute()
                 except Exception as e:
-                    print(f"❌ Supabase Persistence Error (Task): {e}")
+                    print(f"[Supabase] task persist error: {e}")
 
-        # PERSIST: Activities
-        elif event_type == "agent_activity" and supabase_admin:
+        elif event_type == "agent_activity":
             activity = data.get("activity")
             if activity:
                 try:
                     supabase_admin.table("agent_activities").insert(activity).execute()
                 except Exception as e:
-                    print(f"❌ Supabase Persistence Error (Activity): {e}")
+                    print(f"[Supabase] activity persist error: {e}")
 
-        # Use the whole data object for agent_message to preserve all fields (id, agent_role, content)
-        event_payload = data
-        if event_type == "agent_activity":
-            event_payload = data.get("activity")
-        elif event_type == "task_created":
-            event_payload = data.get("task")
-        elif event_type == "agent_thinking":
-            event_payload = data.get("data")
-        elif event_type == "workflow_updated":
-            event_payload = data.get("data")
+    # ── Determine event payload ──────────────────────────────────────
+    payload_map = {
+        "agent_activity": data.get("activity"),
+        "task_created":   data.get("task"),
+        "agent_thinking": data.get("data"),
+        "workflow_updated": data.get("data"),
+    }
+    event_payload = payload_map.get(event_type, data)
 
-        event = WSEvent(
-            event=ws_event_type,
-            data=event_payload,
-            conversation_id=conversation_id
-        )
-        await manager.broadcast(conversation_id, event)
+    await manager.broadcast(conversation_id, WSEvent(
+        event=ws_event_type,
+        data=event_payload,
+        conversation_id=conversation_id,
+    ))
 
-# Start subscription
+
 global_bus.subscribe(on_bus_event)
 
 
@@ -157,43 +147,48 @@ global_bus.subscribe(on_bus_event)
 @router.post("/api/v1/chat", response_model=dict)
 async def chat(request: ChatRequest):
     """
-    Main chat endpoint. Receives user message, runs the multi-agent pipeline,
-    persists everything to Supabase, and returns the full result.
+    Main chat endpoint.
 
-    WebSocket clients receive real-time updates during processing.
+    Runs the full multi-agent LangGraph pipeline synchronously so that
+    the complete response is returned in the REST response body.
+    This makes the endpoint compatible with serverless environments
+    (Vercel) where background tasks are not supported.
+
+    Connected WebSocket clients also receive real-time streaming events
+    during processing when running on a persistent server.
     """
     conversation_id = request.conversation_id
     user_id = request.user_id
-
-    # 0. Ensure conversation exists (Upsert)
     mapped_user_id = to_uuid(user_id)
+
+    # ── 1. Upsert conversation ─────────────────────────────────────
     if supabase_admin:
         try:
             supabase_admin.table("conversations").upsert({
                 "id": conversation_id,
                 "user_id": mapped_user_id,
-                "title": request.message[:50] + "...",
-                "updated_at": datetime.utcnow().isoformat()
+                "title": request.message[:60],
+                "updated_at": datetime.utcnow().isoformat(),
             }).execute()
         except Exception as e:
-            print(f"❌ Supabase Persistence Error (Upsert Conversation): {e}")
+            print(f"[Supabase] conversation upsert error: {e}")
 
-    # 1. Save user message to Supabase
-    user_msg = {
-        "id": str(uuid4()),
-        "conversation_id": conversation_id,
-        "role": "user",
-        "content": request.message,
-        "metadata": {},
-        "created_at": datetime.utcnow().isoformat(),
-    }
+    # ── 2. Persist user message ────────────────────────────────────
+    user_msg_id = str(uuid4())
     if supabase_admin:
         try:
-            supabase_admin.table("messages").insert(user_msg).execute()
+            supabase_admin.table("messages").insert({
+                "id": user_msg_id,
+                "conversation_id": conversation_id,
+                "role": "user",
+                "content": request.message,
+                "metadata": {},
+                "created_at": datetime.utcnow().isoformat(),
+            }).execute()
         except Exception as e:
-            print(f"❌ Supabase Persistence Error (User Message): {e}")
+            print(f"[Supabase] user message persist error: {e}")
 
-    # 0.5 Ensure workflow exists (Initial Draft)
+    # ── 3. Create initial workflow record ──────────────────────────
     workflow_id = str(uuid4())
     if supabase_admin:
         try:
@@ -201,28 +196,28 @@ async def chat(request: ChatRequest):
                 "id": workflow_id,
                 "user_id": mapped_user_id,
                 "conversation_id": conversation_id,
-                "title": f"Blueprint: {request.message[:40]}...",
+                "title": f"Blueprint: {request.message[:50]}",
                 "status": "running",
                 "created_at": datetime.utcnow().isoformat(),
                 "updated_at": datetime.utcnow().isoformat(),
             }).execute()
         except Exception as e:
-            print(f"❌ Supabase Persistence Error (Initial Workflow): {e}")
+            print(f"[Supabase] workflow create error: {e}")
 
-    # 2. Broadcast: user message received, agents starting
+    # ── 4. Broadcast start event to any WS listeners ───────────────
     await manager.broadcast(conversation_id, WSEvent(
         event=WSEventType.AGENT_THINKING,
-        data={"message": "🤖 MeDo analyzing your goal...", "agent": "orchestrator"},
+        data={"agent_role": "orchestrator", "message": "Agents initializing..."},
         conversation_id=conversation_id,
     ))
 
-    # 3. Load conversation history
-    history = []
+    # ── 5. Load conversation history ───────────────────────────────
+    history: list = []
     if supabase_admin:
         try:
-            history_result = (
+            res = (
                 supabase_admin.table("messages")
-                .select("role, content, agent_role")
+                .select("role, content")
                 .eq("conversation_id", conversation_id)
                 .order("created_at")
                 .limit(20)
@@ -230,61 +225,93 @@ async def chat(request: ChatRequest):
             )
             history = [
                 {"role": m["role"], "content": m["content"]}
-                for m in (history_result.data or [])
-                if m.get("id") != user_msg["id"]
+                for m in (res.data or [])
+                if m.get("id") != user_msg_id
             ]
         except Exception as e:
-            print(f"Error loading history: {e}")
+            print(f"[Supabase] history load error: {e}")
 
-    # 4. Run the multi-agent LangGraph pipeline in the background
-    # We return immediately so the frontend isn't blocked by the long-running pipeline.
-    # The frontend receives updates via WebSocket.
-    async def run_pipeline():
+    # ── 6. Run the multi-agent pipeline (synchronous) ──────────────
+    final_msg_id = str(uuid4())
+    final_content = ""
+    task_count = 0
+
+    try:
+        state = await orchestrator.run(
+            user_goal=request.message,
+            conversation_id=conversation_id,
+            user_id=user_id,
+            history=history,
+            autonomous=request.autonomous_mode,
+            workflow_id=workflow_id,
+        )
+
+        task_count = len(state.get("tasks", []))
+        final_content = _build_chat_response(state)
+
+        # ── 7. Persist final workflow graph ────────────────────────
+        if supabase_admin and workflow_id:
+            try:
+                supabase_admin.table("workflows").update({
+                    "nodes": state.get("workflow_nodes", []),
+                    "edges": state.get("workflow_edges", []),
+                    "status": "completed",
+                    "updated_at": datetime.utcnow().isoformat(),
+                }).eq("id", workflow_id).execute()
+            except Exception as e:
+                print(f"[Supabase] workflow update error: {e}")
+
+    except Exception as exc:
+        print(f"[Pipeline] Error: {exc}")
+        final_content = (
+            f"The AutoPilot agents encountered an issue processing your request. "
+            f"Error: {str(exc)[:200]}\n\n"
+            "Please try again or rephrase your goal."
+        )
+        await manager.broadcast(conversation_id, WSEvent(
+            event=WSEventType.ERROR,
+            data={"error": str(exc)},
+            conversation_id=conversation_id,
+        ))
+
+    # ── 8. Build and persist the final orchestrator message ─────────
+    final_msg = {
+        "id": final_msg_id,
+        "conversation_id": conversation_id,
+        "role": "assistant",
+        "agent_role": "orchestrator",
+        "content": final_content,
+        "metadata": {"task_count": task_count},
+        "created_at": datetime.utcnow().isoformat(),
+    }
+
+    if supabase_admin and final_content:
         try:
-            state = await orchestrator.run(
-                user_goal=request.message,
-                conversation_id=conversation_id,
-                user_id=user_id,
-                history=history,
-                autonomous=request.autonomous_mode,
-                workflow_id=workflow_id,
+            # Check not already persisted by agent_message WS event
+            existing = (
+                supabase_admin.table("messages")
+                .select("id")
+                .eq("id", final_msg_id)
+                .execute()
             )
-            # Finalize the workflow graph
-            if supabase_admin and workflow_id:
-                try:
-                    supabase_admin.table("workflows").update({
-                        "nodes": state.get("workflow_nodes", []),
-                        "edges": state.get("workflow_edges", []),
-                        "status": "completed",
-                        "updated_at": datetime.utcnow().isoformat(),
-                    }).eq("id", workflow_id).execute()
-                except Exception as e:
-                    print(f"❌ Supabase Persistence Error (Final Workflow): {e}")
-            
-            # Emit a 'stream_done' event via WebSocket
-            await manager.broadcast(conversation_id, WSEvent(
-                event=WSEventType.AGENT_ACTIVITY,
-                data={"status": "completed", "agent_role": "orchestrator", "detail": "All agents finished."},
-                conversation_id=conversation_id
-            ))
+            if not (existing.data):
+                supabase_admin.table("messages").insert(final_msg).execute()
+        except Exception as e:
+            print(f"[Supabase] final message persist error: {e}")
 
-        except Exception as exc:
-            print(f"❌ Pipeline Error: {exc}")
-            await manager.broadcast(conversation_id, WSEvent(
-                event=WSEventType.ERROR,
-                data={"error": str(exc)},
-                conversation_id=conversation_id,
-            ))
-
-    asyncio.create_task(run_pipeline())
+    # ── 9. Broadcast stream_done to WS clients ─────────────────────
+    await manager.broadcast(conversation_id, WSEvent(
+        event=WSEventType.STREAM_DONE,
+        data={"agent_role": "orchestrator", "task_count": task_count},
+        conversation_id=conversation_id,
+    ))
 
     return {
         "status": "success",
         "conversation_id": conversation_id,
         "workflow_id": workflow_id,
-        "message": "Orchestrator initiated in background."
+        "message": final_msg,
     }
-
 
 
 # ── WebSocket Endpoint ────────────────────────────────────────────────
@@ -292,14 +319,14 @@ async def chat(request: ChatRequest):
 @router.websocket("/ws/{conversation_id}")
 async def websocket_endpoint(websocket: WebSocket, conversation_id: str):
     """
-    WebSocket connection per conversation.
-    Frontend connects once, then receives real-time agent events
-    while the REST /chat endpoint processes the user message.
+    Real-time event stream per conversation.
+    Receives ping/pong keep-alives and broadcasts orchestrator events.
+    Note: On serverless (Vercel), this endpoint cannot hold persistent
+    connections — the REST response delivers the full result instead.
     """
     await manager.connect(conversation_id, websocket)
     try:
         while True:
-            # Keep connection alive, handle ping/pong
             data = await websocket.receive_text()
             try:
                 msg = json.loads(data)
@@ -314,19 +341,32 @@ async def websocket_endpoint(websocket: WebSocket, conversation_id: str):
 # ── Helper ────────────────────────────────────────────────────────────
 
 def _build_chat_response(state: dict) -> str:
-    """Build the human-readable chat response shown in the UI."""
+    """Assemble the human-readable markdown response from agent outputs."""
     task_count = len(state.get("tasks", []))
-    pm_summary = state.get("pm_response", "")
-    
-    # Extract agent outputs if they are in the simulated format
-    lines = [
-        "## 🚀 Master Orchestration — System Plan Generated\n",
-        pm_summary,
-        "\n\n---\n",
-        "### [Workflow]\n- Step 1: Analyze Strategic Goal\n- Step 2: Generate Planning Blueprint\n- Step 3: Design Technical Architecture\n- Step 4: Formulate Growth Strategy\n- Step 5: Validate Metrics & Risks\n",
-        f"\n**✅ {task_count} tasks created** across Product, Development, Marketing, and Analytics.\n",
-        "\n### [Agent Communication]\nPM → Dev: Requirement Specs Delivered\nDev → Marketing: System Capabilities Shared\nMarketing → Analyst: Growth Projections Sent\n",
-        "\n### [Autonomous Improvements]\n- **Self-Optimization:** System will adjust agent temperature based on task complexity.\n- **Memory Refinement:** Historical project data will be used to improve roadmap accuracy.\n",
-        "\n**Agents activated:** 🎯 PM · 💻 Developer · 📣 Marketing · ⚙️ Operations · 📊 Analyst",
-    ]
-    return "".join(lines)
+    pm_response = state.get("pm_response", "").strip()
+    dev_response = state.get("dev_response", "").strip()
+    marketing_response = state.get("marketing_response", "").strip()
+    analyst_response = state.get("analyst_response", "").strip()
+
+    # Use the richest agent response if available
+    if pm_response and len(pm_response) > 200:
+        return pm_response
+
+    # Fallback: synthesize all agent outputs
+    parts = ["## AutoPilot Orchestration Complete\n"]
+
+    if pm_response:
+        parts.append(f"### [Product Manager AI]\n{pm_response}\n")
+    if dev_response:
+        parts.append(f"---\n### [Developer AI]\n{dev_response}\n")
+    if marketing_response:
+        parts.append(f"---\n### [Marketing AI]\n{marketing_response}\n")
+    if analyst_response:
+        parts.append(f"---\n### [Analyst AI]\n{analyst_response}\n")
+
+    if task_count:
+        parts.append(f"\n---\n**✅ {task_count} tasks generated** across all agents.")
+
+    parts.append("\n\n**Active Agents:** Product Manager · Developer · Marketing · Analyst · Operations")
+
+    return "\n".join(parts)

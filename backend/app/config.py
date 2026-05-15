@@ -24,9 +24,10 @@ class Settings(BaseSettings):
     app_port: int = Field(default=8000, env="APP_PORT")
     secret_key: str = Field(..., env="SECRET_KEY")
 
-    # CORS
+    # CORS — comma-separated; "*" allows all origins (for Vercel deployments)
     cors_origins: str = Field(
-        default="http://localhost:3000", env="CORS_ORIGINS"
+        default="http://localhost:3000,http://localhost:3001,https://*.vercel.app",
+        env="CORS_ORIGINS",
     )
 
     # Optional integrations
@@ -35,7 +36,11 @@ class Settings(BaseSettings):
 
     @property
     def allowed_origins(self) -> List[str]:
-        return [o.strip() for o in self.cors_origins.split(",")]
+        raw = [o.strip() for o in self.cors_origins.split(",") if o.strip()]
+        # If wildcard requested, return ["*"] for FastAPI CORS middleware
+        if "*" in raw:
+            return ["*"]
+        return raw
 
     class Config:
         env_file = ".env"

@@ -1,7 +1,10 @@
 /**
  * WebSocket client for receiving real-time agent events.
- * Connects to ws://backend/ws/{conversationId} and dispatches
- * events to registered handlers.
+ *
+ * On Vercel serverless deployments, WebSocket connections cannot be
+ * held open (functions terminate after the response). In that case
+ * the client fails to connect silently and the app continues working
+ * via the REST response (which now returns the full AI response body).
  */
 
 export type WSEventType =
@@ -32,20 +35,30 @@ class WebSocketClient {
   private pingInterval: NodeJS.Timeout | null = null
   private reconnectTimeout: NodeJS.Timeout | null = null
   private shouldReconnect = true
+  private failedAttempts = 0
+  private readonly MAX_FAILURES = 3  // Stop retrying after 3 consecutive failures
 
   connect(conversationId: string) {
-    if (this.ws && this.conversationId === conversationId) return
+    // Already connected to this conversation — no-op
+    if (this.ws?.readyState === WebSocket.OPEN && this.conversationId === conversationId) return
 
     this.disconnect()
     this.conversationId = conversationId
     this.shouldReconnect = true
 
-    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000'
-    this.ws = new WebSocket(`${wsUrl}/ws/${conversationId}`)
+    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || process.env.NEXT_PUBLIC_API_URL?.replace('https://', 'wss://').replace('http://', 'ws://') || 'ws://localhost:8000'
+
+    try {
+      this.ws = new WebSocket(`${wsUrl}/ws/${conversationId}`)
+    } catch (err) {
+      // WebSocket constructor itself threw (e.g., invalid URL) — degrade silently
+      console.warn('[WS] Could not create WebSocket:', err)
+      return
+    }
 
     this.ws.onopen = () => {
-      console.log(`[WS] Connected to conversation ${conversationId}`)
-      // Send ping every 25 seconds to keep connection alive
+      console.log(`[WS] Connected: ${conversationId}`)
+      this.failedAttempts = 0
       this.pingInterval = setInterval(() => {
         if (this.ws?.readyState === WebSocket.OPEN) {
           this.ws.send(JSON.stringify({ type: 'ping' }))
@@ -56,32 +69,44 @@ class WebSocketClient {
     this.ws.onmessage = (e) => {
       try {
         const event: WSEvent = JSON.parse(e.data)
-        const handlers = this.handlers.get(event.event) || []
-        handlers.forEach((h) => h(event))
+        // Dispatch to all registered handlers for this event type
+        ;(this.handlers.get(event.event) || []).forEach((h) => h(event))
       } catch {
-        // ignore malformed messages
+        // Ignore malformed messages
       }
     }
 
-    this.ws.onclose = () => {
-      console.log('[WS] Connection closed')
+    this.ws.onclose = (evt) => {
+      console.log(`[WS] Closed (code=${evt.code})`)
       this._clearPing()
-      if (this.shouldReconnect && this.conversationId) {
+
+      // Abnormal close on a serverless backend returns 1006 — don't retry
+      const isServerlessClose = evt.code === 1006 || evt.code === 1001
+      if (isServerlessClose) {
+        this.failedAttempts++
+      }
+
+      if (
+        this.shouldReconnect &&
+        this.conversationId &&
+        this.failedAttempts < this.MAX_FAILURES
+      ) {
+        const delay = Math.min(2000 * (this.failedAttempts + 1), 10_000)
         this.reconnectTimeout = setTimeout(() => {
           this.connect(this.conversationId!)
-        }, 2000)
+        }, delay)
+      } else if (this.failedAttempts >= this.MAX_FAILURES) {
+        console.info('[WS] Serverless environment detected — real-time streaming disabled, using REST responses.')
       }
     }
 
-    this.ws.onerror = (err) => {
-      console.error('[WS] Error:', err)
+    this.ws.onerror = () => {
+      // Errors are handled in onclose — suppress noisy console output
     }
   }
 
-  on(event: WSEventType, handler: EventHandler) {
-    if (!this.handlers.has(event)) {
-      this.handlers.set(event, [])
-    }
+  on(event: WSEventType, handler: EventHandler): () => void {
+    if (!this.handlers.has(event)) this.handlers.set(event, [])
     this.handlers.get(event)!.push(handler)
     return () => this.off(event, handler)
   }
