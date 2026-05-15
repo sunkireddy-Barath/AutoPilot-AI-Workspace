@@ -197,7 +197,11 @@ export const useStore = create<AppState>()(
         messages: [],
         setMessages: (msgs) => set({ messages: msgs }),
         addMessage: (msg) =>
-          set((s) => ({ messages: [...s.messages, msg] })),
+          set((s) => ({
+            messages: s.messages.some((m) => m.id === msg.id)
+              ? s.messages
+              : [...s.messages, msg],
+          })),
 
         // Tasks
         tasks: [],

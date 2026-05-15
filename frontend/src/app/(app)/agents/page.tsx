@@ -135,13 +135,13 @@ export default function AgentsPage() {
              <div className="relative w-40 h-40 flex items-center justify-center">
                <svg className="w-full h-full transform -rotate-90">
                  <circle cx="80" cy="80" r="72" stroke="currentColor" strokeWidth="12" fill="transparent" className="text-white/[0.03]" />
-                 <motion.circle 
-                   cx="80" cy="80" r="72" stroke="currentColor" strokeWidth="12" fill="transparent" 
+                 <motion.circle
+                   cx="80" cy="80" r="72" stroke="currentColor" strokeWidth="12" fill="transparent"
                    strokeDasharray={452.4}
                    initial={{ strokeDashoffset: 452.4 }}
-                   animate={{ strokeDashoffset: 452.4 * 0.02 }}
+                   animate={{ strokeDashoffset: 452.4 * (1 - displayHealth / 100) }}
                    transition={{ duration: 2, ease: "circOut" }}
-                   className="text-brand-500 drop-shadow-[0_0_15px_rgba(99,102,241,0.6)]" 
+                   className="text-brand-500 drop-shadow-[0_0_15px_rgba(99,102,241,0.6)]"
                  />
                </svg>
                <div className="absolute flex flex-col items-center">

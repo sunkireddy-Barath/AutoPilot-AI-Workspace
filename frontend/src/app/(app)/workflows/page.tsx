@@ -6,118 +6,157 @@ import DashboardHeader from '@/components/dashboard/DashboardHeader'
 import { useStore } from '@/lib/store'
 import { workflowsApi } from '@/lib/api'
 import { motion } from 'framer-motion'
-import { Network, Share2, Download, Maximize2, Zap } from 'lucide-react'
+import { Network, Share2, Download, Maximize2, Zap, Activity, CheckSquare } from 'lucide-react'
 import AgentCollaborationLog from '@/components/workflow/AgentCollaborationLog'
 
 export default function WorkflowsPage() {
   const { userId, setWorkflowGraph, workflowNodes, agentActivities, tasks, isAgentsRunning, setAgentsRunning } = useStore()
 
-  // Dynamic Calculations
   const activeNodes = workflowNodes.filter(n => n.data?.role !== 'orchestrator').length
-  
   const orchestratorLog = agentActivities.find(a => a.agent_role === 'orchestrator')
-  const insightText = orchestratorLog ? orchestratorLog.detail : "Graph initialized. Awaiting orchestrator routing."
-  
+  const insightText = orchestratorLog?.detail ?? 'Graph initialized. Awaiting orchestrator routing.'
   const totalTasks = tasks.length || 1
   const completedTasks = tasks.filter(t => t.status === 'completed').length
+  const inProgressTasks = tasks.filter(t => t.status === 'in_progress').length
   const optScore = tasks.length === 0 ? 100 : Math.round((completedTasks / totalTasks) * 100)
 
   useEffect(() => {
     if (!userId) return
-
-    const fetchWorkflow = async () => {
-      try {
-        const workflows = await workflowsApi.list(userId) as any[]
-        if (workflows.length > 0) {
-          const latest = workflows[0]
-          setWorkflowGraph(latest.nodes, latest.edges)
-        }
-      } catch (error) {
-        console.error('Failed to fetch workflows:', error)
+    workflowsApi.list(userId).then((workflows: any[]) => {
+      if (workflows.length > 0) {
+        const latest = workflows[0]
+        setWorkflowGraph(latest.nodes, latest.edges)
       }
-    }
-
-    fetchWorkflow()
+    }).catch(console.error)
   }, [userId, setWorkflowGraph])
 
   return (
-    <div className="p-8 h-screen flex flex-col">
-      <DashboardHeader 
-        title="Visual Workflow" 
-        subtitle="Real-time map of agent collaboration and task dependency graph." 
+    <div className="p-6 h-screen flex flex-col gap-4 pb-28">
+      <DashboardHeader
+        title="Visual Workflow"
+        subtitle="Real-time map of agent collaboration and task dependency graph."
       />
 
-      <div className="flex-1 min-h-0 flex gap-6">
-        <div className="flex-1 flex flex-col gap-4">
-          {/* Toolbar */}
-          <div className="flex items-center justify-between glass p-2 px-4 border-white/5">
-            <div className="flex items-center gap-6">
-              <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-brand-500 shadow-glow-brand" />
-                <span className="text-xs font-bold text-white uppercase tracking-tighter">Live Connection</span>
-              </div>
-              <button 
-                onClick={() => setAgentsRunning(!isAgentsRunning)}
-                className="px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase transition-all bg-brand-500/20 text-brand-400 hover:bg-brand-500/30 border border-brand-500/30"
-              >
-                {isAgentsRunning ? 'Stop Simulation' : 'Simulate Swarm'}
-              </button>
-              <div className="flex items-center gap-2">
-                <Network className="h-4 w-4 text-slate-500" />
-                <span className="text-xs text-slate-400 font-medium">{activeNodes} Active Nodes</span>
-              </div>
-            </div>
-
-            <div className="group flex items-center gap-2">
-              <button className="btn-ghost p-2" title="Maximize"><Maximize2 className="h-4 w-4" /></button>
-              <button className="btn-ghost p-2" title="Share Grant"><Share2 className="h-4 w-4" /></button>
-              <button className="btn-ghost p-2" title="Export PNG"><Download className="h-4 w-4" /></button>
-            </div>
+      {/* Toolbar */}
+      <div className="flex items-center justify-between glass px-4 py-2.5 rounded-2xl border-white/5 shrink-0">
+        <div className="flex items-center gap-5">
+          <div className="flex items-center gap-2">
+            <motion.div
+              animate={{ opacity: [0.5, 1, 0.5] }}
+              transition={{ duration: 2, repeat: Infinity }}
+              className="h-2 w-2 rounded-full bg-brand-500 shadow-[0_0_8px_rgba(99,102,241,0.8)]"
+            />
+            <span className="text-xs font-bold text-white uppercase tracking-tighter">Live Connection</span>
           </div>
 
-          {/* The Graph */}
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="flex-1 min-h-0 rounded-[32px] overflow-hidden relative shadow-2xl"
+          <button
+            onClick={() => setAgentsRunning(!isAgentsRunning)}
+            className={`px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase transition-all border ${
+              isAgentsRunning
+                ? 'bg-brand-500/20 text-brand-400 border-brand-500/30 hover:bg-brand-500/30'
+                : 'bg-white/5 text-slate-400 border-white/10 hover:bg-white/10'
+            }`}
           >
-            <WorkflowGraph />
-          </motion.div>
+            {isAgentsRunning ? 'Stop Simulation' : 'Simulate Swarm'}
+          </button>
+
+          <div className="flex items-center gap-2">
+            <Network className="h-4 w-4 text-slate-500" />
+            <span className="text-xs text-slate-400 font-medium">{activeNodes} Agent Nodes</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <CheckSquare className="h-4 w-4 text-slate-500" />
+            <span className="text-xs text-slate-400 font-medium">{tasks.length} Tasks</span>
+          </div>
         </div>
 
-        {/* Right Side Panel - Collaboration Log */}
-        <motion.div 
-          initial={{ opacity: 0, x: 50 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="w-80 h-full hidden xl:flex flex-col"
-        >
-          <AgentCollaborationLog />
-        </motion.div>
+        <div className="flex items-center gap-1">
+          <button className="btn-ghost p-2 rounded-xl" title="Maximize">
+            <Maximize2 className="h-4 w-4 text-slate-400" />
+          </button>
+          <button className="btn-ghost p-2 rounded-xl" title="Share">
+            <Share2 className="h-4 w-4 text-slate-400" />
+          </button>
+          <button className="btn-ghost p-2 rounded-xl" title="Export PNG">
+            <Download className="h-4 w-4 text-slate-400" />
+          </button>
+        </div>
       </div>
 
-      {/* Floating Insight Card */}
-      <motion.div 
-        initial={{ y: 200 }}
-        animate={{ y: 0 }}
-        className="fixed bottom-8 right-8 w-80 glass-strong p-6 shadow-2xl z-20 border-brand-500/30"
-      >
-        <div className="flex items-start justify-between mb-4">
-          <div className="bg-brand-500/10 p-2 rounded-lg">
-            <Network className="h-5 w-5 text-brand-400" />
+      {/* Main Content */}
+      <div className="flex-1 min-h-0 flex gap-4">
+        {/* Graph */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3 }}
+          className="flex-1 min-h-0 min-w-0"
+        >
+          <WorkflowGraph />
+        </motion.div>
+
+        {/* Right Panel */}
+        <motion.div
+          initial={{ opacity: 0, x: 40 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+          className="w-72 shrink-0 flex flex-col gap-3 min-h-0"
+        >
+          {/* Stats Cards */}
+          <div className="grid grid-cols-2 gap-3 shrink-0">
+            <div className="glass rounded-2xl p-4 border-white/5 flex flex-col gap-1.5">
+              <div className="flex items-center gap-2">
+                <Activity className="h-3.5 w-3.5 text-brand-400" />
+                <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">Active</span>
+              </div>
+              <div className="text-2xl font-black text-white">{inProgressTasks}</div>
+              <div className="text-[9px] text-slate-500 font-medium">tasks running</div>
+            </div>
+
+            <div className="glass rounded-2xl p-4 border-white/5 flex flex-col gap-1.5">
+              <div className="flex items-center gap-2">
+                <Zap className="h-3.5 w-3.5 text-emerald-400" />
+                <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">Score</span>
+              </div>
+              <div className="text-2xl font-black text-emerald-400">{optScore}%</div>
+              <div className="text-[9px] text-slate-500 font-medium">completion rate</div>
+            </div>
           </div>
-          <div className="text-[10px] font-black text-brand-400 uppercase tracking-widest">Graph Insight</div>
-        </div>
-        <h4 className="text-sm font-bold text-white mb-2">Autonomous Path Optimized</h4>
-        <p className="text-xs text-slate-400 leading-relaxed">
-          {insightText}
-        </p>
-        <div className="mt-4 pt-4 border-t border-white/5">
-          <div className="flex justify-between items-center text-[10px]">
-            <span className="text-slate-500 uppercase font-bold">Optimization Score</span>
-            <span className="text-green-400 font-bold">{optScore}%</span>
+
+          {/* Graph Insight Card */}
+          <div className="glass rounded-2xl p-4 border-white/5 shrink-0">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="p-1.5 rounded-lg bg-brand-500/10">
+                <Network className="h-3.5 w-3.5 text-brand-400" />
+              </div>
+              <span className="text-[9px] font-black text-brand-400 uppercase tracking-widest">Graph Insight</span>
+            </div>
+            <p className="text-[11px] text-slate-400 leading-relaxed">
+              {insightText}
+            </p>
+            <div className="mt-3 pt-3 border-t border-white/5">
+              <div className="flex items-center justify-between">
+                <span className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Optimization</span>
+                <span className="text-[11px] font-black text-emerald-400">{optScore}%</span>
+              </div>
+              <div className="mt-2 h-1.5 bg-surface-800 rounded-full overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${optScore}%` }}
+                  transition={{ duration: 1, ease: 'easeOut', delay: 0.5 }}
+                  className="h-full bg-emerald-500 rounded-full"
+                />
+              </div>
+            </div>
           </div>
-        </div>
-      </motion.div>
+
+          {/* Collaboration Log — fills remaining space */}
+          <div className="flex-1 min-h-0 glass rounded-2xl p-4 border-white/5 overflow-hidden">
+            <AgentCollaborationLog />
+          </div>
+        </motion.div>
+      </div>
     </div>
   )
 }

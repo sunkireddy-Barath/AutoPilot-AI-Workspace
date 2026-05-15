@@ -14,8 +14,8 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     try {
       const jsonErr = JSON.parse(err)
       if (jsonErr.detail) throw new Error(jsonErr.detail)
-    } catch (e) {
-      if (e instanceof Error && e.message === (JSON.parse(err).detail)) throw e
+    } catch {
+      // Not JSON — fall through to generic error
     }
     throw new Error(`API Error ${res.status}: ${err}`)
   }

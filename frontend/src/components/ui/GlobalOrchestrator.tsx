@@ -109,8 +109,9 @@ export default function GlobalOrchestrator() {
 
     // 6.5 Agent Collaboration (Internal handoffs)
     const offCollaboration = wsClient.on('agent_collaboration', (e: WSEvent) => {
-      useStore.getState().addAgentCollaboration(e.data)
-      toast.success(`Handoff: ${e.data.source} → ${e.data.target}`, {
+      const collab = e.data as { source: string; target: string }
+      useStore.getState().addAgentCollaboration(collab)
+      toast.success(`Handoff: ${collab.source} → ${collab.target}`, {
         icon: '🔗',
         style: { borderRadius: '12px', background: '#0f172a', color: '#fff' }
       })

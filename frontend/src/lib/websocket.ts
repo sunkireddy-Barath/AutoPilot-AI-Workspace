@@ -7,6 +7,7 @@
 export type WSEventType =
   | 'agent_thinking'
   | 'agent_message'
+  | 'agent_collaboration'
   | 'task_created'
   | 'task_updated'
   | 'workflow_updated'

@@ -1,22 +1,10 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import {
-  PlusCircle,
-  Settings2,
-  History,
-  Bot,
-  Cpu,
-  Zap,
-  RefreshCw,
-  Rocket,
-  Search,
-  Share2,
-  Download
-} from 'lucide-react'
-import { useStore, Message, AgentRole } from '@/lib/store'
-import { wsClient, WSEvent } from '@/lib/websocket'
+import { Zap, Rocket, Cpu, Share2, Search, History, Download, PlusCircle, Sparkles } from 'lucide-react'
+import { useStore, Message } from '@/lib/store'
+import { wsClient } from '@/lib/websocket'
 import { chatApi, conversationsApi } from '@/lib/api'
 import { exportProjectToMarkdown } from '@/lib/export'
 import ChatMessage from './ChatMessage'
@@ -29,249 +17,294 @@ export default function ChatWindow() {
   const {
     userId,
     activeConversationId,
+    conversations,
     messages,
     setMessages,
     addMessage,
     setActiveConversation,
     streamingContent,
-    appendStreamChunk,
-    clearStream,
-    setAgentStatus,
-    agentStatuses,
-    addTask,
-    updateTask,
-    addAgentActivity,
-    setWorkflowGraph,
     setAgentsRunning,
-    tasks
+    tasks,
+    // Store-managed agent state (updated by GlobalOrchestrator via WS)
+    activeAgent,
   } = useStore()
 
   const [loading, setLoading] = useState(false)
-  const [activeAgent, setActiveAgent] = useState<AgentRole | null>(null)
   const [historyOpen, setHistoryOpen] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
 
-  const handleExport = () => {
-    if (messages.length === 0) return
-    const firstMsg = messages.find(m => m.role === 'user')?.content || 'AutoPilot Project'
-    const projectName = firstMsg.slice(0, 30) + (firstMsg.length > 30 ? '...' : '')
-    exportProjectToMarkdown(projectName, messages, tasks)
-    toast.success('Project plan downloaded')
-  }
+  // Active session title from conversation list
+  const activeSession = conversations.find(c => c.id === activeConversationId)
 
-  // Auto-initialize session if none exists
-  useEffect(() => {
-    if (userId && !activeConversationId && !loading) {
-      handleNewSession()
-    }
-  }, [userId, activeConversationId])
-
-  // Scroll to bottom on new messages or streaming
+  // Scroll to bottom whenever messages / streaming content change
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }
   }, [messages, streamingContent, activeAgent])
 
-  // Setup WebSocket connection
+  // Ensure WS is connected whenever the active conversation changes
   useEffect(() => {
     if (!activeConversationId) return
-
     wsClient.connect(activeConversationId)
-
-    // Handle agent thinking events
-    wsClient.connect(activeConversationId)
-
-    return () => {
-      // Handlers are managed by GlobalOrchestrator
-    }
   }, [activeConversationId])
 
-  const handleSendMessage = async (text: string) => {
+  const handleSendMessage = useCallback(async (text: string) => {
     if (!userId) return
 
     let currentConvId = activeConversationId
 
-    // Auto-create session if none exists
+    // Auto-create a conversation if none exists yet
     if (!currentConvId) {
       setLoading(true)
       try {
-        const newConv = await conversationsApi.create(userId, "Autonomous Project Session") as any
+        const newConv = await conversationsApi.create(userId, text.slice(0, 60)) as any
         currentConvId = newConv.id
         setActiveConversation(currentConvId!)
-      } catch (error) {
+      } catch {
         toast.error('Failed to initialize session')
         setLoading(false)
         return
       }
     }
 
-    // Add user message locally for immediate feedback
+    // Optimistically add user message
     const userMsg: Message = {
       id: crypto.randomUUID(),
       conversation_id: currentConvId!,
       role: 'user',
       content: text,
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
     }
     addMessage(userMsg)
     setAgentsRunning(true)
-
     setLoading(true)
+
     try {
       const result = await chatApi.sendMessage({
         conversation_id: currentConvId!,
         user_id: userId,
         message: text,
-        autonomous_mode: useStore.getState().autonomousMode
+        autonomous_mode: useStore.getState().autonomousMode,
       }) as any
 
-      // Add the final assistant message from the REST response
+      // Add REST response message only if it wasn't already delivered via WS
       if (result?.message) {
         addMessage({
           id: result.message.id,
           conversation_id: currentConvId!,
           role: 'agent',
-          agent_role: 'orchestrator',
+          agent_role: result.message.agent_role || 'orchestrator',
           content: result.message.content,
-          created_at: result.message.created_at || new Date().toISOString()
+          created_at: result.message.created_at || new Date().toISOString(),
         })
       }
     } catch (error: any) {
       toast.error(error.message || 'Failed to send message')
-      console.error(error)
+      setAgentsRunning(false) // Reset on error since WS stream_done won't fire
     } finally {
       setLoading(false)
     }
-  }
+  }, [userId, activeConversationId, addMessage, setActiveConversation, setAgentsRunning])
 
-  const handleNewSession = async () => {
+  const handleNewSession = useCallback(async () => {
     if (!userId) return
-
     setLoading(true)
     try {
-      const newConv = await conversationsApi.create(userId, "New Analysis Session") as any
+      const newConv = await conversationsApi.create(userId, 'New Analysis Session') as any
       setActiveConversation(newConv.id)
       setMessages([])
-      toast.success('Started new session')
-    } catch (error) {
-      toast.error('Failed to create new session')
-      console.error(error)
+      toast.success('New session started')
+    } catch {
+      toast.error('Failed to create session')
     } finally {
       setLoading(false)
     }
-  }
+  }, [userId, setActiveConversation, setMessages])
+
+  const handleExport = useCallback(() => {
+    if (messages.length === 0) {
+      toast.error('No messages to export')
+      return
+    }
+    const title = messages.find(m => m.role === 'user')?.content?.slice(0, 40) || 'AutoPilot Project'
+    exportProjectToMarkdown(title, messages, tasks)
+    toast.success('Project plan exported')
+  }, [messages, tasks])
 
   return (
     <>
       <ConversationHistory open={historyOpen} onClose={() => setHistoryOpen(false)} />
+
       <div className="flex flex-col h-full bg-transparent overflow-hidden relative w-full">
 
-      {/* Messages Area */}
-      <div
-        ref={scrollRef}
-        className="flex-1 overflow-y-auto scroll-smooth custom-scrollbar flex flex-col pt-4 relative"
-      >
-
-        <div className="max-w-3xl w-full mx-auto px-6 flex-1 flex flex-col pb-20 justify-center">
-          {messages.length === 0 && !loading && (
-            <div className="flex flex-col items-center text-center px-4 py-20">
+        {/* ── Session header bar ── */}
+        <div className="shrink-0 flex items-center justify-between px-6 py-3 border-b border-white/[0.04] bg-[#050508]/60 backdrop-blur-md">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="w-20 h-20 rounded-3xl bg-brand-600/10 flex items-center justify-center mb-8 border border-brand-500/20 shadow-glow-brand/20 relative"
-              >
-                <div className="absolute inset-0 bg-brand-500/20 blur-2xl rounded-full" />
-                <Zap className="h-10 w-10 text-brand-400 fill-brand-400/20 relative z-10" />
-              </motion.div>
-
-              <h1 className="text-4xl font-black text-white mb-4 tracking-tighter">
-                Neural <span className="text-brand-500">AutoPilot</span>
-              </h1>
-              <p className="text-slate-500 max-w-sm text-base font-medium leading-relaxed mb-12">
-                The next generation of autonomous project execution. Describe your goal to begin.
-              </p>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl">
-                {[
-                  { title: "Product Manager", desc: "Define goals, user stories & roadmaps", icon: Rocket, msg: "Act as the Product Manager and help me define a roadmap for a new app." },
-                  { title: "Lead Developer", desc: "Generate architecture and write code", icon: Cpu, msg: "Act as the Lead Developer and help me design the system architecture." },
-                  { title: "Marketing Expert", desc: "Draft campaigns and growth strategies", icon: Share2, msg: "Act as the Marketing Expert and create a growth campaign for my product." },
-                  { title: "Data Analyst", desc: "Extract insights and define KPIs", icon: Search, msg: "Act as the Data Analyst and define key metrics for my business." }
-                ].map((item) => (
-                  <button
-                    key={item.title}
-                    onClick={() => handleSendMessage(item.msg)}
-                    className="flex flex-col items-start p-5 rounded-[20px] bg-white/[0.03] border border-white/5 hover:border-brand-500/30 hover:bg-white/[0.05] transition-all duration-300 group text-left relative overflow-hidden h-28"
-                  >
-                    <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity duration-300">
-                      <item.icon size={48} />
-                    </div>
-                    <div className="text-[10px] font-black text-brand-500 uppercase tracking-widest mb-1 transition-transform duration-300 group-hover:-translate-y-1">Agent</div>
-                    <div className="text-sm font-bold text-white mb-1 transition-transform duration-300 group-hover:-translate-y-1">{item.title}</div>
-
-                    {/* Words displayed in bottom side on mouse over */}
-                    <div className="absolute bottom-5 left-5 right-5 text-xs text-slate-500 opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 pointer-events-none">
-                      {item.desc}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <AnimatePresence initial={false}>
-            {messages.map((msg) => (
-              <ChatMessage key={msg.id} message={msg} />
-            ))}
-
-            {streamingContent && (
-              <ChatMessage
-                message={{
-                  id: 'streaming',
-                  conversation_id: activeConversationId!,
-                  role: 'agent',
-                  agent_role: activeAgent || 'orchestrator',
-                  content: streamingContent,
-                  created_at: new Date().toISOString()
-                }}
+                animate={{ opacity: [0.4, 1, 0.4] }}
+                transition={{ duration: 2.5, repeat: Infinity }}
+                className="w-1.5 h-1.5 rounded-full bg-brand-500 shadow-[0_0_6px_rgba(99,102,241,0.8)]"
               />
+              <span className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500">
+                Neural Session
+              </span>
+            </div>
+            {activeSession && (
+              <span className="text-[11px] font-bold text-white/70 truncate max-w-[220px]">
+                — {activeSession.title}
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setHistoryOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-slate-500 hover:text-white hover:bg-white/[0.05] transition-all text-[10px] font-bold uppercase tracking-widest border border-transparent hover:border-white/10"
+              title="Session History"
+            >
+              <History className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">History</span>
+            </button>
+            <button
+              onClick={handleExport}
+              disabled={messages.length === 0}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-slate-500 hover:text-white hover:bg-white/[0.05] transition-all text-[10px] font-bold uppercase tracking-widest border border-transparent hover:border-white/10 disabled:opacity-30 disabled:cursor-not-allowed"
+              title="Export session"
+            >
+              <Download className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Export</span>
+            </button>
+            <button
+              onClick={handleNewSession}
+              disabled={loading}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-brand-400 hover:text-white hover:bg-brand-500/10 transition-all text-[10px] font-bold uppercase tracking-widest border border-brand-500/20 hover:border-brand-500/40 disabled:opacity-50"
+              title="New session"
+            >
+              <PlusCircle className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">New</span>
+            </button>
+          </div>
+        </div>
+
+        {/* ── Messages area ── */}
+        <div
+          ref={scrollRef}
+          className="flex-1 overflow-y-auto scroll-smooth custom-scrollbar flex flex-col"
+        >
+          <div className="max-w-3xl w-full mx-auto px-6 flex-1 flex flex-col pb-6">
+
+            {/* Empty state */}
+            {messages.length === 0 && !loading && (
+              <div className="flex flex-col items-center text-center px-4 py-16 my-auto">
+                <motion.div
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: 'spring', stiffness: 200 }}
+                  className="relative w-24 h-24 rounded-3xl bg-brand-600/10 flex items-center justify-center mb-8 border border-brand-500/20"
+                >
+                  <motion.div
+                    animate={{ scale: [1, 1.5, 1], opacity: [0.2, 0.5, 0.2] }}
+                    transition={{ duration: 3, repeat: Infinity }}
+                    className="absolute inset-0 bg-brand-500/20 blur-2xl rounded-full"
+                  />
+                  <Zap className="h-10 w-10 text-brand-400 fill-brand-400/20 relative z-10" />
+                </motion.div>
+
+                <motion.h1
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="text-4xl font-black text-white mb-3 tracking-tighter"
+                >
+                  Neural <span className="text-brand-500">AutoPilot</span>
+                </motion.h1>
+                <motion.p
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.15 }}
+                  className="text-slate-500 max-w-sm text-sm font-medium leading-relaxed mb-10"
+                >
+                  Describe your business goal and 4 specialized AI agents will autonomously plan, build, market and analyze it.
+                </motion.p>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-2xl"
+                >
+                  {[
+                    { title: 'Product Manager', desc: 'Define goals, user stories & roadmaps', icon: Rocket, msg: 'Act as Product Manager and create a complete product roadmap for a SaaS analytics tool.' },
+                    { title: 'Lead Developer', desc: 'Generate architecture, code & APIs', icon: Cpu, msg: 'Act as Lead Developer and design a scalable system architecture for a real-time chat app.' },
+                    { title: 'Marketing Expert', desc: 'Campaigns, GTM strategy & content', icon: Share2, msg: 'Act as Marketing Expert and create a full go-to-market strategy for a new productivity app.' },
+                    { title: 'Data Analyst', desc: 'KPIs, insights & performance metrics', icon: Search, msg: 'Act as Data Analyst and define key metrics, risks and optimization recommendations for my business.' },
+                  ].map((item, i) => (
+                    <motion.button
+                      key={item.title}
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.25 + i * 0.05 }}
+                      onClick={() => handleSendMessage(item.msg)}
+                      className="flex flex-col items-start p-5 rounded-[20px] bg-white/[0.025] border border-white/[0.06] hover:border-brand-500/30 hover:bg-white/[0.05] transition-all duration-300 group text-left relative overflow-hidden h-28"
+                    >
+                      <div className="absolute top-0 right-0 p-4 opacity-[0.04] group-hover:opacity-[0.1] transition-opacity duration-500">
+                        <item.icon size={44} />
+                      </div>
+                      <div className="absolute inset-0 bg-gradient-to-br from-brand-500/0 to-brand-600/0 group-hover:from-brand-500/5 group-hover:to-brand-600/5 transition-all duration-500 rounded-[20px]" />
+                      <div className="text-[9px] font-black text-brand-500 uppercase tracking-[0.25em] mb-1.5 relative z-10">
+                        <Sparkles className="inline h-2.5 w-2.5 mr-1" />
+                        Agent Mode
+                      </div>
+                      <div className="text-sm font-bold text-white mb-1 relative z-10">{item.title}</div>
+                      <div className="absolute bottom-5 left-5 right-5 text-[11px] text-slate-500 opacity-0 translate-y-3 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 pointer-events-none z-10">
+                        {item.desc}
+                      </div>
+                    </motion.button>
+                  ))}
+                </motion.div>
+              </div>
             )}
 
-            {activeAgent && !streamingContent && (
-              <ThinkingIndicator role={activeAgent} />
-            )}
-          </AnimatePresence>
+            {/* Messages */}
+            <AnimatePresence initial={false}>
+              {messages.map((msg) => (
+                <ChatMessage key={msg.id} message={msg} />
+              ))}
+
+              {/* Live streaming message */}
+              {streamingContent && (
+                <ChatMessage
+                  key="streaming"
+                  message={{
+                    id: 'streaming',
+                    conversation_id: activeConversationId!,
+                    role: 'agent',
+                    agent_role: activeAgent || 'orchestrator',
+                    content: streamingContent,
+                    created_at: new Date().toISOString(),
+                  }}
+                />
+              )}
+
+              {/* Thinking indicator — shows when agent is thinking but no stream yet */}
+              {activeAgent && !streamingContent && (
+                <ThinkingIndicator key="thinking" role={activeAgent} />
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+
+        {/* ── Input area ── */}
+        <div className="shrink-0 w-full pb-28 pt-3 px-4 bg-gradient-to-t from-[#050508] via-[#050508]/95 to-transparent">
+          <ChatInput
+            onSend={handleSendMessage}
+            loading={loading}
+            disabled={!userId}
+          />
         </div>
       </div>
-
-      {/* Input Area - Relative at bottom of flex-col */}
-      <div className="w-full pb-32 pt-4 px-4 bg-gradient-to-t from-[#050508] via-[#050508]/95 to-transparent">
-        <ChatInput
-          onSend={handleSendMessage}
-          loading={loading}
-          disabled={!userId}
-        />
-      </div>
-    </div>
     </>
-  )
-}
-
-function ArrowRight(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24" height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M5 12h14" /><path d="m12 5 7 7-7 7" />
-    </svg>
   )
 }
