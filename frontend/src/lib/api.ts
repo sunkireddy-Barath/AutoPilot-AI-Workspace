@@ -39,10 +39,10 @@ export const chatApi = {
 // ── Conversations ──────────────────────────────────────────────────────
 export const conversationsApi = {
   list: (userId: string) =>
-    request<unknown[]>(`/api/v1/conversations?user_id=${userId}`),
+    request<unknown[]>(`/api/v1/conversations/?user_id=${userId}`),
 
   create: (userId: string, title = 'New Conversation') =>
-    request('/api/v1/conversations', {
+    request('/api/v1/conversations/', {
       method: 'POST',
       body: JSON.stringify({ user_id: userId, title }),
     }),
@@ -60,7 +60,7 @@ export const tasksApi = {
     const qs = conversationId
       ? `user_id=${userId}&conversation_id=${conversationId}`
       : `user_id=${userId}`
-    return request<unknown[]>(`/api/v1/tasks?${qs}`)
+    return request<unknown[]>(`/api/v1/tasks/?${qs}`)
   },
 
   update: (taskId: string, patch: Record<string, unknown>) =>
@@ -76,7 +76,7 @@ export const tasksApi = {
 // ── Workflows ──────────────────────────────────────────────────────────
 export const workflowsApi = {
   list: (userId: string) =>
-    request<unknown[]>(`/api/v1/workflows?user_id=${userId}`),
+    request<unknown[]>(`/api/v1/workflows/?user_id=${userId}`),
 }
 
 // ── Agent Activities ───────────────────────────────────────────────────
