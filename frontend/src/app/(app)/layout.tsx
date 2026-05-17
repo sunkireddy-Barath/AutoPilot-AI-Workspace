@@ -43,8 +43,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       {/* Global Orchestrator (WebSocket Logic) */}
       <GlobalOrchestrator />
 
-      {/* Main Content Area - Full Width & Height */}
-      <main className="h-screen relative z-10 overflow-hidden">
+      {/* Main Content Area — starts below the fixed TopBar (h-20 = 80px) */}
+      <main className="fixed top-20 left-0 right-0 bottom-0 z-10 overflow-hidden">
         <div className="h-full flex flex-col">
           {children}
         </div>

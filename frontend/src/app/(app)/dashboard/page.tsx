@@ -116,7 +116,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="p-8 w-full max-w-full px-4 lg:px-16 space-y-8 h-full overflow-y-auto pb-32 custom-scrollbar pt-24">
+    <div className="w-full max-w-full px-4 lg:px-16 space-y-8 h-full overflow-y-auto pb-32 custom-scrollbar pt-12">
       <div className="px-2">
         <DashboardHeader 
           title="Command Hub" 

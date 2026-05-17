@@ -66,7 +66,7 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="w-full h-screen max-w-full flex bg-[#050508] pt-28 overflow-hidden relative">
+    <div className="w-full h-full max-w-full flex bg-[#050508] pt-4 overflow-hidden relative">
       <motion.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}

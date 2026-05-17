@@ -28,12 +28,11 @@ export default function AgentsPage() {
   const recentLogs = agentActivities.slice(0, 4)
 
   return (
-    <div className="h-full overflow-y-auto">
-    <div className="p-8 w-full max-w-full px-4 lg:px-16 space-y-8 pb-32">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <DashboardHeader 
-          title="Neural Units" 
-          subtitle="Specialized AI agents operating within your synchronized cluster." 
+    <div className="h-full overflow-y-auto w-full max-w-full px-4 lg:px-16 space-y-8 pb-32 pt-12 custom-scrollbar">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <DashboardHeader
+          title="Neural Units"
+          subtitle="Specialized AI agents operating within your synchronized cluster."
         />
         
         <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-white/[0.03] border border-white/5 backdrop-blur-xl">
@@ -196,7 +195,6 @@ export default function AgentsPage() {
         </div>
         <AgentGrid />
       </div>
-    </div>
     </div>
   )
 }
