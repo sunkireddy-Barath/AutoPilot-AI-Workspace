@@ -3,9 +3,10 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useStore } from '@/lib/store'
-import { FileText, Folder, Download, Eye, ChevronRight, X, FileCode, FileType } from 'lucide-react'
+import { FileText, Folder, Download, Eye, ChevronRight, X, FileCode } from 'lucide-react'
 import { filesApi } from '@/lib/api'
 import { cn } from '@/lib/utils'
+import toast from 'react-hot-toast'
 
 export default function FileExplorer() {
   const [files, setFiles] = useState<any[]>([])
@@ -166,10 +167,28 @@ export default function FileExplorer() {
               </div>
 
               <div className="p-4 border-t border-white/5 flex justify-end gap-3 bg-white/[0.01]">
-                <button className="px-6 py-2 rounded-xl bg-white/5 text-white text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all">
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(content)
+                      .then(() => toast?.success?.('Copied to clipboard'))
+                      .catch(() => {})
+                  }}
+                  className="px-6 py-2 rounded-xl bg-white/5 text-white text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all"
+                >
                   Copy Content
                 </button>
-                <button className="px-6 py-2 rounded-xl bg-brand-600 text-white text-[10px] font-black uppercase tracking-widest shadow-glow-brand hover:scale-105 transition-all flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    const blob = new Blob([content], { type: 'text/plain' })
+                    const url = URL.createObjectURL(blob)
+                    const a = document.createElement('a')
+                    a.href = url
+                    a.download = selectedFile?.name || 'artifact.txt'
+                    a.click()
+                    URL.revokeObjectURL(url)
+                  }}
+                  className="px-6 py-2 rounded-xl bg-brand-600 text-white text-[10px] font-black uppercase tracking-widest shadow-glow-brand hover:scale-105 transition-all flex items-center gap-2"
+                >
                   <Download className="h-3 w-3" /> Download Artifact
                 </button>
               </div>

@@ -5,9 +5,11 @@ import InsightChart from '@/components/dashboard/InsightChart'
 import { motion } from 'framer-motion'
 import { TrendingUp, Users, Target, Zap, Clock, ArrowUpRight } from 'lucide-react'
 import { useStore } from '@/lib/store'
+import { useRouter } from 'next/navigation'
 
 export default function InsightsPage() {
   const { tasks, agentActivities } = useStore()
+  const router = useRouter()
 
   // --- Dynamic Data Calculations ---
   
@@ -140,7 +142,10 @@ export default function InsightsPage() {
                      </div>
                    ))}
                 </div>
-                <button className="px-5 py-2.5 rounded-xl bg-brand-600 text-white text-[10px] font-black uppercase tracking-widest shadow-glow-brand hover:scale-105 active:scale-95 transition-all flex items-center gap-2">
+                <button
+                  onClick={() => router.push('/chat')}
+                  className="px-5 py-2.5 rounded-xl bg-brand-600 text-white text-[10px] font-black uppercase tracking-widest shadow-glow-brand hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+                >
                   Execute Strategy <ArrowUpRight className="h-4 w-4" />
                 </button>
               </div>

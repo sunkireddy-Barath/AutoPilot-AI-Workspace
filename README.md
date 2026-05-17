@@ -1,189 +1,380 @@
-# 🚀 Neural AutoPilot (MeDo)
+# AutoPilot AI Workspace
 
-**The Master Execution & Dashboard Orchestrator (MeDo) — Revolutionizing the Future of Autonomous Work.**
-
-Neural AutoPilot (MeDo) is a state-of-the-art, autonomous multi-agent platform designed to bridge the gap between high-level human intent and production-ready project execution. By leveraging a complex **Neural Core** orchestration engine, MeDo coordinates a specialized swarm of AI agents—Product Managers, Developers, Marketing Experts, and Data Analysts—to autonomously build, refine, and optimize your business goals in a unified, self-healing ecosystem.
+> A production-grade, multi-agent AI business automation platform. Describe your business goal and specialized AI agents — Product Manager, Developer, Marketing Expert, Data Analyst, and Operations — autonomously plan, build, and execute it in real time.
 
 ---
 
-## 🏛️ System Architecture & Framework
+## Live Deployment
 
-The MeDo ecosystem is built on a high-performance, multi-layered architecture designed for extreme transparency and real-time autonomous reasoning.
+| Service | URL |
+|---------|-----|
+| **Frontend (App)** | https://frontend-virid-ten-21.vercel.app |
+| **Backend API** | https://autopilot-ai-backend.vercel.app |
+| **API Docs (Swagger)** | https://autopilot-ai-backend.vercel.app/docs |
+| **Health Check** | https://autopilot-ai-backend.vercel.app/health |
 
-### 1. Holistic Framework Architecture
-*The foundational map of the MeDo technical stack and persistent data nodes.*
+---
 
-```mermaid
-graph TD
-    %% Node Definitions
-    User((User))
-    
-    subgraph Frontend ["Frontend (Next.js 14)"]
-        UI["Glassmorphic UI"]
-        State["Zustand Store"]
-        WS_Client["WS Listener"]
-    end
+## Tech Stack
 
-    subgraph Backend ["Backend (FastAPI)"]
-        API["REST API Layer"]
-        Engine["LangGraph Engine"]
-        
-        subgraph Swarm ["The Agent Swarm"]
-            PM["PM Agent"]
-            DEV["Dev Agent"]
-            MKT["Market Agent"]
-            ANA["Analyst Agent"]
-        end
-    end
+### Frontend
+| | Technology |
+|-|-----------|
+| Framework | Next.js 14 (App Router, TypeScript) |
+| Styling | Tailwind CSS + custom glassmorphic design system |
+| Animation | Framer Motion |
+| State Management | Zustand (persisted to localStorage) |
+| Authentication | Firebase Auth — Email/Password + Google OAuth |
+| Real-time | WebSocket client with serverless graceful fallback |
+| Workflow Graph | React Flow (@xyflow/react) |
+| Deployment | Vercel |
 
-    subgraph Storage ["Storage (Supabase)"]
-        DB["Postgres DB"]
-        Realtime["Realtime Bus"]
-    end
+### Backend
+| | Technology |
+|-|-----------|
+| Framework | FastAPI (Python 3.12) |
+| AI Orchestration | LangGraph + LangChain |
+| LLM | OpenAI GPT-4o-mini |
+| Agents | 5 specialized agents (PM, Dev, Marketing, Analyst, Operations) |
+| Database | Supabase (PostgreSQL) with in-memory mock fallback |
+| Deployment | Vercel Serverless (`@vercel/python`) |
 
-    subgraph AI ["AI Layer (OpenAI)"]
-        GPT["GPT-4o"]
-    end
+---
 
-    %% Connections
-    User --> UI
-    UI <--> State
-    UI <--> WS_Client
-    UI <--> API
-    
-    API <--> Engine
-    Engine <--> Swarm
-    Swarm <--> GPT
-    
-    Engine <--> DB
-    DB <--> Realtime
-    Realtime --> WS_Client
+## Architecture
 
-    %% Styling
-    style Frontend fill:#0f172a,stroke:#334155,stroke-width:2px,color:#fff
-    style Backend fill:#0f172a,stroke:#334155,stroke-width:2px,color:#fff
-    style Storage fill:#0f172a,stroke:#334155,stroke-width:2px,color:#fff
-    style Swarm fill:#1e293b,stroke:#3b82f6,stroke-width:2px,color:#fff
-    style AI fill:#0f172a,stroke:#334155,stroke-width:2px,color:#fff
 ```
-
-### 2. The Sequential "Neural Loop" (Execution Flow)
-*Visualizing the step-by-step logic progression between the User and the Agent Swarm.*
-
-```mermaid
-sequenceDiagram
-    participant User as 👤 User
-    participant ORC as 🧠 Master Orchestrator
-    participant PM as 📋 Product Manager
-    participant DEV as 💻 Lead Developer
-    participant MKT as 📢 Marketing Expert
-    participant S as 🗄️ Supabase DB
-
-    User->>ORC: "Launch a Coffee Subscription App"
-    ORC->>PM: Initialize Neural Planning
-    
-    rect rgb(30, 41, 59)
-        Note right of PM: Agent analyzes goal & creates roadmap
-        PM->>S: Persist 10+ Dynamic Tasks
-        S-->>User: (Real-time Pipeline Update)
-    end
-
-    par PM to Dev & Marketing
-        PM->>DEV: Design Architecture & Schema
-        PM->>MKT: Conduct Market Research
-    end
-
-    DEV->>PM: Technical Spec Ready
-    MKT->>PM: Growth Strategy Ready
-
-    rect rgb(30, 41, 59)
-        Note over PM,DEV: Swarm Peer-Review & Refinement
-    end
-
-    PM->>ORC: Consolidated Project Package
-    ORC-->>User: Streaming Neural Response (WS)
+User ──→ Firebase Auth ──→ Next.js Frontend (Vercel)
+                                    │
+                           Zustand Store (localStorage)
+                                    │
+                          FastAPI Backend (Vercel)
+                                    │
+                         LangGraph Orchestrator
+                    ┌───────────────────────────┐
+                    │  Product Manager Agent    │ → Roadmap, user stories, RICE scoring
+                    │  Developer Agent          │ → Architecture, tech stack, code plan
+                    │  Marketing Agent          │ → GTM strategy, campaigns, content
+                    │  Analyst Agent            │ → KPIs, metrics, risk analysis
+                    │  Operations Agent         │ → Infrastructure, CI/CD, scaling
+                    └───────────────────────────┘
+                                    │
+                          Supabase DB / Mock Store
+                                    │
+                       WebSocket → Real-time UI updates
 ```
 
 ---
 
-## 💎 The MeDo Strategic Advantage: Why This Architecture Matters
+## Features
 
-MeDo is specifically engineered to solve the "Execution Gap" in modern project management.
+### Authentication
+- Email/Password sign-up and sign-in via Firebase
+- Google OAuth — one-click sign-in
+- Protected routes — all app pages require authentication
+- Session persisted across page refreshes via Firebase + Zustand
+- Profile update (display name) and password change in Settings
 
-### 🧠 Autonomous "Self-Healing" Workflows
-If a task in the **Active Pipeline** is blocked or requires more info, the agents don't just stop. The **Neural Core** triggers a "Self-Healing" loop where the PM agent attempts to resolve the blocker using information from the other agents, only alerting the user when a high-level decision is required.
+### AI Command Center (Chat)
+- Send any business goal to the 5-agent LangGraph pipeline
+- 4 quick-prompt chips for instant role-specific prompts
+- Real-time thinking indicator while agents process
+- Full markdown rendering (code blocks, headers, tables, lists)
+- **History sidebar** — slide-out panel showing all past sessions; click any to restore
+- **Export** — downloads the full project plan as a `.md` file
+- **New Session** — starts a fresh conversation
+- Auto Mode toggle — enables autonomous agent chaining
+- Enter to send · Shift+Enter for newline · character counter
 
-### 🌟 Our Vision: The Future of Autonomous Work
-At MeDo, we believe that the next era of productivity will be defined by **Human-Swarm Collaboration**. Neural AutoPilot is our first step towards a world where anyone can manifest a complex business idea into a living, breathing project simply by describing it. We are building the operating system for the next generation of builders.
+### Dashboard — Command Hub
+- Live stats: active tasks, completed count, system health %, risks flagged
+- Strategic overview card showing active agent and current job count
+- **Active Pipeline** — list of all tasks; click any task to jump to its conversation in chat
+- **Session History** — all past conversations; click to restore full message thread
+- **Neural Suggestions** — dynamic AI recommendations based on current task state
+- **Workspace Output** — file explorer for agent-generated artifacts
+  - Click any file to open a preview modal with content
+  - **Copy Content** — copies file text to clipboard
+  - **Download Artifact** — saves file to your machine
+- **Agent Activity Timeline** — live animated log of every agent action with timestamps
+
+### Neural Units (Agents)
+- 6 agent cards: Product Manager, Developer, Marketing, Analyst, Orchestrator, Operations
+- Live status badge on each card (Idle / Thinking / Active)
+- Capability tags listing each agent's core skills
+- **Pause Matrix** — suspends all agent operations
+- **Synchronize** — resumes agent operations
+- Intelligence Health ring — animated circular progress showing task completion rate
+- Neural Logs panel — last 4 agent activities
+
+### Visual Workflow
+- Interactive React Flow canvas — orchestrator centered, agents arranged in an ellipse
+- Task nodes linked to their assigned agent nodes
+- **Simulate Swarm / Stop** — toggles animated agent activity
+- **Maximize** — fullscreens the graph canvas
+- **Copy Link** — copies current URL to clipboard
+- **Export JSON** — downloads workflow graph data as `.json`
+- Minimap for canvas navigation
+- Right panel: active task count, completion score bar, orchestrator insight text, collaboration log
+
+### Intelligence Hub (Insights)
+- 3 animated sparkline charts: System Throughput, Task Velocity, Market Resonance
+- Channel Distribution — bar graph showing Twitter/LinkedIn/Product Hunt activity based on real agent data
+- Agent Directive card — pulls the latest analyst agent reasoning text
+- Sidebar metrics: active processes count, Neural ROI, Compute Saved (hours), Cluster Sync %
+- **Execute Strategy** — navigates to AI Command Center
+
+### Settings — Personal Hub
+- Profile card: display name (editable), email (read-only from Firebase)
+- **Update Profile** — saves display name change to Firebase
+- **Password Update** — re-authenticates with current password, then updates in Firebase
+- Visual Matrix: Obsidian / Neural / Stellar theme selector
+- Signals & HUD toggles: Neural Thought Stream, Audio Feedback, Success HUD
+- Integration Matrix: live Firebase Auth status, backend API status
+- Team Cluster panel
+
+### Global UI
+- Fixed bottom dock (Sidebar) — navigates between all 5 sections; active route has animated indicator dot
+- Autonomous mode toggle in dock
+- User name display (from Firebase) with logout
+- Fixed top bar — brand logo, **New Project** button, notification bell
+- Notifications panel — activity feed with per-notification agent icons; **Clear All** button
+- Animated neural mesh background
+- Toast notifications for every user action
+- Fully responsive layout
 
 ---
 
-## 🤖 Deep Dive: The Agent Swarm
+## All API Endpoints
 
-- **Master Orchestrator**: The conductor. Manages state routing, session persistence, and real-time streaming updates.
-- **Product Manager**: The strategist. Breaks down goals into atomic tasks and manages the project roadmap.
-- **Lead Developer**: The builder. Designs architectures, generates schemas, and writes implementation logic.
-- **Marketing Expert**: The growth engine. Conducts competitive audits and drafts go-to-market strategies.
-- **Data Analyst**: The truth-teller. Monitors KPIs, ROI, and project progress with mathematical precision.
+Base URL: `https://autopilot-ai-backend.vercel.app`
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/health` | Health check |
+| `POST` | `/api/v1/chat` | Send goal to multi-agent pipeline |
+| `GET` | `/api/v1/conversations/` | List conversations for a user |
+| `POST` | `/api/v1/conversations/` | Create a new conversation |
+| `GET` | `/api/v1/conversations/{id}` | Get conversation + messages |
+| `GET` | `/api/v1/conversations/{id}/messages` | Get messages for a conversation |
+| `DELETE` | `/api/v1/conversations/{id}` | Delete a conversation |
+| `GET` | `/api/v1/tasks/` | List tasks for a user |
+| `PATCH` | `/api/v1/tasks/{id}` | Update task status/progress |
+| `DELETE` | `/api/v1/tasks/{id}` | Delete a task |
+| `GET` | `/api/v1/workflows/` | List workflows for a user |
+| `GET` | `/api/v1/workflows/{id}/graph` | Get workflow node/edge graph |
+| `GET` | `/api/v1/agents/activities` | Get agent activity log |
+| `GET` | `/api/v1/files` | List workspace output files |
+| `GET` | `/api/v1/files/{path}` | Get file content |
+| `GET` | `/api/v1/search/global` | Global search across conversations + tasks |
+| `WS` | `/ws/{conversation_id}` | Real-time event stream |
+
+Interactive Swagger UI: https://autopilot-ai-backend.vercel.app/docs
 
 ---
 
-## 🛠️ Technical Stack & Novelty
+## Agent Pipeline
 
-### The "Agents as Workers" Philosophy
-In MeDo, the LLM is not just a text generator; it is the **Engine of a Worker Swarm**. 
-- **Deterministic Routing**: LangGraph ensures that the flow between agents is structured and predictable.
-- **Real-time Swarm Feedback**: The system streams the thinking process, task creation, and logic updates as they happen.
-
----
-
-## 📂 Project Structure
-
-```text
-.
-├── backend                 # Neural Core Engine (FastAPI)
-│   ├── app
-│   │   ├── agents          # Domain-specific AI logic (PM, Developer, etc.)
-│   │   ├── api             # High-speed REST & WebSocket Dispatchers
-│   │   ├── db              # Supabase Client & Dynamic Schema management
-│   │   ├── orchestrator    # LangGraph Core (The Brain of MeDo)
-│   │   └── utils           # Security & Real-time Event Bus
-│   └── main.py             # Server Entry Point
-├── frontend                # Neural Interface (Next.js 14)
-│   ├── src
-│   │   ├── app             # Dashboard, Command Center, Auth
-│   │   ├── components      # Glassmorphic UI Components
-│   │   ├── lib             # State (Zustand) & API Connectors
-│   │   └── styles          # Design Tokens & CSS
-│   └── public              # Neural Assets & Logos
-└── schema.sql              # Database Source of Truth
+```
+User submits goal
+        ↓
+Product Manager  →  Features, user stories, RICE-prioritized task list
+        ↓
+Developer        →  System architecture, tech stack, implementation roadmap
+        ↓
+Marketing        →  GTM strategy, content calendar, channel recommendations
+        ↓
+Analyst          →  KPIs, risk matrix, optimization recommendations
+        ↓
+Operations       →  Infrastructure plan, CI/CD strategy, scaling approach
+        ↓
+Synthesize       →  Merge all outputs into final markdown response
+                    Persist tasks + workflow graph to database
+                    Broadcast real-time events via WebSocket
 ```
 
 ---
 
-## 🚀 Installation & Rapid Deployment
+## Local Development
 
-### 1. Database Initialization
-- Create a project on [Supabase](https://supabase.com).
-- Execute `schema.sql` in the SQL Editor to set up the persistence layer.
+### Prerequisites
+- Node.js 18+
+- Python 3.12+
+- Firebase project (`auto-pilot-365fe`) with Email/Password + Google auth enabled
 
-### 2. Backend Setup
+### Frontend
+
+```bash
+cd frontend
+npm install
+```
+
+Create `.env.local`:
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyC42URKayzE4CIviex-aGzwgy9I-LcbSQs
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=auto-pilot-365fe.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=auto-pilot-365fe
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=auto-pilot-365fe.firebasestorage.app
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=1011426503463
+NEXT_PUBLIC_FIREBASE_APP_ID=1:1011426503463:web:ae09052efe5527272cd702
+NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=G-HJBD8ZE871
+```
+
+```bash
+npm run dev    # http://localhost:3000
+```
+
+### Backend
+
 ```bash
 cd backend
 python -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
-# Configure .env with OPENAI_API_KEY, SUPABASE_URL, and SERVICE_ROLE_KEY
-uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
-### 3. Frontend Setup
+Create `.env`:
+```env
+OPENAI_API_KEY=sk-...
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+SECRET_KEY=your_secret
+```
+
+```bash
+uvicorn app.main:app --reload    # http://localhost:8000
+```
+
+> **Note:** Backend runs in mock mode (in-memory store) when Supabase is not configured. Agent responses require `OPENAI_API_KEY`; without it the engine returns keyword-based fallback responses.
+
+---
+
+## Deployment Guide
+
+### Vercel — Frontend
+
 ```bash
 cd frontend
-npm install
-# Configure .env.local with NEXT_PUBLIC_SUPABASE and NEXT_PUBLIC_FIREBASE keys
-npm run dev
+vercel --prod
+```
+
+Set these environment variables in Vercel dashboard (all `NEXT_PUBLIC_` must be build-time vars):
+
+```
+NEXT_PUBLIC_API_URL=https://autopilot-ai-backend.vercel.app
+NEXT_PUBLIC_FIREBASE_API_KEY=...
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=...
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=...
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=...
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=...
+NEXT_PUBLIC_FIREBASE_APP_ID=...
+NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=...
+```
+
+### Vercel — Backend
+
+```bash
+cd backend
+vercel --prod
+```
+
+Set these environment variables:
+```
+OPENAI_API_KEY=sk-...
+SUPABASE_URL=https://...
+SUPABASE_ANON_KEY=...
+SUPABASE_SERVICE_ROLE_KEY=...
+APP_ENV=production
+CORS_ORIGINS=*
+```
+
+### Firebase Console (required for auth to work on Vercel)
+1. Authentication → Sign-in method → **Enable Email/Password**
+2. Authentication → Sign-in method → **Enable Google** (set support email)
+3. Authentication → Settings → Authorized domains → **Add** `frontend-virid-ten-21.vercel.app`
+
+---
+
+## Project Structure
+
+```
+AutoPilot-AI-Workspace/
+├── frontend/
+│   ├── src/
+│   │   ├── app/
+│   │   │   ├── (app)/               # Protected routes (auth guard)
+│   │   │   │   ├── dashboard/       # Command Hub
+│   │   │   │   ├── chat/            # AI Command Center
+│   │   │   │   ├── agents/          # Neural Units
+│   │   │   │   ├── workflows/       # Visual Workflow
+│   │   │   │   ├── insights/        # Intelligence Hub
+│   │   │   │   ├── settings/        # Personal Hub
+│   │   │   │   └── layout.tsx       # Auth guard + global shell
+│   │   │   ├── auth/                # Sign-in / Sign-up page
+│   │   │   └── page.tsx             # Landing redirect
+│   │   ├── components/
+│   │   │   ├── chat/                # ChatWindow, ChatInput, ChatMessage, ConversationHistory
+│   │   │   ├── dashboard/           # TaskItem, FileExplorer, AgentActivityTimeline, NeuralSuggestions
+│   │   │   ├── agents/              # AgentGrid
+│   │   │   ├── workflow/            # WorkflowGraph, AgentNode, TaskNode, CustomEdge
+│   │   │   ├── ui/                  # Sidebar, TopBar, GlobalOrchestrator, MeshBackground
+│   │   │   └── auth/                # FirebaseProvider (auth state sync)
+│   │   └── lib/
+│   │       ├── store.ts             # Zustand store (persisted to localStorage)
+│   │       ├── api.ts               # Typed REST API client
+│   │       ├── firebase.ts          # Firebase init + auth + Google provider
+│   │       ├── localAuth.ts         # Local auth fallback (no Firebase)
+│   │       ├── websocket.ts         # WebSocket client + serverless fallback
+│   │       └── export.ts            # Markdown project export
+│   └── vercel.json
+│
+└── backend/
+    ├── app/
+    │   ├── api/                     # FastAPI route handlers
+    │   │   ├── chat.py              # POST /chat + WebSocket /ws/{id}
+    │   │   ├── conversations.py
+    │   │   ├── tasks.py
+    │   │   ├── workflows.py
+    │   │   ├── agents.py
+    │   │   ├── files.py
+    │   │   └── search.py
+    │   ├── agents/                  # LangChain agent implementations
+    │   │   ├── pm_agent.py
+    │   │   ├── dev_agent.py
+    │   │   ├── marketing_agent.py
+    │   │   ├── analyst_agent.py
+    │   │   └── operations_agent.py
+    │   ├── orchestrator/
+    │   │   └── langgraph_engine.py  # LangGraph state machine
+    │   ├── db/
+    │   │   └── supabase_client.py   # Supabase + in-memory mock fallback
+    │   ├── models/schemas.py
+    │   ├── config.py
+    │   └── main.py
+    ├── api/index.py                 # Vercel entry point
+    ├── requirements.txt
+    └── vercel.json
 ```
 
 ---
 
-**Built with ❤️ for the future of Intelligent Project Orchestration.**
+## Known Limitations
+
+| Limitation | Detail |
+|-----------|--------|
+| WebSocket on Vercel | Vercel serverless functions can't hold persistent connections. WebSocket falls back to REST responses automatically — all AI responses are returned synchronously and the app works fully. |
+| Data persistence | Requires a connected Supabase project for cross-session DB persistence. Without it, the backend uses an in-memory mock (resets on cold start). Frontend data is persisted to localStorage so history works across refreshes. |
+| OpenAI API | Full agent intelligence requires `OPENAI_API_KEY`. Without it the orchestrator returns heuristic keyword-based fallback responses. |
+
+---
+
+## Author
+
+**Sunkireddy Barath**
+- GitHub: [@sunkireddybarath07](https://github.com/sunkireddybarath07)
+- Email: sunkireddybarath07@gmail.com
+
+---
+
+*Built with Next.js 14 · FastAPI · LangGraph · Firebase · Supabase · Vercel*

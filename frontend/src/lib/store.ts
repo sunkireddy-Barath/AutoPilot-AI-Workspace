@@ -283,12 +283,18 @@ export const useStore = create<AppState>()(
       { name: 'autopilot-store' }
     ),
     {
-      name: 'autopilot-storage', // name of the item in storage (must be unique)
-      partialize: (state) => ({ 
+      name: 'autopilot-storage',
+      partialize: (state) => ({
         userId: state.userId,
         sidebarOpen: state.sidebarOpen,
-        autonomousMode: state.autonomousMode 
-      }), // only persist these fields
+        autonomousMode: state.autonomousMode,
+        // Persist data so history survives page refresh (no DB dependency)
+        conversations: state.conversations,
+        activeConversationId: state.activeConversationId,
+        messages: state.messages.slice(-100), // keep last 100 messages
+        tasks: state.tasks,
+        agentActivities: state.agentActivities.slice(-50), // keep last 50 activities
+      }),
     }
   )
 )

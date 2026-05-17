@@ -1,28 +1,23 @@
 'use client'
 
-import { User, Bell, Zap, PlusCircle, Shield, Activity, Wifi, Trash2, X } from 'lucide-react'
+import { User, Bell, Zap, PlusCircle, Shield, Activity, Trash2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { useStore, AgentRole } from '@/lib/store'
 import { conversationsApi } from '@/lib/api'
 import { cn } from '@/lib/utils'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import toast from 'react-hot-toast'
 import { formatDistanceToNow } from 'date-fns'
+import { auth } from '@/lib/firebase'
 
 export default function TopBar() {
   const router = useRouter()
   const { userId, notifications, setActiveConversation, markNotificationsRead, clearNotifications } = useStore()
-  const [scrolled, setScrolled] = useState(false)
   const [showNotifs, setShowNotifs] = useState(false)
 
   const unreadCount = notifications.filter(n => !n.read).length
-
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20)
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
+  const displayName = auth?.currentUser?.displayName || auth?.currentUser?.email?.split('@')[0] || 'Neural Core'
 
   const handleNewSession = async () => {
     if (!userId) return
@@ -51,10 +46,7 @@ export default function TopBar() {
     <motion.header
       initial={{ y: -100 }}
       animate={{ y: 0 }}
-      className={cn(
-        "fixed top-0 left-0 right-0 z-[150] transition-all duration-500 px-8 h-20 flex items-center justify-between",
-        scrolled ? "bg-black/90 backdrop-blur-3xl border-b border-white/5 shadow-2xl" : "bg-transparent"
-      )}
+      className="fixed top-0 left-0 right-0 z-[150] transition-all duration-500 px-8 h-20 flex items-center justify-between bg-black/80 backdrop-blur-3xl border-b border-white/5 shadow-2xl"
     >
       {/* Left: Brand Section */}
       <div className="flex items-center h-full">
@@ -198,11 +190,16 @@ export default function TopBar() {
 
         <div className="h-8 w-px bg-white/10 mx-1" />
 
-        <button className="flex items-center gap-2 pl-2 pr-4 py-1.5 rounded-full bg-white/[0.05] border border-white/10 hover:bg-white/10 transition-all group">
+        <button
+          onClick={() => router.push('/settings')}
+          className="flex items-center gap-2 pl-2 pr-4 py-1.5 rounded-full bg-white/[0.05] border border-white/10 hover:bg-white/10 transition-all group"
+        >
           <div className="h-7 w-7 rounded-full bg-gradient-to-br from-brand-500 to-indigo-600 flex items-center justify-center border border-white/10 shadow-glow-brand">
             <User className="h-4 w-4 text-white" />
           </div>
-          <span className="text-xs font-bold text-white group-hover:text-brand-400 transition-colors">Neural Core V5</span>
+          <span className="text-xs font-bold text-white group-hover:text-brand-400 transition-colors truncate max-w-[120px]">
+            {displayName}
+          </span>
         </button>
       </div>
     </motion.header>

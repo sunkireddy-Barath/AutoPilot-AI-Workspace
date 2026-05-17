@@ -8,6 +8,7 @@ import { workflowsApi } from '@/lib/api'
 import { motion } from 'framer-motion'
 import { Network, Share2, Download, Maximize2, Zap, Activity, CheckSquare } from 'lucide-react'
 import AgentCollaborationLog from '@/components/workflow/AgentCollaborationLog'
+import toast from 'react-hot-toast'
 
 export default function WorkflowsPage() {
   const { userId, setWorkflowGraph, workflowNodes, agentActivities, tasks, isAgentsRunning, setAgentsRunning } = useStore()
@@ -72,13 +73,38 @@ export default function WorkflowsPage() {
         </div>
 
         <div className="flex items-center gap-1">
-          <button className="btn-ghost p-2 rounded-xl" title="Maximize">
+          <button
+            onClick={() => {
+              const el = document.querySelector('.react-flow') as HTMLElement
+              if (el?.requestFullscreen) el.requestFullscreen()
+            }}
+            className="btn-ghost p-2 rounded-xl hover:bg-white/5 transition-colors" title="Maximize graph"
+          >
             <Maximize2 className="h-4 w-4 text-slate-400" />
           </button>
-          <button className="btn-ghost p-2 rounded-xl" title="Share">
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(window.location.href)
+              toast.success('Workflow link copied!')
+            }}
+            className="btn-ghost p-2 rounded-xl hover:bg-white/5 transition-colors" title="Copy link"
+          >
             <Share2 className="h-4 w-4 text-slate-400" />
           </button>
-          <button className="btn-ghost p-2 rounded-xl" title="Export PNG">
+          <button
+            onClick={() => {
+              const data = JSON.stringify({ nodes: workflowNodes, tasks }, null, 2)
+              const blob = new Blob([data], { type: 'application/json' })
+              const url = URL.createObjectURL(blob)
+              const a = document.createElement('a')
+              a.href = url
+              a.download = 'autopilot-workflow.json'
+              a.click()
+              URL.revokeObjectURL(url)
+              toast.success('Workflow exported as JSON')
+            }}
+            className="btn-ghost p-2 rounded-xl hover:bg-white/5 transition-colors" title="Export JSON"
+          >
             <Download className="h-4 w-4 text-slate-400" />
           </button>
         </div>
