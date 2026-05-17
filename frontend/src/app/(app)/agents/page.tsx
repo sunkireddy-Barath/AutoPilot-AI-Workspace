@@ -28,41 +28,42 @@ export default function AgentsPage() {
   const recentLogs = agentActivities.slice(0, 4)
 
   return (
-    <div className="h-full overflow-y-auto w-full max-w-full px-4 lg:px-16 space-y-8 pb-32 pt-12 custom-scrollbar">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+    <div className="h-full overflow-y-auto w-full max-w-full px-4 lg:px-16 space-y-8 pb-32 pt-6 custom-scrollbar">
+      <div className="pt-8">
         <DashboardHeader
           title="Neural Units"
           subtitle="Specialized AI agents operating within your synchronized cluster."
-        />
-        
-        <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-white/[0.03] border border-white/5 backdrop-blur-xl">
-          <button 
-            onClick={() => {
-              setAgentsRunning(false)
-              toast.error('All systems paused', { icon: '⏸️' })
-            }}
-            disabled={!isAgentsRunning}
-            className={cn(
-              "px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
-              isAgentsRunning ? "text-slate-400 hover:text-white hover:bg-white/5" : "bg-red-500/10 text-red-500 border border-red-500/20"
-            )}
-          >
-            <Pause className="h-3.5 w-3.5" /> Pause Matrix
-          </button>
-          <button 
-            onClick={() => {
-              setAgentsRunning(true)
-              toast.success('Systems operational', { icon: '🚀' })
-            }}
-            disabled={isAgentsRunning}
-            className={cn(
-              "px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
-              !isAgentsRunning ? "bg-brand-600 text-white shadow-glow-brand" : "text-slate-500 cursor-not-allowed"
-            )}
-          >
-            <Play className="h-3.5 w-3.5" /> Synchronize
-          </button>
-        </div>
+        >
+          
+          <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-white/[0.03] border border-white/5 backdrop-blur-xl">
+            <button 
+              onClick={() => {
+                setAgentsRunning(false)
+                toast.error('All systems paused', { icon: '⏸️' })
+              }}
+              disabled={!isAgentsRunning}
+              className={cn(
+                "px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
+                isAgentsRunning ? "text-slate-400 hover:text-white hover:bg-white/5" : "bg-red-500/10 text-red-500 border border-red-500/20"
+              )}
+            >
+              <Pause className="h-3.5 w-3.5" /> Pause Matrix
+            </button>
+            <button 
+              onClick={() => {
+                setAgentsRunning(true)
+                toast.success('Systems operational', { icon: '🚀' })
+              }}
+              disabled={isAgentsRunning}
+              className={cn(
+                "px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
+                !isAgentsRunning ? "bg-brand-600 text-white shadow-glow-brand" : "text-slate-500 cursor-not-allowed"
+              )}
+            >
+              <Play className="h-3.5 w-3.5" /> Synchronize
+            </button>
+          </div>
+        </DashboardHeader>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">

@@ -112,7 +112,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="h-full overflow-y-auto w-full max-w-full px-4 lg:px-16 space-y-8 pb-32 pt-12 custom-scrollbar">
+    <div className="h-full overflow-y-auto w-full max-w-full px-4 lg:px-16 space-y-8 pb-32 pt-6 custom-scrollbar">
       <DashboardHeader
         title="Personal Hub"
         subtitle="Manage your identity, security, and neural interface aesthetics."

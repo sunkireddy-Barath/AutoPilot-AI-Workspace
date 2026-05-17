@@ -32,11 +32,13 @@ export default function WorkflowsPage() {
   }, [userId, setWorkflowGraph])
 
   return (
-    <div className="px-6 pb-6 h-full flex flex-col gap-4 pt-12 overflow-y-auto custom-scrollbar">
-      <DashboardHeader
-        title="Visual Workflow"
-        subtitle="Real-time map of agent collaboration and task dependency graph."
-      />
+    <div className="px-6 pb-6 h-full flex flex-col gap-4 pt-6 overflow-y-auto custom-scrollbar">
+      <div className="px-2 pt-8">
+        <DashboardHeader
+          title="Visual Workflow"
+          subtitle="Real-time map of agent collaboration and task dependency graph."
+        />
+      </div>
 
       {/* Toolbar */}
       <div className="flex items-center justify-between glass px-4 py-2.5 rounded-2xl border-white/5 shrink-0">

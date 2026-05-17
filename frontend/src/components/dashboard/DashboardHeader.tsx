@@ -6,9 +6,10 @@ import { useStore } from '@/lib/store'
 interface DashboardHeaderProps {
   title: string
   subtitle: string
+  children?: React.ReactNode
 }
 
-export default function DashboardHeader({ title, subtitle }: DashboardHeaderProps) {
+export default function DashboardHeader({ title, subtitle, children }: DashboardHeaderProps) {
   return (
     <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
       <div className="space-y-1">
@@ -32,6 +33,11 @@ export default function DashboardHeader({ title, subtitle }: DashboardHeaderProp
           {subtitle}
         </motion.p>
       </div>
+      {children && (
+        <div className="flex-shrink-0 pb-2">
+          {children}
+        </div>
+      )}
     </div>
   )
 }

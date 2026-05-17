@@ -49,11 +49,13 @@ export default function InsightsPage() {
   ]
 
   return (
-    <div className="h-full overflow-y-auto w-full max-w-full px-4 lg:px-16 space-y-8 pb-32 pt-12 custom-scrollbar">
-      <DashboardHeader
-        title="Intelligence Hub"
-        subtitle="Autonomous data synthesis and project velocity insights." 
-      />
+    <div className="h-full overflow-y-auto w-full max-w-full px-4 lg:px-16 space-y-8 pb-32 pt-6 custom-scrollbar">
+      <div className="px-2 pt-8">
+        <DashboardHeader
+          title="Intelligence Hub"
+          subtitle="Autonomous data synthesis and project velocity insights." 
+        />
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Main Insights Canvas */}
