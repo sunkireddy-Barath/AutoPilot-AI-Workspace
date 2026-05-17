@@ -31,7 +31,21 @@ export default function ChatWindow() {
 
   const [loading, setLoading] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
+  const [thinkingAgent, setThinkingAgent] = useState<string | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
+
+  // Cycle through all 5 agent roles while waiting for the REST response
+  useEffect(() => {
+    if (!loading) { setThinkingAgent(null); return }
+    const agents = ['product_manager', 'developer', 'marketing', 'analyst', 'operations'] as const
+    let idx = 0
+    setThinkingAgent(agents[0])
+    const interval = setInterval(() => {
+      idx = (idx + 1) % agents.length
+      setThinkingAgent(agents[idx])
+    }, 2000)
+    return () => clearInterval(interval)
+  }, [loading])
 
   // Active session title from conversation list
   const activeSession = conversations.find(c => c.id === activeConversationId)
@@ -41,7 +55,7 @@ export default function ChatWindow() {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }
-  }, [messages, streamingContent, activeAgent])
+  }, [messages, streamingContent, thinkingAgent])
 
   // Ensure WS is connected whenever the active conversation changes
   useEffect(() => {
@@ -88,20 +102,36 @@ export default function ChatWindow() {
         autonomous_mode: useStore.getState().autonomousMode,
       }) as any
 
-      // Add REST response message only if it wasn't already delivered via WS
-      if (result?.message) {
+      // Display each agent message sequentially with a short delay for a streaming feel
+      const agentMsgs: any[] = result?.messages ?? []
+      if (agentMsgs.length > 0) {
+        for (const msg of agentMsgs) {
+          await new Promise<void>(res => setTimeout(res, 700))
+          addMessage({
+            id: msg.id || crypto.randomUUID(),
+            conversation_id: currentConvId!,
+            role: 'agent',
+            agent_role: msg.agent_role || 'orchestrator',
+            content: msg.content || '',
+            metadata: msg.metadata || {},
+            created_at: msg.created_at || new Date().toISOString(),
+          })
+        }
+      } else if (result?.message) {
+        // Fallback: single orchestrator message
         addMessage({
           id: result.message.id,
           conversation_id: currentConvId!,
           role: 'agent',
           agent_role: result.message.agent_role || 'orchestrator',
           content: result.message.content,
+          metadata: result.message.metadata || {},
           created_at: result.message.created_at || new Date().toISOString(),
         })
       }
     } catch (error: any) {
       toast.error(error.message || 'Failed to send message')
-      setAgentsRunning(false) // Reset on error since WS stream_done won't fire
+      setAgentsRunning(false)
     } finally {
       setLoading(false)
     }
@@ -288,9 +318,9 @@ export default function ChatWindow() {
                 />
               )}
 
-              {/* Thinking indicator — shows when agent is thinking but no stream yet */}
-              {activeAgent && !streamingContent && (
-                <ThinkingIndicator key="thinking" role={activeAgent} />
+              {/* Cycling agent thinking indicator while waiting for REST response */}
+              {loading && thinkingAgent && !streamingContent && (
+                <ThinkingIndicator key={`thinking-${thinkingAgent}`} role={thinkingAgent as any} />
               )}
             </AnimatePresence>
           </div>

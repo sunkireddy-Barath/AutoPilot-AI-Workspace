@@ -310,6 +310,7 @@ async def chat(request: ChatRequest):
         "status": "success",
         "conversation_id": conversation_id,
         "workflow_id": workflow_id,
+        "messages": state.get("agent_messages", []) if isinstance(state, dict) else [],
         "message": final_msg,
     }
 
