@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { onAuthStateChanged } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
+import { getSession } from '@/lib/localAuth'
 import { useStore } from '@/lib/store'
 import { Toaster } from 'react-hot-toast'
 
@@ -10,21 +11,23 @@ export default function FirebaseProvider({ children }: { children: React.ReactNo
   const setUserId = useStore((s) => s.setUserId)
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setUserId(user.uid)
-      } else {
-        setUserId(null)
-      }
-    })
-
-    return () => unsubscribe()
+    if (auth) {
+      // Firebase is configured — watch its auth state
+      const unsub = onAuthStateChanged(auth, (user) => {
+        setUserId(user ? user.uid : null)
+      })
+      return unsub
+    } else {
+      // No Firebase config — fall back to local session
+      const session = getSession()
+      if (session) setUserId(session.id)
+    }
   }, [setUserId])
 
   return (
     <>
       {children}
-      <Toaster 
+      <Toaster
         position="top-right"
         toastOptions={{
           style: {

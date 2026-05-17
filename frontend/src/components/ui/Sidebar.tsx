@@ -16,8 +16,9 @@ import {
   User
 } from 'lucide-react'
 import { useStore } from '@/lib/store'
+import { localAuth, getSession } from '@/lib/localAuth'
 import { auth } from '@/lib/firebase'
-import { signOut, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth'
+import { signOut as firebaseSignOut, onAuthStateChanged } from 'firebase/auth'
 import { cn } from '@/lib/utils'
 import toast from 'react-hot-toast'
 
@@ -39,36 +40,39 @@ export default function Sidebar() {
     setAutonomousMode 
   } = useStore()
 
-  const [user, setUser] = useState<FirebaseUser | null>(auth.currentUser)
+  const [userEmail, setUserEmail] = useState<string | null>(null)
   const [userName, setUserName] = useState<string>('Neural Operator')
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser)
-      if (currentUser) {
-        setUserId(currentUser.uid)
-        // Use display name if available, otherwise use email prefix
-        const name = currentUser.displayName || currentUser.email?.split('@')[0] || 'Neural Operator'
-        setUserName(name)
-      } else {
-        setUserId(null)
-        setUserName('Guest')
+    if (auth) {
+      const unsub = onAuthStateChanged(auth, (user) => {
+        if (user) {
+          setUserId(user.uid)
+          setUserEmail(user.email ?? null)
+          setUserName(user.displayName || (user.email?.split('@')[0] ?? 'Neural Operator'))
+        }
+      })
+      return unsub
+    } else {
+      const session = getSession()
+      if (session) {
+        setUserId(session.id)
+        setUserEmail(session.email)
+        setUserName(session.name || session.email.split('@')[0])
       }
-    })
-    return () => unsubscribe()
+    }
   }, [setUserId])
 
   const handleLogout = async () => {
-    try {
-      const logoutToast = toast.loading('Terminating neural session...')
-      await signOut(auth)
-      setUserId(null)
-      toast.success('Session terminated', { id: logoutToast })
-      window.location.href = '/auth'
-    } catch (error) {
-      console.error('Logout failed:', error)
-      toast.error('Failed to terminate session')
+    const logoutToast = toast.loading('Terminating neural session...')
+    if (auth) {
+      await firebaseSignOut(auth)
+    } else {
+      localAuth.signOut()
     }
+    setUserId(null)
+    toast.success('Session terminated', { id: logoutToast })
+    window.location.href = '/auth'
   }
 
   return (

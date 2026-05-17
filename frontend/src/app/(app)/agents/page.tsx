@@ -28,6 +28,7 @@ export default function AgentsPage() {
   const recentLogs = agentActivities.slice(0, 4)
 
   return (
+    <div className="h-full overflow-y-auto">
     <div className="p-8 w-full max-w-full px-4 lg:px-16 space-y-8 pb-32">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <DashboardHeader 
@@ -195,6 +196,7 @@ export default function AgentsPage() {
         </div>
         <AgentGrid />
       </div>
+    </div>
     </div>
   )
 }

@@ -2,25 +2,40 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { auth } from '@/lib/firebase'
 import { onAuthStateChanged } from 'firebase/auth'
+import { auth } from '@/lib/firebase'
+import { getSession } from '@/lib/localAuth'
 import LandingPage from '@/components/landing/LandingPage'
 import { motion } from 'framer-motion'
 
 export default function HomePage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
-  const [user, setUser] = useState<any>(null)
+  const [hasSession, setHasSession] = useState(false)
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user)
-      setLoading(false)
-    })
-    return () => unsubscribe()
-  }, [])
+    if (auth) {
+      const unsub = onAuthStateChanged(auth, (user) => {
+        if (user) {
+          setHasSession(true)
+          router.replace('/dashboard')
+        } else {
+          setLoading(false)
+        }
+      })
+      return unsub
+    } else {
+      const session = getSession()
+      if (session) {
+        setHasSession(true)
+        router.replace('/dashboard')
+      } else {
+        setLoading(false)
+      }
+    }
+  }, [router])
 
-  if (loading) {
+  if (loading || hasSession) {
     return (
       <div className="flex h-screen items-center justify-center bg-[#050508]">
         <motion.div
