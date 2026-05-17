@@ -2,11 +2,17 @@ import os
 from typing import Optional, List
 from langchain.tools import tool
 from pathlib import Path
-from langchain_community.utilities.tavily_search import TavilySearchAPIWrapper
 
-# Designated output directory for agent generated work
-OUTPUT_DIR = Path("/home/barath/AutoPilot-AI-Workspace/output")
-OUTPUT_DIR.mkdir(exist_ok=True)
+try:
+    from langchain_community.utilities.tavily_search import TavilySearchAPIWrapper as _TavilySearch
+    _TAVILY_AVAILABLE = True
+except ImportError:
+    _TAVILY_AVAILABLE = False
+
+# Vercel serverless only allows writes to /tmp; fall back to /tmp if local dir missing
+_LOCAL_OUTPUT = Path("/home/barath/AutoPilot-AI-Workspace/output")
+OUTPUT_DIR = _LOCAL_OUTPUT if _LOCAL_OUTPUT.parent.parent.exists() else Path("/tmp/workspace_output")
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 @tool
 def write_workspace_file(filename: str, content: str, subdir: Optional[str] = None) -> str:
@@ -78,9 +84,9 @@ def google_intel_tool(query: str) -> str:
     Use this for high-level business strategy and GTM planning.
     """
     tavily_api_key = os.getenv("TAVILY_API_KEY")
-    if tavily_api_key:
+    if tavily_api_key and _TAVILY_AVAILABLE:
         try:
-            search = TavilySearchAPIWrapper(tavily_api_key=tavily_api_key)
+            search = _TavilySearch(tavily_api_key=tavily_api_key)
             results = search.results(query, max_results=5)
             return str(results)
         except Exception as e:
@@ -95,9 +101,9 @@ def google_research_simulation(query: str) -> str:
     Use this for market research, trend analysis, or finding competitors.
     """
     tavily_api_key = os.getenv("TAVILY_API_KEY")
-    if tavily_api_key:
+    if tavily_api_key and _TAVILY_AVAILABLE:
         try:
-            search = TavilySearchAPIWrapper(tavily_api_key=tavily_api_key)
+            search = _TavilySearch(tavily_api_key=tavily_api_key)
             return search.run(query)
         except Exception as e:
             return f"Research Error: {str(e)}. Falling back to simulation."

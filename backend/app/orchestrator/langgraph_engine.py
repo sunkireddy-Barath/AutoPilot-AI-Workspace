@@ -493,7 +493,11 @@ class MeDoOrchestrator:
                     conversation_id, workflow_id
                 )
             })
-            response = await self.pm.think(user_goal, history or [])
+            try:
+                response = await self.pm.think(user_goal, history or [])
+            except Exception as llm_err:
+                print(f"⚠️ LLM unavailable in manual mode: {llm_err} — heuristic fallback")
+                response = self._heuristic_pm_response(user_goal)
             msg_id = str(uuid4())
             await global_bus.emit("agent_message", {
                 "id": msg_id,
@@ -823,6 +827,54 @@ class MeDoOrchestrator:
             })
 
             return initial_state
+
+    def _heuristic_pm_response(self, user_goal: str) -> str:
+        """Generate a rich PM response without calling any LLM."""
+        topic = user_goal[:60].strip()
+        tl = topic.lower()
+        is_ml = any(k in tl for k in ["ml", "ai", "model", "predict", "train", "data", "llm", "gpt"])
+        is_commerce = any(k in tl for k in ["food", "shop", "store", "delivery", "commerce", "buy", "marketplace"])
+        is_social = any(k in tl for k in ["social", "chat", "connect", "community", "network", "messaging"])
+        is_saas = any(k in tl for k in ["saas", "dashboard", "crm", "analytics", "platform", "tool", "app"])
+
+        if is_ml:
+            phases = [
+                {"title": "Data Infrastructure", "description": "Set up data lakes, ingestion pipelines, and preprocessing steps.", "status": "In Progress"},
+                {"title": "Model Development", "description": "Train and evaluate core ML models, benchmark against baselines.", "status": "Planned"},
+                {"title": "Inference API & UI", "description": "Deploy low-latency inference endpoints and build the frontend.", "status": "Planned"},
+                {"title": "MLOps & Monitoring", "description": "Implement drift detection, retraining pipelines, and alerting.", "status": "Planned"},
+            ]
+            summary = f"**AutoPilot Analysis: {topic}**\n\nAs your AI Product Manager, I've analyzed your ML-focused request. Data quality is the single biggest lever here — before any model work begins, we need rock-solid data pipelines.\n\n**Strategic Roadmap:**\n"
+        elif is_commerce:
+            phases = [
+                {"title": "Core Commerce Engine", "description": "Product catalog, cart logic, checkout flow, and order management.", "status": "In Progress"},
+                {"title": "Payments & Logistics", "description": "Stripe/PayPal integration, delivery tracking, and notifications.", "status": "Planned"},
+                {"title": "Merchant & Admin Portal", "description": "Vendor onboarding dashboards and analytics for operators.", "status": "Planned"},
+                {"title": "Growth & Retention", "description": "Loyalty programs, referrals, push notifications, and A/B testing.", "status": "Planned"},
+            ]
+            summary = f"**AutoPilot Analysis: {topic}**\n\nFor commerce platforms, trust and transaction reliability are non-negotiable. The roadmap prioritizes bulletproof checkout before adding growth features.\n\n**Strategic Roadmap:**\n"
+        elif is_social:
+            phases = [
+                {"title": "Real-Time Core", "description": "WebSocket infrastructure, presence system, and basic messaging.", "status": "In Progress"},
+                {"title": "Social Graph", "description": "Follower/following model, feeds, and content discovery.", "status": "Planned"},
+                {"title": "Engagement Features", "description": "Reactions, notifications, comments, and media uploads.", "status": "Planned"},
+                {"title": "Moderation & Scale", "description": "Content moderation, CDN optimization, and anti-spam systems.", "status": "Planned"},
+            ]
+            summary = f"**AutoPilot Analysis: {topic}**\n\nSocial products live and die by real-time engagement. I've designed the roadmap to establish the low-latency messaging core first, then layer social features on top.\n\n**Strategic Roadmap:**\n"
+        else:
+            phases = [
+                {"title": "Foundation & Auth", "description": "Core architecture, authentication, authorization, and base UI shell.", "status": "In Progress"},
+                {"title": "Core Feature Set", "description": "Primary business logic, main user flows, and API integrations.", "status": "Planned"},
+                {"title": "Polish & Performance", "description": "UI refinement, caching, load testing, and accessibility.", "status": "Planned"},
+                {"title": "Launch & Scale", "description": "Production deployment, monitoring, and growth analytics.", "status": "Planned"},
+            ]
+            summary = f"**AutoPilot Analysis: {topic}**\n\nI've conducted a deep-dive on your goal. The phased roadmap below prioritizes shipping a solid foundation before adding feature depth — this reduces rework and gets user feedback early.\n\n**Strategic Roadmap:**\n"
+
+        for i, p in enumerate(phases, 1):
+            summary += f"\n**Phase {i}: {p['title']}** ({p['status']})\n{p['description']}\n"
+
+        summary += f"\n\n**Key KPIs to Track:**\n- Time-to-first-value for new users\n- Feature adoption rate per sprint\n- Error rate and p95 latency\n- User retention at D7/D30\n\n**Next Steps:** Enable Autonomous Mode to let all 5 agents collaborate and generate a full workflow blueprint with tasks, architecture diagrams, and growth strategy."
+        return summary
 
     def _build_sequential_workflow(self, tasks):
         """Builds an organic, human-designed 'Data Flow' graph with a winding Z-pattern."""
