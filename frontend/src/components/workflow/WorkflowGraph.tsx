@@ -25,84 +25,69 @@ import { Network, Loader2 } from 'lucide-react'
 const nodeTypes = { agent: AgentNode, task: TaskNode, goal: GoalNode }
 const edgeTypes = { custom: CustomEdge }
 
-// Radial layout: orchestrator in center, others arranged around it
+// Hierarchical top-down layout: Goal → Orchestrator → Agents row → Tasks below each agent
 function buildLayout(nodes: any[], edges: any[]): { nodes: any[]; edges: any[] } {
   if (nodes.length === 0) return { nodes, edges }
 
-  const centerNode = nodes.find(
-    (n) => n.data?.role === 'orchestrator' || n.id.includes('orchestrator')
-  ) || nodes[0]
-
   const goalNodes = nodes.filter((n) => n.type === 'goal')
-  const agentNodes = nodes.filter((n) => n.type === 'agent' && n.id !== centerNode.id)
+  const orchestratorNode = nodes.find((n) => n.data?.role === 'orchestrator' || n.id === 'orchestrator')
+  const agentNodes = nodes.filter((n) => n.type === 'agent' && n.id !== orchestratorNode?.id)
   const taskNodes = nodes.filter((n) => n.type === 'task')
 
-  const agentRadiusX = 460
-  const agentRadiusY = 220
-  const agentAngleStep = (2 * Math.PI) / (agentNodes.length || 1)
+  const COL_W = 220
+  const agentCount = agentNodes.length || 1
+  const startX = -((agentCount - 1) * COL_W) / 2
 
   const layouted: any[] = []
 
-  // Goal node — above orchestrator
+  // Goal — top center
   goalNodes.forEach((gn) => {
-    layouted.push({ ...gn, position: { x: -gn.id.length * 2, y: -320 } })
+    layouted.push({ ...gn, position: { x: 0, y: -320 } })
   })
 
-  // Center orchestrator
-  layouted.push({ ...centerNode, position: { x: 0, y: 0 } })
+  // Orchestrator — center
+  if (orchestratorNode) {
+    layouted.push({ ...orchestratorNode, position: { x: 0, y: -160 } })
+  }
 
-  // Surrounding agents in ellipse
+  // Agents — horizontal row
+  const agentPositions: Record<string, { x: number; y: number }> = {}
   agentNodes.forEach((node, i) => {
-    const angle = i * agentAngleStep - Math.PI / 2
-    layouted.push({
-      ...node,
-      position: {
-        x: agentRadiusX * Math.cos(angle),
-        y: agentRadiusY * Math.sin(angle),
-      },
-    })
+    const pos = { x: startX + i * COL_W, y: 0 }
+    agentPositions[node.data?.role as string] = pos
+    layouted.push({ ...node, position: pos })
   })
 
-  // Task nodes: group under their assigned agent, stacked vertically
+  // Tasks — below their assigned agent, 2-column grid per agent
   const agentTaskMap: Record<string, any[]> = {}
-  const unassignedTasks: any[] = []
-
+  const unassigned: any[] = []
   taskNodes.forEach((tn) => {
-    const agent = tn.data?.assigned_agent as string | undefined
-    if (agent) {
-      agentTaskMap[agent] = agentTaskMap[agent] || []
-      agentTaskMap[agent].push(tn)
+    const role = tn.data?.assigned_agent as string | undefined
+    if (role && agentPositions[role]) {
+      agentTaskMap[role] = agentTaskMap[role] || []
+      agentTaskMap[role].push(tn)
     } else {
-      unassignedTasks.push(tn)
+      unassigned.push(tn)
     }
   })
 
-  // Position tasks below their agent
-  Object.entries(agentTaskMap).forEach(([agentRole, tasks]) => {
-    const agentLayoutNode = layouted.find(
-      (n) => n.type === 'agent' && n.data?.role === agentRole
-    )
-    if (!agentLayoutNode) {
-      unassignedTasks.push(...tasks)
-      return
-    }
-    const { x, y } = agentLayoutNode.position
+  Object.entries(agentTaskMap).forEach(([role, tasks]) => {
+    const { x, y } = agentPositions[role]
     tasks.forEach((tn, ti) => {
       layouted.push({
         ...tn,
         position: {
-          x: x - 115 + (ti % 2) * 240,
-          y: y + 160 + Math.floor(ti / 2) * 160,
+          x: x - 95 + (ti % 2) * 200,
+          y: y + 180 + Math.floor(ti / 2) * 160,
         },
       })
     })
   })
 
-  // Scatter unassigned tasks below orchestrator
-  unassignedTasks.forEach((tn, i) => {
+  unassigned.forEach((tn, i) => {
     layouted.push({
       ...tn,
-      position: { x: (i - unassignedTasks.length / 2) * 260, y: 220 },
+      position: { x: (i - unassigned.length / 2) * 220, y: 200 },
     })
   })
 
@@ -148,7 +133,7 @@ function buildGraphData(
     product_manager: 'agent_pm',
     developer: 'agent_dev',
     marketing: 'agent_mkt',
-    analyst: 'agent_analyst',
+    analyst: 'agent_ana',
     orchestrator: 'agent_orchestrator',
     operations: 'agent_ops',
   }

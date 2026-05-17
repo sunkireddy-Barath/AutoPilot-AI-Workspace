@@ -312,6 +312,8 @@ async def chat(request: ChatRequest):
         "workflow_id": workflow_id,
         "messages": state.get("agent_messages", []) if isinstance(state, dict) else [],
         "message": final_msg,
+        "workflow_nodes": state.get("workflow_nodes", []) if isinstance(state, dict) else [],
+        "workflow_edges": state.get("workflow_edges", []) if isinstance(state, dict) else [],
     }
 
 

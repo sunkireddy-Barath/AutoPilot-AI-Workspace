@@ -511,7 +511,13 @@ class MeDoOrchestrator:
             aid = agent_id_map.get(assigned, "pm")
             nodes.append({
                 "id": t["id"], "type": "task",
-                "data": {"label": t["title"], "status": t["status"]},
+                "data": {
+                    "title": t["title"],
+                    "status": t["status"],
+                    "priority": t.get("priority", "medium"),
+                    "progress": t.get("progress", 100),
+                    "assigned_agent": t.get("assigned_agent"),
+                },
                 "position": {"x": ax + (i % 2) * 30 - 15, "y": 420 + (i % 3) * 90},
             })
             edges.append({

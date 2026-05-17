@@ -32,7 +32,7 @@ export default function WorkflowsPage() {
   }, [userId, setWorkflowGraph])
 
   return (
-    <div className="p-6 h-screen flex flex-col gap-4 pb-28">
+    <div className="px-6 pb-6 h-full flex flex-col gap-4 pt-28 overflow-y-auto custom-scrollbar">
       <DashboardHeader
         title="Visual Workflow"
         subtitle="Real-time map of agent collaboration and task dependency graph."

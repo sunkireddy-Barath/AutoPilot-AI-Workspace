@@ -27,6 +27,7 @@ export default function ChatWindow() {
     setAgentsRunning,
     autonomousMode,
     tasks,
+    setWorkflowGraph,
   } = useStore()
 
   const [loading, setLoading] = useState(false)
@@ -108,6 +109,11 @@ export default function ChatWindow() {
         autonomous_mode: useStore.getState().autonomousMode,
       }) as any
 
+      // Push workflow graph into store so WorkflowGraph animates immediately
+      if (result?.workflow_nodes?.length) {
+        setWorkflowGraph(result.workflow_nodes, result.workflow_edges ?? [])
+      }
+
       // Display each agent message sequentially with a short delay for a streaming feel
       const agentMsgs: any[] = result?.messages ?? []
       if (agentMsgs.length > 0) {
@@ -135,13 +141,15 @@ export default function ChatWindow() {
           created_at: result.message.created_at || new Date().toISOString(),
         })
       }
+
+      setAgentsRunning(false)
     } catch (error: any) {
       toast.error(error.message || 'Failed to send message')
       setAgentsRunning(false)
     } finally {
       setLoading(false)
     }
-  }, [userId, activeConversationId, addMessage, addConversation, setActiveConversation, setAgentsRunning])
+  }, [userId, activeConversationId, addMessage, addConversation, setActiveConversation, setAgentsRunning, setWorkflowGraph])
 
   const handleNewSession = useCallback(async () => {
     if (!userId) return
