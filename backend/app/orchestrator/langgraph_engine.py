@@ -524,6 +524,58 @@ class MeDoOrchestrator:
 
         return nodes, edges
 
+    async def _call_agent(
+        self,
+        agent_obj,
+        role_str: str,
+        thinking_msg: str,
+        context: str,
+        heuristic: dict,
+        conversation_id: str,
+        workflow_id: Optional[str],
+        history: list,
+        topic: str,
+    ) -> dict:
+        """Call one agent, emit events, return the collected message dict."""
+        await global_bus.emit("agent_thinking", {
+            "conversation_id": conversation_id,
+            "agent_role": role_str,
+            "message": thinking_msg,
+        })
+
+        content = ""
+        artifact = None
+        try:
+            raw = await agent_obj.think(context, history)
+            content = re.sub(r"<thinking>[\s\S]*?</thinking>", "", raw).strip()
+            artifact = self._extract_artifact(raw)
+            if not content or len(content) < 50:
+                raise ValueError("Response too short")
+        except Exception as llm_err:
+            print(f"⚠️ [{role_str}] LLM error: {llm_err} — using heuristic")
+            content = heuristic["content"]
+            artifact = heuristic["artifact"]
+
+        msg = {
+            "id": str(uuid4()),
+            "conversation_id": conversation_id,
+            "role": "agent",
+            "agent_role": role_str,
+            "content": content,
+            "metadata": {"artifact": artifact} if artifact else {},
+            "created_at": datetime.utcnow().isoformat(),
+        }
+        await global_bus.emit("agent_message", msg)
+        await global_bus.emit("agent_activity", {
+            "conversation_id": conversation_id,
+            "activity": self._create_activity(
+                role_str, "Analysis",
+                f"{role_str.replace('_', ' ').title()} analysis complete for: {topic}",
+                conversation_id, workflow_id,
+            ),
+        })
+        return msg
+
     async def run(
         self,
         user_goal: str,
@@ -534,81 +586,64 @@ class MeDoOrchestrator:
         workflow_id: Optional[str] = None,
     ) -> dict:
         mapped_user_id = to_uuid(user_id)
-        agent_messages: List[dict] = []
         topic = re.sub(r'[^\w\s]', '', user_goal).strip()[:40]
-
-        # ── Agent sequence ─────────────────────────────────────────────
-        agent_sequence = [
-            (self.pm,        "product_manager", "Analyzing requirements and creating strategic roadmap..."),
-            (self.dev,       "developer",       "Designing system architecture and technical blueprint..."),
-            (self.marketing, "marketing",       "Building go-to-market strategy and growth funnel..."),
-            (self.analyst,   "analyst",         "Analyzing KPIs, risk matrix, and performance metrics..."),
-            (self.ops,       "operations",      "Planning infrastructure, CI/CD, and deployment pipeline..."),
-        ]
-
-        # Build context chain: each agent receives a brief from the previous
-        context = user_goal
-        prev_summary = ""
-
-        # Get heuristic fallbacks upfront (domain-aware)
+        history = history or []
         heuristics = _heuristic_responses(user_goal)
 
-        for idx, (agent_obj, role_str, thinking_msg) in enumerate(agent_sequence):
-            # Notify frontend which agent is thinking
+        # ── AUTO OFF: Single PM agent — fast, focused response ──────────
+        if not autonomous:
             await global_bus.emit("agent_thinking", {
                 "conversation_id": conversation_id,
-                "agent_role": role_str,
-                "message": thinking_msg,
+                "agent_role": "product_manager",
+                "message": "Analyzing your goal and preparing a strategic response...",
             })
-
-            content = ""
-            artifact = None
-
-            # Try LLM first; fall back to heuristic
-            try:
-                raw = await agent_obj.think(context, history or [])
-                content = re.sub(r"<thinking>[\s\S]*?</thinking>", "", raw).strip()
-                artifact = self._extract_artifact(raw)
-                if not content or len(content) < 50:
-                    raise ValueError("LLM returned too short a response")
-            except Exception as llm_err:
-                print(f"⚠️ [{role_str}] LLM error: {llm_err} — using heuristic")
-                h = heuristics[idx]
-                content = h["content"]
-                artifact = h["artifact"]
-
-            msg = {
-                "id": str(uuid4()),
-                "conversation_id": conversation_id,
-                "role": "agent",
-                "agent_role": role_str,
-                "content": content,
-                "metadata": {"artifact": artifact} if artifact else {},
-                "created_at": datetime.utcnow().isoformat(),
-            }
-            agent_messages.append(msg)
-
-            # Emit for any live WebSocket clients (best-effort on Vercel)
-            await global_bus.emit("agent_message", msg)
-
-            activity = self._create_activity(
-                role_str, "Analysis",
-                f"{role_str.replace('_', ' ').title()} analysis complete for: {topic}",
-                conversation_id, workflow_id,
+            msg = await self._call_agent(
+                self.pm, "product_manager",
+                "Analyzing your goal and preparing a strategic response...",
+                user_goal, heuristics[0],
+                conversation_id, workflow_id, history, topic,
             )
-            await global_bus.emit("agent_activity", {
-                "conversation_id": conversation_id,
-                "activity": activity,
+            task = {
+                "id": str(uuid4()), "title": f"Analyze {topic}",
+                "description": "", "status": "completed", "priority": "high",
+                "assigned_agent": "product_manager", "progress": 100,
+                "user_id": mapped_user_id, "conversation_id": conversation_id,
+                "workflow_id": workflow_id,
+                "created_at": datetime.utcnow().isoformat(),
+                "updated_at": datetime.utcnow().isoformat(),
+            }
+            await global_bus.emit("task_created", {"conversation_id": conversation_id, "task": task})
+            nodes, edges = self._build_workflow_graph([task])
+            await global_bus.emit("workflow_updated", {
+                "conversation_id": conversation_id, "nodes": nodes, "edges": edges,
             })
+            return {
+                "agent_messages": [msg], "tasks": [task],
+                "workflow_nodes": nodes, "workflow_edges": edges,
+                "pm_response": msg["content"], "dev_response": "",
+                "marketing_response": "", "analyst_response": "", "ops_response": "",
+            }
 
-            # Pass a brief summary to the next agent for context continuity
-            prev_summary = content[:300]
-            if idx == 0:
-                context = f"Goal: {user_goal}\n\nPM Strategy Summary:\n{prev_summary}"
-            elif idx == 1:
-                context = f"Goal: {user_goal}\n\nDeveloper Architecture Summary:\n{prev_summary}"
-            else:
-                context = f"Goal: {user_goal}\n\nContext from previous agents:\n{prev_summary}"
+        # ── AUTO ON: Full 5-agent pipeline — comprehensive analysis ─────
+        agent_sequence = [
+            (self.pm,        "product_manager", "Analyzing requirements and creating strategic roadmap...",   0),
+            (self.dev,       "developer",       "Designing system architecture and technical blueprint...",   1),
+            (self.marketing, "marketing",       "Building go-to-market strategy and growth funnel...",        2),
+            (self.analyst,   "analyst",         "Analyzing KPIs, risk matrix, and performance metrics...",    3),
+            (self.ops,       "operations",      "Planning infrastructure, CI/CD, and deployment pipeline...", 4),
+        ]
+
+        agent_messages: List[dict] = []
+        context = user_goal
+
+        # ── Run each agent in sequence ──────────────────────────────────
+        for agent_obj, role_str, thinking_msg, h_idx in agent_sequence:
+            msg = await self._call_agent(
+                agent_obj, role_str, thinking_msg, context,
+                heuristics[h_idx], conversation_id, workflow_id, history, topic,
+            )
+            agent_messages.append(msg)
+            context = f"Goal: {user_goal}\n\nPrevious agent ({role_str}) summary:\n{msg['content'][:300]}"
 
         # ── Generate tasks ──────────────────────────────────────────────
         task_defs = [

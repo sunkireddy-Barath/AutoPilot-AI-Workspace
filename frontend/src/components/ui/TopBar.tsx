@@ -13,7 +13,7 @@ import { auth } from '@/lib/firebase'
 
 export default function TopBar() {
   const router = useRouter()
-  const { userId, notifications, setActiveConversation, markNotificationsRead, clearNotifications } = useStore()
+  const { userId, notifications, setActiveConversation, addConversation, markNotificationsRead, clearNotifications } = useStore()
   const [showNotifs, setShowNotifs] = useState(false)
 
   const unreadCount = notifications.filter(n => !n.read).length
@@ -25,6 +25,7 @@ export default function TopBar() {
     try {
       const newConv = await conversationsApi.create(userId, "New Analysis Session") as any
       setActiveConversation(newConv.id)
+      addConversation(newConv)  // persist to history sidebar immediately
       toast.success('Session ready', { id: loadingToast })
       router.push('/chat')
     } catch (error) {

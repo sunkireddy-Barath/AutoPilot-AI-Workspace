@@ -21,12 +21,12 @@ export default function ChatWindow() {
     messages,
     setMessages,
     addMessage,
+    addConversation,
     setActiveConversation,
     streamingContent,
     setAgentsRunning,
+    autonomousMode,
     tasks,
-    // Store-managed agent state (updated by GlobalOrchestrator via WS)
-    activeAgent,
   } = useStore()
 
   const [loading, setLoading] = useState(false)
@@ -34,9 +34,14 @@ export default function ChatWindow() {
   const [thinkingAgent, setThinkingAgent] = useState<string | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
 
-  // Cycle through all 5 agent roles while waiting for the REST response
+  // Show agent thinking indicators while waiting for REST response.
+  // AUTO OFF → only PM indicator. AUTO ON → cycles through all 5 agents.
   useEffect(() => {
     if (!loading) { setThinkingAgent(null); return }
+    if (!autonomousMode) {
+      setThinkingAgent('product_manager')
+      return
+    }
     const agents = ['product_manager', 'developer', 'marketing', 'analyst', 'operations'] as const
     let idx = 0
     setThinkingAgent(agents[0])
@@ -45,7 +50,7 @@ export default function ChatWindow() {
       setThinkingAgent(agents[idx])
     }, 2000)
     return () => clearInterval(interval)
-  }, [loading])
+  }, [loading, autonomousMode])
 
   // Active session title from conversation list
   const activeSession = conversations.find(c => c.id === activeConversationId)
@@ -75,6 +80,7 @@ export default function ChatWindow() {
         const newConv = await conversationsApi.create(userId, text.slice(0, 60)) as any
         currentConvId = newConv.id
         setActiveConversation(currentConvId!)
+        addConversation(newConv)  // add to history immediately
       } catch {
         toast.error('Failed to initialize session')
         setLoading(false)
@@ -135,7 +141,7 @@ export default function ChatWindow() {
     } finally {
       setLoading(false)
     }
-  }, [userId, activeConversationId, addMessage, setActiveConversation, setAgentsRunning])
+  }, [userId, activeConversationId, addMessage, addConversation, setActiveConversation, setAgentsRunning])
 
   const handleNewSession = useCallback(async () => {
     if (!userId) return
@@ -143,6 +149,7 @@ export default function ChatWindow() {
     try {
       const newConv = await conversationsApi.create(userId, 'New Analysis Session') as any
       setActiveConversation(newConv.id)
+      addConversation(newConv)  // add to history immediately
       setMessages([])
       toast.success('New session started')
     } catch {
@@ -150,7 +157,7 @@ export default function ChatWindow() {
     } finally {
       setLoading(false)
     }
-  }, [userId, setActiveConversation, setMessages])
+  }, [userId, addConversation, setActiveConversation, setMessages])
 
   const handleExport = useCallback(() => {
     if (messages.length === 0) {
@@ -311,7 +318,7 @@ export default function ChatWindow() {
                     id: 'streaming',
                     conversation_id: activeConversationId!,
                     role: 'agent',
-                    agent_role: activeAgent || 'orchestrator',
+                    agent_role: (thinkingAgent as any) || 'orchestrator',
                     content: streamingContent,
                     created_at: new Date().toISOString(),
                   }}
