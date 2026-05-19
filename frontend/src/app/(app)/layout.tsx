@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { onAuthStateChanged } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
 import Sidebar from '@/components/ui/Sidebar'
+import TopBar from '@/components/ui/TopBar'
 import GlobalOrchestrator from '@/components/ui/GlobalOrchestrator'
 import MeshBackground from '@/components/ui/MeshBackground'
 import { Toaster } from 'react-hot-toast'
@@ -42,7 +43,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       {/* Global Orchestrator (WebSocket Logic) */}
       <GlobalOrchestrator />
 
-      <main className="fixed top-0 left-0 right-0 bottom-0 z-10 overflow-hidden">
+      {/* Fixed Top Navigation Bar */}
+      <TopBar />
+
+      <main className="fixed top-20 left-0 right-0 bottom-0 z-10 overflow-visible">
         <div className="h-full flex flex-col">
           {children}
         </div>

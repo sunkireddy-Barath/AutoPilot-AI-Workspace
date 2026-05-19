@@ -49,8 +49,8 @@ export default function InsightsPage() {
   ]
 
   return (
-    <div className="h-full overflow-y-auto w-full max-w-full px-4 lg:px-16 space-y-8 pb-32 pt-6 custom-scrollbar">
-      <div className="px-2 pt-8">
+    <div className="w-full max-w-full px-4 lg:px-16 space-y-8 h-full overflow-y-auto pb-32 custom-scrollbar pt-24">
+      <div className="px-2">
         <DashboardHeader
           title="Intelligence Hub"
           subtitle="Autonomous data synthesis and project velocity insights." 

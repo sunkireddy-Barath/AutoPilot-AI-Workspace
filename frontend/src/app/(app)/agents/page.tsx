@@ -28,8 +28,8 @@ export default function AgentsPage() {
   const recentLogs = agentActivities.slice(0, 4)
 
   return (
-    <div className="h-full overflow-y-auto w-full max-w-full px-4 lg:px-16 space-y-8 pb-32 pt-6 custom-scrollbar">
-      <div className="pt-8">
+    <div className="w-full max-w-full px-4 lg:px-16 space-y-8 h-full overflow-y-auto pb-32 custom-scrollbar pt-24">
+      <div className="px-2">
         <DashboardHeader
           title="Neural Units"
           subtitle="Specialized AI agents operating within your synchronized cluster."
